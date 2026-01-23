@@ -67,7 +67,7 @@ jobs:
       - name: Upload coverage HTML
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-report
+          name: coverage-report-node-${{ matrix.node-version }}
           path: coverage/index.html
 
       - name: Comment coverage on PR
