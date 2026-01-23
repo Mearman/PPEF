@@ -122,7 +122,7 @@
   "author": "Joseph Mearman",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Mearman/ppef.git"
+    "url": "git+https://github.com/Mearman/ppef.git"
   },
   "release": {
     "branches": [
