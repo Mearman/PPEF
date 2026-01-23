@@ -1,3 +1,7 @@
+## <small>1.0.1 (2026-01-23)</small>
+
+* fix: normalize repository url for npm publishing ([2263b8d](https://github.com/Mearman/ppef/commit/2263b8d))
+
 ## 1.0.0 (2026-01-23)
 
 * ci: add github actions workflow with semantic-release ([9d667e6](https://github.com/Mearman/ppef/commit/9d667e6))
