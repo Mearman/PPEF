@@ -21,7 +21,7 @@ export const edgeRemovalPerturbation: Perturbation = {
 	type: "structural",
 	intensity: 0.1, // Default: remove 10% of edges
 
-	async apply(evaluationCase: EvaluationCase, seed = 42): Promise<EvaluationCase> {
+	apply(evaluationCase: EvaluationCase, seed = 42): EvaluationCase {
 		const intensity = this.intensity ?? 0.1;
 		// Note: rng would be used when actually perturbing the graph at load time
 		// const rng = new SeededRandom(seed);
@@ -75,7 +75,7 @@ export const seedShiftPerturbation: Perturbation = {
 	type: "seed",
 	intensity: 1, // Default: shift all seeds
 
-	apply: async (evaluationCase: EvaluationCase, seed = 42): Promise<EvaluationCase> => {
+	apply: (evaluationCase: EvaluationCase, seed = 42): EvaluationCase => {
 		const perturbedId = createHash("sha256")
 			.update(`${evaluationCase.caseId}-seed-shift-${seed}`)
 			.digest("hex")
@@ -109,7 +109,7 @@ export const nodeRemovalPerturbation: Perturbation = {
 	type: "structural",
 	intensity: 0.05, // Default: remove 5% of nodes
 
-	async apply(evaluationCase: EvaluationCase, seed = 42): Promise<EvaluationCase> {
+	apply(evaluationCase: EvaluationCase, seed = 42): EvaluationCase {
 		const intensity = this.intensity ?? 0.05;
 
 		const perturbedId = createHash("sha256")
@@ -146,7 +146,7 @@ export const weightNoisePerturbation: Perturbation = {
 	type: "noise",
 	intensity: 0.1, // Default: 10% noise (std dev as fraction of weight)
 
-	async apply(evaluationCase: EvaluationCase, seed = 42): Promise<EvaluationCase> {
+	apply(evaluationCase: EvaluationCase, seed = 42): EvaluationCase {
 		const intensity = this.intensity ?? 0.1;
 
 		const perturbedId = createHash("sha256")

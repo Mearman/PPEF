@@ -443,7 +443,7 @@ describe("GitStorage", () => {
 	describe("load", () => {
 		it("should return null when git is not available", async () => {
 			const storage = new GitStorage("test-namespace", "/nonexistent");
-			const loaded = await storage.load();
+			const loaded = storage.load();
 			assert.strictEqual(loaded, null);
 		});
 	});

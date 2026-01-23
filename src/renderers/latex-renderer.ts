@@ -211,7 +211,7 @@ ${rows.join("\n")}
 		if (typeof value === "string") {
 			return escapeLatex(value);
 		}
-		return escapeLatex(String(value));
+		return escapeLatex(JSON.stringify(value));
 	}
 
 	/**

@@ -44,14 +44,16 @@ export const evaluateClaim = (
 	}
 
 	// Get metric values
-	const primaryStats = primaryAgg.metrics[claim.metric];
-	const baselineStats = baselineAgg.metrics[claim.metric];
+	const primaryMetric = claim.metric;
+	const baselineMetric = claim.metric;
+	const primaryStats = primaryAgg.metrics[primaryMetric];
+	const baselineStats = baselineAgg.metrics[baselineMetric];
 
-	if (!primaryStats || !baselineStats) {
+	if (!(primaryMetric in primaryAgg.metrics) || !(baselineMetric in baselineAgg.metrics)) {
 		return createInconclusiveResult(
 			claim,
-			primaryStats ? undefined : "Metric not found in primary results",
-			baselineStats ? undefined : "Metric not found in baseline results",
+			"Metric not found in primary results",
+			"Metric not found in baseline results",
 		);
 	}
 

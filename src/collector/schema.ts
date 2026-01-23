@@ -39,7 +39,7 @@ export const validateResult = (result: unknown): SchemaValidation => {
 		if (typeof r.run.sut !== "string" || r.run.sut.length === 0) {
 			errors.push("run.sut must be a non-empty string");
 		}
-		if (!["primary", "baseline", "oracle"].includes(r.run.sutRole ?? "")) {
+		if (!["primary", "baseline", "oracle"].includes(r.run.sutRole)) {
 			errors.push("run.sutRole must be 'primary', 'baseline', or 'oracle'");
 		}
 		if (typeof r.run.caseId !== "string" || r.run.caseId.length === 0) {
@@ -66,7 +66,7 @@ export const validateResult = (result: unknown): SchemaValidation => {
 	if (!r.metrics || typeof r.metrics !== "object") {
 		errors.push("Missing or invalid metrics");
 	} else {
-		if (!r.metrics.numeric || typeof r.metrics.numeric !== "object") {
+		if (typeof r.metrics.numeric !== "object") {
 			errors.push("metrics.numeric must be an object");
 		} else {
 			for (const [key, value] of Object.entries(r.metrics.numeric)) {
@@ -80,7 +80,7 @@ export const validateResult = (result: unknown): SchemaValidation => {
 	// Validate provenance
 	if (!r.provenance || typeof r.provenance !== "object") {
 		errors.push("Missing or invalid provenance");
-	} else if (!r.provenance.runtime || typeof r.provenance.runtime !== "object") {
+	} else if (typeof r.provenance.runtime !== "object") {
 		errors.push("provenance.runtime must be an object");
 	}
 

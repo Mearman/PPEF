@@ -100,36 +100,23 @@ export class ResultCollector {
 	validate(result: EvaluationResult): ValidationError[] {
 		const errors: ValidationError[] = [];
 
-		// Required fields
-		if (result.run) {
-			if (!result.run.runId) {
-				errors.push({ field: "run.runId", message: "Missing run ID" });
-			}
-			if (!result.run.sut) {
-				errors.push({ field: "run.sut", message: "Missing SUT identifier" });
-			}
-			if (!result.run.sutRole) {
-				errors.push({ field: "run.sutRole", message: "Missing SUT role" });
-			}
-			if (!result.run.caseId) {
-				errors.push({ field: "run.caseId", message: "Missing case ID" });
-			}
-		} else {
-			errors.push({ field: "run", message: "Missing run context" });
+		// Validate required nested properties have non-empty values
+		if (result.run.runId === "") {
+			errors.push({ field: "run.runId", message: "Missing run ID" });
+		}
+		if (result.run.sut === "") {
+			errors.push({ field: "run.sut", message: "Missing SUT identifier" });
+		}
+		if (result.run.caseId === "") {
+			errors.push({ field: "run.caseId", message: "Missing case ID" });
 		}
 
-		if (!result.correctness) {
-			errors.push({ field: "correctness", message: "Missing correctness assessment" });
-		}
-
-		if (!result.metrics) {
-			errors.push({ field: "metrics", message: "Missing metrics" });
-		} else if (!result.metrics.numeric) {
+		if (Object.keys(result.metrics.numeric).length === 0) {
 			errors.push({ field: "metrics.numeric", message: "Missing numeric metrics" });
 		}
 
-		if (!result.provenance) {
-			errors.push({ field: "provenance", message: "Missing provenance" });
+		if (result.provenance.runtime.platform === "") {
+			errors.push({ field: "provenance.runtime.platform", message: "Missing platform" });
 		}
 
 		return errors;

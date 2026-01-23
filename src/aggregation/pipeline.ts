@@ -128,7 +128,7 @@ const aggregateGroup = (
 	for (const metricName of allMetricNames) {
 		const values = results
 			.map((r) => r.metrics.numeric[metricName])
-			.filter((v) => v !== undefined && !Number.isNaN(v));
+			.filter((v) => typeof v === "number" && !Number.isNaN(v));
 
 		if (values.length > 0) {
 			metricStats[metricName] = computeSummaryStats(values);
@@ -145,7 +145,7 @@ const aggregateGroup = (
 	return {
 		sut,
 		sutRole: firstResult.run.sutRole,
-		caseClass: caseClass ?? undefined,
+		caseClass,
 		group: {
 			runCount: results.length,
 			caseCount: uniqueCases.size,
@@ -221,11 +221,9 @@ const computeAllComparisons = (
 				const primaryStats = primaryAgg.metrics[metricName];
 				const baselineStats = baselineAgg.metrics[metricName];
 
-				if (primaryStats && baselineStats) {
-					comparisonDeltas[metricName] = primaryStats.mean - baselineStats.mean;
-					comparisonRatios[metricName] =
-						baselineStats.mean === 0 ? Infinity : primaryStats.mean / baselineStats.mean;
-				}
+				comparisonDeltas[metricName] = primaryStats.mean - baselineStats.mean;
+				comparisonRatios[metricName] =
+					baselineStats.mean === 0 ? Infinity : primaryStats.mean / baselineStats.mean;
 			}
 
 			// Get raw results for detailed comparison (matched by case ID)

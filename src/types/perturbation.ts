@@ -28,7 +28,7 @@ export interface Perturbation {
 	intensity?: number;
 
 	/** Apply the perturbation to a case */
-	apply(evaluationCase: EvaluationCase, seed?: number): Promise<EvaluationCase>;
+	apply(evaluationCase: EvaluationCase, seed?: number): EvaluationCase;
 }
 
 /**

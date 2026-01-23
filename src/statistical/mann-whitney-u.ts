@@ -133,13 +133,9 @@ export const cohensD = (sampleA: number[], sampleB: number[]): number => {
  * Uses t-distribution approximation (1.96 for 95% CI with large samples).
  *
  * @param values - Sample values
- * @param confidence - Confidence level (default 0.95 for 95%)
  * @returns Object with lower and upper bounds
  */
-export const confidenceInterval = (
-	values: number[],
-	confidence = 0.95,
-): { lower: number; upper: number } => {
+export const confidenceInterval = (values: number[]): { lower: number; upper: number } => {
 	const n = values.length;
 	const mean = values.reduce((a, b) => a + b, 0) / n;
 	const std = Math.sqrt(values.reduce((sum, value) => sum + (value - mean) ** 2, 0) / (n - 1));

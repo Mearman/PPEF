@@ -64,6 +64,7 @@ const createTestRun = (runId: string, seed: number): PlannedRun => ({
  */
 class MockCheckpointStorage {
 	private data: CheckpointData | null = null;
+	static readonly TYPE = "mock";
 	saveDelay = 0;
 	loadDelay = 0;
 	saveCallCount = 0;
@@ -94,7 +95,7 @@ class MockCheckpointStorage {
 	}
 
 	get type(): string {
-		return "mock";
+		return MockCheckpointStorage.TYPE;
 	}
 
 	setData(data: CheckpointData | null): void {
@@ -288,11 +289,11 @@ describe("CheckpointManager", () => {
 			const saved = storage.getData();
 
 			// Should only have one entry in completedRunIds
-			assert.deepStrictEqual(saved?.completedRunIds, ["duplicate-run"]);
-			assert.strictEqual(saved?.completedRunIds.length, 1);
+			assert.deepStrictEqual(saved!.completedRunIds, ["duplicate-run"]);
+			assert.strictEqual(saved!.completedRunIds.length, 1);
 
 			// Result should still be stored
-			assert.deepStrictEqual(saved?.results["duplicate-run"], result);
+			assert.deepStrictEqual(saved!.results["duplicate-run"], result);
 		});
 
 		it("should not add duplicate runIds when saving same runId with different results", async () => {

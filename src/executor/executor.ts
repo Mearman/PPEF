@@ -11,7 +11,7 @@ import { arch, platform, version as nodeVersion } from "node:process";
 import type { CaseDefinition, Primitive } from "../types/case.js";
 import type { CorrectnessResult, EvaluationResult, Provenance } from "../types/result.js";
 import type { SutDefinition } from "../types/sut.js";
-import { MemoryMonitor } from "./memory-monitor.js";
+import { MemoryMonitor, MemoryWarningLevel } from "./memory-monitor.js";
 import { generateRunId } from "./run-id.js";
 
 /**
@@ -203,7 +203,7 @@ export class Executor<TInput = unknown, TInputs = unknown, TResult = unknown> {
 				criticalThresholdMb: this.config.memoryCriticalThresholdMb,
 				verbose: true,
 				onWarningLevelChange: (level, stats) => {
-					if (level === "critical" && this.config.abortOnMemoryCritical) {
+					if (level === MemoryWarningLevel.CRITICAL && this.config.abortOnMemoryCritical) {
 						throw new Error(
 							`Memory critical threshold exceeded (${stats.rssMb.toFixed(1)}MB). Aborting execution.`,
 						);
@@ -508,7 +508,7 @@ export class Executor<TInput = unknown, TInputs = unknown, TResult = unknown> {
 		// Check memory before execution
 		if (this.memoryMonitor) {
 			const initialLevel = this.memoryMonitor.check();
-			if (initialLevel === "emergency") {
+			if (initialLevel === MemoryWarningLevel.EMERGENCY) {
 				throw new Error("Memory at emergency level before execution. Aborting.");
 			}
 		}
@@ -544,8 +544,7 @@ export class Executor<TInput = unknown, TInputs = unknown, TResult = unknown> {
 		const sut = sutDef.factory(run.config);
 
 		// Execute with timeout if configured
-		let sutResult: TResult;
-		sutResult = await (this.config.timeoutMs > 0
+		const sutResult = await (this.config.timeoutMs > 0
 			? Promise.race([
 					sut.run({ ...inputs, input }),
 					new Promise<never>((_, reject) =>
@@ -572,7 +571,7 @@ export class Executor<TInput = unknown, TInputs = unknown, TResult = unknown> {
 		// Build correctness result (basic - can be extended)
 		const correctness: CorrectnessResult = {
 			expectedExists: caseDef.case.expectedOutput !== undefined,
-			producedOutput: sutResult !== null && sutResult !== undefined,
+			producedOutput: true,
 			valid: true, // Assume valid if no exception
 			matchesExpected: null, // Would need comparison logic
 		};

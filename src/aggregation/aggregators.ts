@@ -110,21 +110,17 @@ export const computeComparison = (
 	metricName: string,
 ): ComparisonMetrics => {
 	// Extract values and match by case ID
-	const primaryByCase = new Map<string, number>();
-	const baselineByCase = new Map<string, number>();
+	const primaryByCase = new Map<string, number | undefined>();
+	const baselineByCase = new Map<string, number | undefined>();
 
 	for (const result of primaryResults) {
 		const value = result.metrics.numeric[metricName];
-		if (value !== undefined) {
-			primaryByCase.set(result.run.caseId, value);
-		}
+		primaryByCase.set(result.run.caseId, value);
 	}
 
 	for (const result of baselineResults) {
 		const value = result.metrics.numeric[metricName];
-		if (value !== undefined) {
-			baselineByCase.set(result.run.caseId, value);
-		}
+		baselineByCase.set(result.run.caseId, value);
 	}
 
 	// Get matching case IDs
@@ -141,8 +137,12 @@ export const computeComparison = (
 	const primaryValues: number[] = [];
 	const baselineValues: number[] = [];
 	for (const caseId of commonCaseIds) {
-		primaryValues.push(primaryByCase.get(caseId)!);
-		baselineValues.push(baselineByCase.get(caseId)!);
+		const primaryValue = primaryByCase.get(caseId);
+		const baselineValue = baselineByCase.get(caseId);
+		if (primaryValue !== undefined && baselineValue !== undefined) {
+			primaryValues.push(primaryValue);
+			baselineValues.push(baselineValue);
+		}
 	}
 
 	const primaryStats = computeSummaryStats(primaryValues);

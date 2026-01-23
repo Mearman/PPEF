@@ -168,7 +168,7 @@ export interface CheckpointStorage {
 	 * Load checkpoint data from storage.
 	 * @returns Checkpoint data or null if not found
 	 */
-	load(): Promise<CheckpointData | null>;
+	load(): CheckpointData | null | Promise<CheckpointData | null>;
 
 	/**
 	 * Save checkpoint data to storage.
@@ -179,12 +179,12 @@ export interface CheckpointStorage {
 	/**
 	 * Delete checkpoint from storage.
 	 */
-	delete(): Promise<void>;
+	delete(): void | Promise<void>;
 
 	/**
 	 * Check if checkpoint exists.
 	 */
-	exists(): Promise<boolean>;
+	exists(): boolean | Promise<boolean>;
 
 	/**
 	 * Get storage type identifier.
@@ -224,7 +224,7 @@ export class FileStorage implements CheckpointStorage {
 			const content = JSON.stringify(data, null, 2);
 			await this.fs.writeFile(this.path, content);
 		} catch (error) {
-			console.warn(`Failed to save checkpoint to ${this.path}: ${error}`);
+			console.warn(`Failed to save checkpoint to ${this.path}: ${String(error)}`);
 			throw error;
 		}
 	}
@@ -240,7 +240,7 @@ export class FileStorage implements CheckpointStorage {
 	async exists(): Promise<boolean> {
 		try {
 			const content = await this.fs.readFile(this.path);
-			const data = JSON.parse(content);
+			const data: unknown = JSON.parse(content);
 			return data !== null && typeof data === "object";
 		} catch {
 			return false;
@@ -341,7 +341,7 @@ export class GitStorage implements CheckpointStorage {
 		}
 	}
 
-	async load(): Promise<CheckpointData | null> {
+	load(): CheckpointData | null {
 		if (!this.checkGitAvailable()) {
 			console.warn("Git not available, falling back to null checkpoint");
 			return null;
@@ -384,16 +384,16 @@ export class GitStorage implements CheckpointStorage {
 			);
 
 			// Clean up temp file
-			await unlink(temporaryPath).catch(() => {});
+			await unlink(temporaryPath).catch(() => undefined);
 		} catch (error) {
-			console.warn(`Failed to save git checkpoint: ${error}`);
+			console.warn(`Failed to save git checkpoint: ${String(error)}`);
 			throw error;
 		}
 	}
 
-	async delete(): Promise<void> {
+	delete(): void {
 		if (!this.checkGitAvailable()) {
-			return;
+			return undefined;
 		}
 
 		try {
@@ -404,10 +404,11 @@ export class GitStorage implements CheckpointStorage {
 		} catch {
 			// Ignore if note doesn't exist
 		}
+		return undefined;
 	}
 
-	async exists(): Promise<boolean> {
-		const data = await this.load();
+	exists(): boolean {
+		const data = this.load();
 		return data !== null;
 	}
 
@@ -415,7 +416,7 @@ export class GitStorage implements CheckpointStorage {
 	 * List all checkpoints for this namespace across git history.
 	 * Returns a map of commit SHA to checkpoint metadata.
 	 */
-	async listHistory(): Promise<{ commit: string; checkpoint: CheckpointData }[]> {
+	listHistory(): { commit: string; checkpoint: CheckpointData }[] {
 		if (!this.checkGitAvailable()) {
 			return [];
 		}
@@ -454,7 +455,7 @@ export class GitStorage implements CheckpointStorage {
 	 * Restore checkpoint from a specific commit.
 	 * @param commitSha
 	 */
-	async restoreFromCommit(commitSha: string): Promise<CheckpointData | null> {
+	restoreFromCommit(commitSha: string): CheckpointData | null {
 		if (!this.checkGitAvailable()) {
 			return null;
 		}
@@ -520,4 +521,4 @@ const detectPreferredMode = (): CheckpointMode => {
  * @param resultsDir
  */
 export const getGitNamespace = (resultsDir: string): string =>
-	resultsDir.replaceAll(/[/\\]/g, "-").replace(/^\./, "").replace(/^\/+/, "");
+	resultsDir.replace(/[/\\]/g, "-").replace(/^\./, "").replace(/^\/+/, "");

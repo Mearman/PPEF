@@ -164,7 +164,7 @@ export const executeParallel = async (
 	const numberWorkers = options.workers ?? cpus().length;
 	const nodePath = options.nodePath ?? process.execPath;
 	const checkpointDir = options.checkpointDir ?? resolve(PACKAGE_ROOT, "results/execute");
-	const timeoutMs = options.timeoutMs ?? config.timeoutMs ?? 0;
+	const timeoutMs = options.timeoutMs ?? config.timeoutMs;
 
 	console.log(`ParallelExecutor: Spawning ${numberWorkers} processes for ${runs.length} runs`);
 	console.log(`Checkpoint directory: ${checkpointDir}`);

@@ -222,9 +222,7 @@ let globalMonitor: MemoryMonitor | null = null;
  * @param config
  */
 export const getGlobalMemoryMonitor = (config?: Partial<MemoryMonitorConfig>): MemoryMonitor => {
-	if (!globalMonitor) {
-		globalMonitor = new MemoryMonitor(config);
-	}
+	globalMonitor ??= new MemoryMonitor(config);
 	return globalMonitor;
 };
 

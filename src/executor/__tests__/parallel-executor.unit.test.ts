@@ -238,7 +238,7 @@ describe("ParallelExecutorOptions", () => {
 
 		it("should use custom checkpoint directory when specified", () => {
 			const options = { checkpointDir: "/custom/path" };
-			const checkpointDir = options.checkpointDir ?? "/default/path";
+			const checkpointDir = options.checkpointDir;
 
 			assert.strictEqual(checkpointDir, "/custom/path");
 		});

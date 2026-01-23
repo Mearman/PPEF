@@ -93,9 +93,9 @@ describe("ParallelExecutor (Integration)", () => {
 				const storage = new FileStorage(checkpointPaths[index]);
 				const loaded = await storage.load();
 				assert.ok(loaded);
-				assert.strictEqual(loaded?.configHash, `worker-${index}`);
-				assert.strictEqual(loaded?.workerIndex, index);
-				assert.strictEqual(loaded?.totalWorkers, numberWorkers);
+				assert.strictEqual(loaded.configHash, `worker-${index}`);
+				assert.strictEqual(loaded.workerIndex, index);
+				assert.strictEqual(loaded.totalWorkers, numberWorkers);
 			}
 
 			// Clean up
@@ -267,8 +267,8 @@ describe("ParallelExecutor (Integration)", () => {
 
 				// Reload and verify
 				const loaded = await storage.load();
-				assert.strictEqual(loaded?.workerIndex, index);
-				assert.strictEqual(loaded?.totalWorkers, numberWorkers);
+				assert.strictEqual(loaded!.workerIndex, index);
+				assert.strictEqual(loaded!.totalWorkers, numberWorkers);
 
 				// Clean up
 				try {

@@ -210,8 +210,8 @@ export class CheckpointManager {
 		try {
 			await this.storage.save(this.data);
 			this.dirty = false;
-		} catch (error) {
-			console.warn(`Failed to save checkpoint: ${error}`);
+		} catch (error: unknown) {
+			console.warn(`Failed to save checkpoint: ${String(error)}`);
 		}
 	}
 
@@ -228,19 +228,16 @@ export class CheckpointManager {
 			const currentData = await this.storage.load();
 
 			// Use loaded data or initialize if empty
-			let data: CheckpointData;
-			data = currentData
-				? currentData
-				: {
-						configHash: "pending",
-						createdAt: new Date().toISOString(),
-						updatedAt: new Date().toISOString(),
-						completedRunIds: [],
-						results: {},
-						totalPlanned: 0,
-						workerIndex: this.workerIndex,
-						totalWorkers: this.totalWorkers,
-					};
+			const data: CheckpointData = currentData ?? {
+				configHash: "pending",
+				createdAt: new Date().toISOString(),
+				updatedAt: new Date().toISOString(),
+				completedRunIds: [],
+				results: {},
+				totalPlanned: 0,
+				workerIndex: this.workerIndex,
+				totalWorkers: this.totalWorkers,
+			};
 
 			// Record the result (only if not already present)
 			if (!data.completedRunIds.includes(result.run.runId)) {

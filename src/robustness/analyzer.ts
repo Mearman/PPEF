@@ -46,11 +46,11 @@ export const analyzeRobustnessForMetric = (
 	// Extract metric values
 	const baseValues = baseResults
 		.map((r) => r.metrics.numeric[metric])
-		.filter((v) => v !== undefined && !Number.isNaN(v));
+		.filter((v) => !Number.isNaN(v));
 
 	const perturbedValues = perturbedResults
 		.map((r) => r.metrics.numeric[metric])
-		.filter((v) => v !== undefined && !Number.isNaN(v));
+		.filter((v) => !Number.isNaN(v));
 
 	if (baseValues.length === 0 || perturbedValues.length === 0) {
 		return {
@@ -122,7 +122,7 @@ export const analyzeRobustnessWithCurve = (
 	for (const [level, levelResults] of byIntensity) {
 		const values = levelResults
 			.map((r) => r.metrics.numeric[metric])
-			.filter((v) => v !== undefined && !Number.isNaN(v));
+			.filter((v) => !Number.isNaN(v));
 
 		if (values.length > 0) {
 			const stats = computeSummaryStats(values);
@@ -157,7 +157,7 @@ export const analyzeRobustnessWithCurve = (
 	const allPerturbedValues = results
 		.filter((r) => r.run.config?.perturbationIntensity !== undefined)
 		.map((r) => r.metrics.numeric[metric])
-		.filter((v) => v !== undefined && !Number.isNaN(v));
+		.filter((v) => !Number.isNaN(v));
 
 	const overallStats = computeSummaryStats(allPerturbedValues);
 
@@ -249,9 +249,7 @@ export const createRobustnessAnalysis = (
 				const robustness = analyzeRobustnessForMetric(baseResults, perturbedResults, metric);
 
 				// Get baseline value
-				const baseValues = baseResults
-					.map((r) => r.metrics.numeric[metric])
-					.filter((v) => v !== undefined);
+				const baseValues = baseResults.map((r) => r.metrics.numeric[metric]);
 				const baselineValue =
 					baseValues.length > 0
 						? baseValues.reduce((a, b) => a + b, 0) / baseValues.length

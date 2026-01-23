@@ -33,8 +33,10 @@ describe("Checkpoint Merge Bug Diagnostics", () => {
 	 * Helper to read checkpoint data directly from file
 	 * @param path
 	 */
-	const readCheckpointFile = (path: string): CheckpointData =>
-		JSON.parse(readFileSync(path, "utf-8"));
+	const readCheckpointFile = (path: string): CheckpointData => {
+		const data = JSON.parse(readFileSync(path, "utf-8"));
+		return data as CheckpointData;
+	};
 
 	afterEach(() => {
 		rmSync(testDir, { recursive: true, force: true });
