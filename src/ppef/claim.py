@@ -71,7 +71,10 @@ class Claim:
                 is_supported = self.predicate(results)
                 self.status = ClaimStatus.SUPPORTED if is_supported else ClaimStatus.REFUTED
                 self.confidence = 1.0 if is_supported else 0.0
-            except Exception as e:
+            except Exception:
+                # If predicate raises an exception, mark claim as inconclusive
+                # Exception details are intentionally not logged to keep the framework
+                # lightweight and allow users to implement their own logging if needed
                 self.status = ClaimStatus.INCONCLUSIVE
                 self.confidence = 0.0
         
