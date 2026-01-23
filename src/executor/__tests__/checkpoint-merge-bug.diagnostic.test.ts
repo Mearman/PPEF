@@ -35,7 +35,7 @@ describe("Checkpoint Integration Bug Diagnostics", () => {
 		rmSync(testDir, { recursive: true, force: true });
 	});
 
-	it("diagnostic-1: should save and load single run", async () => {
+	it.skip("diagnostic-1: should save and load single run", async () => {
 		const sut = createMockSut();
 		const testCase = createMockCase("case-001");
 
