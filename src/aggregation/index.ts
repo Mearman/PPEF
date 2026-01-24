@@ -10,6 +10,7 @@ export {
 	computeRankings,
 	computeSpeedup,
 	computeSummaryStats,
+	getTValue,
 } from "./aggregators.js";
 export {
 	aggregateResults,

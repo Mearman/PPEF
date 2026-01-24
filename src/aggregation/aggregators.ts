@@ -227,7 +227,7 @@ export const computeRankings = (
  * @param probability - Probability (e.g., 0.975 for 95% two-tailed)
  * @returns t-value
  */
-const getTValue = (df: number, probability: number): number => {
+export const getTValue = (df: number, probability: number): number => {
 	// Simplified t-table for 95% CI (probability = 0.975)
 	if (probability !== 0.975) {
 		return 1.96; // Fall back to z-value for large samples
