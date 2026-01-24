@@ -6,6 +6,7 @@
 
 import type { EvaluationResult } from "../types/result.js";
 import type { AggregationOutput } from "../types/aggregate.js";
+import type { EvaluationCase } from "../types/case.js";
 import type { LoadedConfig } from "./types.js";
 
 /**
@@ -39,9 +40,10 @@ export interface ISutFactory {
 
 /**
  * Case definition interface.
+ * Matches the structure of CaseDefinition from types/case.ts
  */
 export interface ICaseDefinition {
-	caseId: string;
+	case: EvaluationCase;
 	getInput: () => Promise<unknown>;
 	getInputs?: () => unknown[];
 }
@@ -109,13 +111,33 @@ export interface IExecutor {
 		metricsExtractor: IMetricsExtractor,
 		onResult?: (result: EvaluationResult) => void,
 	): Promise<{ results: EvaluationResult[]; errors: { runId: string; error: string }[] }>;
+
+	plan(
+		sutDefinitions: ISutFactory[],
+		caseDefinitions: ICaseDefinition[],
+	): { sutId: string; caseId: string; repetition: number; seed: number }[];
+}
+
+/**
+ * File system interface for file operations.
+ */
+export interface IFileSystem {
+	readFile(path: string, encoding: string): Promise<string>;
 }
 
 /**
  * Aggregator interface.
  */
 export interface IAggregator {
-	aggregateResults(results: EvaluationResult[]): AggregationOutput;
+	aggregateResults(
+		results: EvaluationResult[],
+		options: { groupByCaseClass: boolean; computeComparisons: boolean },
+	): Awaited<ReturnType<typeof import("../aggregation/index.js").aggregateResults>>;
+
+	createAggregationOutput(
+		aggregates: Awaited<ReturnType<typeof import("../aggregation/index.js").aggregateResults>>,
+		results: EvaluationResult[],
+	): AggregationOutput;
 }
 
 /**
