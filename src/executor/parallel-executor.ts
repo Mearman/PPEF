@@ -61,7 +61,7 @@ export interface ParallelExecutorOptions {
  * Returns unique names for each worker.
  * @param count
  */
-const generateWorkerNames = (count: number): string[] => {
+export const generateWorkerNames = (count: number): string[] => {
 	const adjectives = [
 		"swift",
 		"nimble",
