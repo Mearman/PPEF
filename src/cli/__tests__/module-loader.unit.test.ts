@@ -215,6 +215,52 @@ export const createCase = "not a function";
 			await unlink(modulePath);
 			await rmdir(tempDir);
 		});
+
+		it("should throw error when getInput is missing", async () => {
+			const tempDir = await mkdtemp(join(tmpdir(), "ppef-test-"));
+			const modulePath = join(tempDir, "test-case.js");
+			const moduleContent = `
+export function createCase() {
+  return {
+    case: { caseId: 'test-case-001' },
+    getInputs: () => ({})
+  };
+}
+`;
+			await writeFile(modulePath, moduleContent, "utf-8");
+
+			await assert.rejects(
+				async () => loadCaseDefinition("./test-case.js", "createCase", tempDir),
+				/Missing getInput function/,
+			);
+
+			// Cleanup
+			await unlink(modulePath);
+			await rmdir(tempDir);
+		});
+
+		it("should throw error when getInputs is missing", async () => {
+			const tempDir = await mkdtemp(join(tmpdir(), "ppef-test-"));
+			const modulePath = join(tempDir, "test-case.js");
+			const moduleContent = `
+export function createCase() {
+  return {
+    case: { caseId: 'test-case-001' },
+    getInput: async () => ({})
+  };
+}
+`;
+			await writeFile(modulePath, moduleContent, "utf-8");
+
+			await assert.rejects(
+				async () => loadCaseDefinition("./test-case.js", "createCase", tempDir),
+				/Missing getInputs function/,
+			);
+
+			// Cleanup
+			await unlink(modulePath);
+			await rmdir(tempDir);
+		});
 	});
 
 	describe("loadMetricsExtractor", () => {
