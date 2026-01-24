@@ -50,7 +50,6 @@ describe("output-writer", () => {
 						runId: "test-run-id",
 						sut: "test-sut",
 						sutRole: "primary" as const,
-						sutVersion: "1.0.0",
 						caseId: "test-case",
 						caseClass: "test-class",
 						repetition: 0,
@@ -84,7 +83,7 @@ describe("output-writer", () => {
 			const data = JSON.parse(written);
 			assert.ok(data.results);
 			assert.strictEqual(data.results.length, 1);
-			assert.strictEqual(data.results[0].sutId, "test-sut");
+			assert.strictEqual(data.results[0].run.sut, "test-sut");
 
 			await unlink(outputPath);
 			await rmdir(tempDir);
