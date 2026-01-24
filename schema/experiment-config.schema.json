@@ -1,0 +1,175 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/Mearman/ppef/schemas/experiment-config.schema.json",
+  "title": "PPEF Experiment Configuration",
+  "description": "Configuration schema for PPEF experiment execution via CLI",
+  "type": "object",
+  "required": ["experiment", "executor", "suts", "cases", "metricsExtractor", "output"],
+  "properties": {
+    "experiment": {
+      "type": "object",
+      "description": "Experiment metadata",
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Experiment name"
+        },
+        "description": {
+          "type": "string",
+          "description": "Experiment description"
+        },
+        "version": {
+          "type": "string",
+          "description": "Experiment version"
+        }
+      }
+    },
+    "executor": {
+      "type": "object",
+      "description": "Executor configuration",
+      "properties": {
+        "continueOnError": {
+          "type": "boolean",
+          "description": "Continue execution if a single run fails"
+        },
+        "repetitions": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Number of repetitions per case"
+        },
+        "seedBase": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Random seed base"
+        },
+        "timeoutMs": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Timeout per run in milliseconds (0 = no timeout)"
+        },
+        "collectProvenance": {
+          "type": "boolean",
+          "description": "Whether to collect provenance information"
+        },
+        "concurrency": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Number of concurrent runs"
+        }
+      }
+    },
+    "suts": {
+      "type": "array",
+      "description": "System Under Test configurations",
+      "items": {
+        "type": "object",
+        "required": ["id", "module", "exportName", "registration"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique SUT identifier"
+          },
+          "module": {
+            "type": "string",
+            "description": "Path to module file (relative to config file)"
+          },
+          "exportName": {
+            "type": "string",
+            "description": "Name of the export to use as factory"
+          },
+          "config": {
+            "type": "object",
+            "description": "Optional configuration to pass to factory"
+          },
+          "registration": {
+            "type": "object",
+            "required": ["name", "version", "role"],
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Human-readable name"
+              },
+              "version": {
+                "type": "string",
+                "description": "Version string"
+              },
+              "role": {
+                "type": "string",
+                "enum": ["primary", "baseline", "oracle"],
+                "description": "Role in evaluation"
+              },
+              "tags": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Searchable tags"
+              },
+              "description": {
+                "type": "string",
+                "description": "Optional description"
+              }
+            }
+          }
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "description": "Test case configurations",
+      "items": {
+        "type": "object",
+        "required": ["id", "module", "exportName"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique case identifier"
+          },
+          "module": {
+            "type": "string",
+            "description": "Path to module file (relative to config file)"
+          },
+          "exportName": {
+            "type": "string",
+            "description": "Name of the export to use as case factory"
+          }
+        }
+      }
+    },
+    "metricsExtractor": {
+      "type": "object",
+      "description": "Metrics extractor configuration",
+      "required": ["module", "exportName"],
+      "properties": {
+        "module": {
+          "type": "string",
+          "description": "Path to module file (relative to config file)"
+        },
+        "exportName": {
+          "type": "string",
+          "description": "Name of the export to use as metrics extractor"
+        }
+      }
+    },
+    "output": {
+      "type": "object",
+      "description": "Output configuration",
+      "properties": {
+        "path": {
+          "type": "string",
+          "description": "Output directory path"
+        },
+        "format": {
+          "type": "string",
+          "enum": ["json", "json-pretty"],
+          "description": "Output format"
+        },
+        "aggregate": {
+          "type": "boolean",
+          "description": "Whether to aggregate results"
+        }
+      }
+    }
+  }
+}
