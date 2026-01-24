@@ -130,8 +130,8 @@ describe("Framework Pipeline Integration", () => {
 		// Find primary aggregate
 		const dpAggregate = aggregates.find((a) => a.sut === "degree-prioritised-v1.0.0");
 		assert.ok(dpAggregate);
-		assert.ok(dpAggregate?.metrics["execution-time"]);
-		assert.strictEqual(dpAggregate?.group.runCount, 10);
+		assert.ok(dpAggregate.metrics["execution-time"]);
+		assert.strictEqual(dpAggregate.group.runCount, 10);
 
 		// Step 3: Define and evaluate claims
 		const claims: EvaluationClaim[] = [
@@ -168,9 +168,7 @@ describe("Framework Pipeline Integration", () => {
 
 		assert.strictEqual(evaluations.length, 3);
 		assert.ok(
-			evaluations.every(
-				(e) => e.status === "satisfied" || e.status === "violated" || e.status === "inconclusive",
-			),
+			evaluations.every((e) => ["satisfied", "violated", "inconclusive"].includes(e.status)),
 		);
 
 		// Step 4: Create summary
@@ -198,8 +196,8 @@ describe("Framework Pipeline Integration", () => {
 			extractData: (aggs) =>
 				aggs.map((a) => ({
 					method: a.sut.replace("-v1.0.0", ""),
-					execTime: a.metrics["execution-time"]?.mean.toFixed(1),
-					nodesExpanded: a.metrics["nodes-expanded"]?.mean.toFixed(0),
+					execTime: a.metrics["execution-time"].mean.toFixed(1),
+					nodesExpanded: a.metrics["nodes-expanded"].mean.toFixed(0),
 				})),
 		};
 
@@ -294,10 +292,12 @@ describe("Framework Pipeline Integration", () => {
 		assert.strictEqual(evaluations.find((e) => e.claim.claimId === "QUALITY")?.status, "satisfied");
 
 		// Evidence should show correct values
-		const speedEvidence = evaluations.find((e) => e.claim.claimId === "SPEED")?.evidence;
-		assert.strictEqual(speedEvidence?.primaryValue, 50);
-		assert.strictEqual(speedEvidence?.baselineValue, 100);
-		assert.strictEqual(speedEvidence?.delta, -50); // 50 - 100 = -50
+		const speedEvaluation = evaluations.find((e) => e.claim.claimId === "SPEED");
+		assert.ok(speedEvaluation);
+		const speedEvidence = speedEvaluation.evidence;
+		assert.strictEqual(speedEvidence.primaryValue, 50);
+		assert.strictEqual(speedEvidence.baselineValue, 100);
+		assert.strictEqual(speedEvidence.delta, -50); // 50 - 100 = -50
 	});
 
 	it("should properly serialize and deserialize through ResultCollector", () => {
@@ -344,7 +344,7 @@ describe("Framework Pipeline Integration", () => {
 				extractData: (aggs) =>
 					aggs.map((a) => ({
 						method: a.sut,
-						time: a.metrics["execution-time"]?.mean.toFixed(1),
+						time: a.metrics["execution-time"].mean.toFixed(1),
 					})),
 			},
 			{
@@ -359,7 +359,7 @@ describe("Framework Pipeline Integration", () => {
 				extractData: (aggs) =>
 					aggs.map((a) => ({
 						method: a.sut,
-						diversity: a.metrics["path-diversity"]?.mean.toFixed(3),
+						diversity: a.metrics["path-diversity"].mean.toFixed(3),
 					})),
 			},
 		];

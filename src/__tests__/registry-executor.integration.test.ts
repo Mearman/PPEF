@@ -40,8 +40,9 @@ describe("Registry + Executor Integration", () => {
 			assert.strictEqual(sutRegistry.size, 1);
 
 			const retrieved = sutRegistry.get("test-sut-v1.0.0");
-			assert.strictEqual(retrieved?.registration.name, "Test SUT");
-			assert.strictEqual(retrieved?.registration.role, "primary");
+			assert.ok(retrieved);
+			assert.strictEqual(retrieved.registration.name, "Test SUT");
+			assert.strictEqual(retrieved.registration.role, "primary");
 		});
 
 		it("should prevent duplicate registration", () => {
@@ -236,8 +237,9 @@ describe("Registry + Executor Integration", () => {
 			assert.strictEqual(caseRegistry.size, 1);
 
 			const retrieved = caseRegistry.get("case-001");
-			assert.strictEqual(retrieved?.case.name, "Test Case case-001");
-			assert.strictEqual(retrieved?.case.caseClass, "scale-free");
+			assert.ok(retrieved);
+			assert.strictEqual(retrieved.case.name, "Test Case case-001");
+			assert.strictEqual(retrieved.case.caseClass, "scale-free");
 		});
 
 		it("should prevent duplicate case registration", () => {
@@ -468,12 +470,13 @@ describe("Registry + Executor Integration", () => {
 			);
 
 			const dp = sutRegistry.get("dp-v1.0.0");
+			assert.ok(dp);
 
-			assert.strictEqual(dp?.registration.role, "primary");
-			assert.strictEqual(dp?.registration.config.maxDepth, 3);
-			assert.strictEqual(dp?.registration.config.hubThreshold, 0.9);
-			assert.ok(dp?.registration.tags.includes("bidirectional"));
-			assert.strictEqual(dp?.registration.description, "Hub-avoiding expansion algorithm");
+			assert.strictEqual(dp.registration.role, "primary");
+			assert.strictEqual(dp.registration.config.maxDepth, 3);
+			assert.strictEqual(dp.registration.config.hubThreshold, 0.9);
+			assert.ok(dp.registration.tags.includes("bidirectional"));
+			assert.strictEqual(dp.registration.description, "Hub-avoiding expansion algorithm");
 		});
 	});
 });
