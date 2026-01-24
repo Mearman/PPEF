@@ -82,6 +82,10 @@ describe("validate command", () => {
 								exportName: "createCase",
 							},
 						],
+						metricsExtractor: {
+							module: "./metrics.js",
+							exportName: "extractMetrics",
+						},
 						executor: {
 							repetitions: 10,
 							seedBase: 42,
@@ -223,6 +227,10 @@ describe("validate command", () => {
 						},
 						suts: [],
 						cases: [],
+						metricsExtractor: {
+							module: "./metrics.js",
+							exportName: "extractMetrics",
+						},
 						executor: {},
 						output: {},
 					},

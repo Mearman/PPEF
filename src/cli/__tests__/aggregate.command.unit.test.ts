@@ -8,7 +8,7 @@ import { beforeEach, describe, it, mock } from "node:test";
 import { strict as assert } from "node:assert";
 
 import { executeAggregate } from "../commands/aggregate.js";
-import type { AggregationOutput } from "../../types/aggregate.js";
+import type { AggregatedResult, AggregationOutput } from "../../types/aggregate.js";
 import type { EvaluationResult } from "../../types/result.js";
 import type { IAggregator, ICommandLogger, IFileSystem, IOutputWriter } from "../command-deps.js";
 
@@ -23,26 +23,44 @@ describe("aggregate command", () => {
 
 	const mockResults: EvaluationResult[] = [
 		{
-			runId: "test-1",
-			sutId: "sut-1",
-			caseId: "case-1",
-			seed: 42,
-			repetition: 0,
-			timestamp: "2024-01-01T00:00:00Z",
-			durationMs: 100,
-			memoryBytes: 1024,
-			status: "success",
-			result: {},
+			run: {
+				runId: "test-1",
+				sut: "sut-1",
+				sutRole: "primary" as const,
+				caseId: "case-1",
+				seed: 42,
+				repetition: 0,
+			},
+			correctness: {
+				expectedExists: false,
+				producedOutput: true,
+				valid: true,
+				matchesExpected: null,
+			},
+			outputs: {},
+			metrics: { numeric: {} },
+			provenance: {
+				runtime: {
+					platform: "linux",
+					arch: "x64",
+					nodeVersion: "20.0.0",
+				},
+			},
 		},
 	];
 
-	const mockAggregates = [
+	const mockAggregates: AggregatedResult[] = [
 		{
 			sut: "sut-1",
+			sutRole: "primary" as const,
 			caseClass: "test-class",
 			group: { runCount: 1, caseCount: 1 },
+			correctness: {
+				validRate: 1,
+				producedOutputRate: 1,
+			},
 			metrics: {
-				accuracy: { mean: 0.9, median: 0.9, min: 0.9, max: 0.9, std: 0, variance: 0 },
+				accuracy: { n: 1, mean: 0.9, median: 0.9, min: 0.9, max: 0.9, std: 0 },
 			},
 		},
 	];
@@ -194,16 +212,17 @@ describe("aggregate command", () => {
 				},
 			);
 
-			const calls = mockAggregator.aggregateResults.mock.calls;
+			// eslint-disable-next-line @typescript-eslint/unbound-method
+			const aggregateResultsMock = mockAggregator.aggregateResults as unknown as ReturnType<
+				typeof mock.fn
+			>;
+			const calls = aggregateResultsMock.mock.calls;
 			assert.strictEqual(calls.length, 1);
-			const [, options] = calls[0].arguments as unknown[];
-			assert.deepStrictEqual(
-				options as { groupByCaseClass: boolean; computeComparisons: boolean },
-				{
-					groupByCaseClass: false,
-					computeComparisons: false,
-				},
-			);
+			const [, options] = calls[0].arguments;
+			assert.deepStrictEqual(options, {
+				groupByCaseClass: false,
+				computeComparisons: false,
+			});
 		});
 
 		it("should use default options when not provided", async () => {
@@ -219,16 +238,17 @@ describe("aggregate command", () => {
 				},
 			);
 
-			const calls = mockAggregator.aggregateResults.mock.calls;
+			// eslint-disable-next-line @typescript-eslint/unbound-method
+			const aggregateResultsMock = mockAggregator.aggregateResults as unknown as ReturnType<
+				typeof mock.fn
+			>;
+			const calls = aggregateResultsMock.mock.calls;
 			assert.strictEqual(calls.length, 1);
-			const [, options] = calls[0].arguments as unknown[];
-			assert.deepStrictEqual(
-				options as { groupByCaseClass: boolean; computeComparisons: boolean },
-				{
-					groupByCaseClass: true,
-					computeComparisons: true,
-				},
-			);
+			const [, options] = calls[0].arguments;
+			assert.deepStrictEqual(options, {
+				groupByCaseClass: true,
+				computeComparisons: true,
+			});
 		});
 
 		it("should write aggregates to output", async () => {
@@ -244,9 +264,13 @@ describe("aggregate command", () => {
 				},
 			);
 
-			const calls = mockOutputWriter.writeAggregates.mock.calls;
+			// eslint-disable-next-line @typescript-eslint/unbound-method
+			const writeAggregatesMock = mockOutputWriter.writeAggregates as unknown as ReturnType<
+				typeof mock.fn
+			>;
+			const calls = writeAggregatesMock.mock.calls;
 			assert.strictEqual(calls.length, 1);
-			const [output, path, format] = calls[0].arguments as unknown[];
+			const [, path, format] = calls[0].arguments;
 			assert.strictEqual(path, "/custom/output.json");
 			assert.strictEqual(format, "json");
 		});
@@ -264,9 +288,13 @@ describe("aggregate command", () => {
 				},
 			);
 
-			const calls = mockOutputWriter.writeAggregates.mock.calls;
+			// eslint-disable-next-line @typescript-eslint/unbound-method
+			const writeAggregatesMock = mockOutputWriter.writeAggregates as unknown as ReturnType<
+				typeof mock.fn
+			>;
+			const calls = writeAggregatesMock.mock.calls;
 			assert.strictEqual(calls.length, 1);
-			const [, path] = calls[0].arguments as unknown[];
+			const [, path] = calls[0].arguments;
 			assert.strictEqual(path, "/test/experiment-aggregates-2024-01-01.json");
 		});
 

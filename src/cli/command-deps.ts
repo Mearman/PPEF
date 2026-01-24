@@ -110,7 +110,14 @@ export interface IExecutor {
 		caseDefinitions: ICaseDefinition[],
 		metricsExtractor: IMetricsExtractor,
 		onResult?: (result: EvaluationResult) => void,
-	): Promise<{ results: EvaluationResult[]; errors: { runId: string; error: string }[] }>;
+	): Promise<{
+		totalRuns: number;
+		successfulRuns: number;
+		failedRuns: number;
+		elapsedMs: number;
+		results: EvaluationResult[];
+		errors: { runId: string; error: string }[];
+	}>;
 
 	plan(
 		sutDefinitions: ISutFactory[],

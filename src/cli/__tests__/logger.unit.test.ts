@@ -203,11 +203,7 @@ describe("CliLogger", () => {
 
 			// Should not call write when progress is disabled
 			const calls = writeSpy.mock.calls;
-			assert.strictEqual(
-				// @ts-expect-error - mock type
-				calls.length,
-				0,
-			);
+			assert.strictEqual(calls.length, 0);
 
 			writeSpy.mock.restore();
 		});

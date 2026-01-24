@@ -46,21 +46,33 @@ describe("output-writer", () => {
 			const tempDir = await mkdtemp(join(tmpdir(), "ppef-test-"));
 			const results: EvaluationResult[] = [
 				{
-					sutId: "test-sut",
-					sutName: "Test SUT",
-					sutVersion: "1.0.0",
-					sutRole: "primary" as const,
-					caseId: "test-case",
-					caseClass: "test-class",
-					repetition: 0,
-					seed: 42,
-					input: {},
-					output: {},
-					metrics: { accuracy: 0.85 },
-					startedAt: new Date().toISOString(),
-					completedAt: new Date().toISOString(),
-					durationMs: 100,
-					error: undefined,
+					run: {
+						runId: "test-run-id",
+						sut: "test-sut",
+						sutRole: "primary" as const,
+						sutVersion: "1.0.0",
+						caseId: "test-case",
+						caseClass: "test-class",
+						repetition: 0,
+						seed: 42,
+					},
+					correctness: {
+						expectedExists: true,
+						producedOutput: true,
+						valid: true,
+						matchesExpected: true,
+					},
+					outputs: {
+						summary: {},
+					},
+					metrics: { numeric: { accuracy: 0.85 } },
+					provenance: {
+						runtime: {
+							platform: "test",
+							arch: "x64",
+							nodeVersion: "20.0.0",
+						},
+					},
 				},
 			];
 
@@ -82,21 +94,33 @@ describe("output-writer", () => {
 			const tempDir = await mkdtemp(join(tmpdir(), "ppef-test-"));
 			const results: EvaluationResult[] = [
 				{
-					sutId: "test-sut",
-					sutName: "Test SUT",
-					sutVersion: "1.0.0",
-					sutRole: "primary" as const,
-					caseId: "test-case",
-					caseClass: "test-class",
-					repetition: 0,
-					seed: 42,
-					input: {},
-					output: {},
-					metrics: { accuracy: 0.85 },
-					startedAt: new Date().toISOString(),
-					completedAt: new Date().toISOString(),
-					durationMs: 100,
-					error: undefined,
+					run: {
+						runId: "test-run-id",
+						sut: "test-sut",
+						sutRole: "primary" as const,
+						sutVersion: "1.0.0",
+						caseId: "test-case",
+						caseClass: "test-class",
+						repetition: 0,
+						seed: 42,
+					},
+					correctness: {
+						expectedExists: true,
+						producedOutput: true,
+						valid: true,
+						matchesExpected: true,
+					},
+					outputs: {
+						summary: {},
+					},
+					metrics: { numeric: { accuracy: 0.85 } },
+					provenance: {
+						runtime: {
+							platform: "test",
+							arch: "x64",
+							nodeVersion: "20.0.0",
+						},
+					},
 				},
 			];
 
@@ -135,26 +159,29 @@ describe("output-writer", () => {
 		it("should write aggregates to JSON file", async () => {
 			const tempDir = await mkdtemp(join(tmpdir(), "ppef-test-"));
 			const aggregates: AggregationOutput = {
+				version: "1.0.0",
 				timestamp: new Date().toISOString(),
 				aggregates: [
 					{
 						sut: "test-sut",
-						sutName: "Test SUT",
+						sutRole: "primary" as const,
 						caseClass: undefined,
 						group: {
 							runCount: 10,
 							caseCount: 5,
-							successCount: 10,
-							failureCount: 0,
+						},
+						correctness: {
+							validRate: 1.0,
+							producedOutputRate: 1.0,
 						},
 						metrics: {
 							accuracy: {
+								n: 10,
 								mean: 0.85,
 								median: 0.86,
 								min: 0.75,
 								max: 0.95,
 								std: 0.05,
-								count: 10,
 							},
 						},
 					},
@@ -178,6 +205,7 @@ describe("output-writer", () => {
 		it("should write aggregates in pretty format", async () => {
 			const tempDir = await mkdtemp(join(tmpdir(), "ppef-test-"));
 			const aggregates: AggregationOutput = {
+				version: "1.0.0",
 				timestamp: new Date().toISOString(),
 				aggregates: [],
 			};

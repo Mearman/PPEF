@@ -253,7 +253,10 @@ export function registerRunCommand(program: Command): void {
 				logger,
 				configLoader: { loadAndValidateConfig },
 				moduleLoader: { loadSutFactory, loadCaseDefinition, loadMetricsExtractor } as never,
-				createExecutor: (config: unknown) => new Executor(config) as unknown as IExecutor,
+				createExecutor: (config: unknown) =>
+					new Executor(
+						config as Partial<import("../../executor/executor.js").ExecutorConfig>,
+					) as unknown as IExecutor,
 				aggregator: { aggregateResults, createAggregationOutput },
 				outputWriter: { generateOutputFilename, writeResults, writeAggregates },
 				processExit: (code: number) => process.exit(code),

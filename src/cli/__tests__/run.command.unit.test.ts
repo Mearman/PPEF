@@ -12,6 +12,7 @@ import type { AggregationOutput } from "../../types/aggregate.js";
 import type { EvaluationResult } from "../../types/result.js";
 import type {
 	IAggregator,
+	ICaseDefinition,
 	ICommandLogger,
 	IConfigLoader,
 	IExecutor,
@@ -39,28 +40,46 @@ describe("run command", () => {
 		run: async (input: unknown) => ({ result: "ok" }),
 	};
 
-	const mockCaseDefinition: CaseDefinition = {
+	const mockCaseDefinition = {
 		case: {
 			caseId: "test-case",
 			name: "Test Case",
 			inputs: {},
 		},
 		getInput: async () => ({}),
-		getInputs: () => ({}),
-	};
+		getInputs: () => [],
+	} satisfies ICaseDefinition;
 
 	const mockResults: EvaluationResult[] = [
 		{
-			runId: "test-1",
-			sutId: "sut-1",
-			caseId: "case-1",
-			seed: 42,
-			repetition: 0,
-			timestamp: "2024-01-01T00:00:00Z",
-			durationMs: 100,
-			memoryBytes: 1024,
-			status: "success",
-			result: {},
+			run: {
+				runId: "test-1",
+				sut: "sut-1",
+				sutRole: "primary",
+				caseId: "case-1",
+				seed: 42,
+				repetition: 0,
+			},
+			correctness: {
+				expectedExists: false,
+				producedOutput: true,
+				valid: true,
+				matchesExpected: null,
+			},
+			outputs: {
+				summary: { status: "success" },
+			},
+			metrics: {
+				numeric: { durationMs: 100, memoryBytes: 1024 },
+			},
+			provenance: {
+				runtime: {
+					platform: "linux",
+					arch: "x64",
+					nodeVersion: "20.0.0",
+				},
+				timestamp: "2024-01-01T00:00:00Z",
+			},
 		},
 	];
 
@@ -162,7 +181,9 @@ describe("run command", () => {
 		mockModuleLoader = {
 			loadSutFactory: async () => mockSutFactory,
 			loadCaseDefinition: async () => mockCaseDefinition,
-			loadMetricsExtractor: async () => (result: unknown) => ({ accuracy: 0.9 }),
+			loadMetricsExtractor: async () => ({
+				extract: (result: unknown, input: unknown) => ({ accuracy: 0.9 }),
+			}),
 		};
 
 		// Mock executor
@@ -174,6 +195,7 @@ describe("run command", () => {
 				totalRuns: 1,
 				successfulRuns: 1,
 				failedRuns: 0,
+				elapsedMs: 100,
 			})),
 		};
 
@@ -271,6 +293,9 @@ describe("run command", () => {
 		});
 
 		it("should call executor plan", async () => {
+			const planMock = mock.fn(() => mockPlannedRuns);
+			mockExecutor.plan = planMock;
+
 			await executeRun("/test/config.json", defaultOptions, {
 				logger: mockLogger,
 				configLoader: mockConfigLoader,
@@ -281,10 +306,20 @@ describe("run command", () => {
 				processExit: mockProcessExit,
 			});
 
-			assert.strictEqual(mockExecutor.plan.mock.calls.length, 1);
+			assert.strictEqual(planMock.mock.calls.length, 1);
 		});
 
 		it("should handle dry run mode", async () => {
+			const executeMock = mock.fn(async () => ({
+				results: mockResults,
+				errors: [],
+				totalRuns: 1,
+				successfulRuns: 1,
+				failedRuns: 0,
+				elapsedMs: 100,
+			}));
+			mockExecutor.execute = executeMock;
+
 			await executeRun(
 				"/test/config.json",
 				{ ...defaultOptions, dryRun: true },
@@ -300,7 +335,7 @@ describe("run command", () => {
 			);
 
 			assert.ok(loggedMessages.includes("[subheader] Dry run - not executing"));
-			assert.strictEqual(mockExecutor.execute.mock.calls.length, 0);
+			assert.strictEqual(executeMock.mock.calls.length, 0);
 		});
 
 		it("should log SUTs and cases in dry run", async () => {
@@ -324,6 +359,16 @@ describe("run command", () => {
 		});
 
 		it("should execute experiments in normal mode", async () => {
+			const executeMock = mock.fn(async () => ({
+				results: mockResults,
+				errors: [],
+				totalRuns: 1,
+				successfulRuns: 1,
+				failedRuns: 0,
+				elapsedMs: 100,
+			}));
+			mockExecutor.execute = executeMock;
+
 			await executeRun("/test/config.json", defaultOptions, {
 				logger: mockLogger,
 				configLoader: mockConfigLoader,
@@ -334,7 +379,7 @@ describe("run command", () => {
 				processExit: mockProcessExit,
 			});
 
-			assert.strictEqual(mockExecutor.execute.mock.calls.length, 1);
+			assert.strictEqual(executeMock.mock.calls.length, 1);
 		});
 
 		it("should log execution summary", async () => {
@@ -355,6 +400,11 @@ describe("run command", () => {
 		});
 
 		it("should write results", async () => {
+			const writeResultsMock = mock.fn(async () => {
+				// Do nothing
+			});
+			mockOutputWriter.writeResults = writeResultsMock;
+
 			await executeRun("/test/config.json", defaultOptions, {
 				logger: mockLogger,
 				configLoader: mockConfigLoader,
@@ -365,10 +415,17 @@ describe("run command", () => {
 				processExit: mockProcessExit,
 			});
 
-			assert.strictEqual(mockOutputWriter.writeResults.mock.calls.length, 1);
+			assert.strictEqual(writeResultsMock.mock.calls.length, 1);
 		});
 
 		it("should aggregate when requested and results exist", async () => {
+			const aggregateResultsMock = mock.fn(() => []);
+			const writeAggregatesMock = mock.fn(async () => {
+				// Do nothing
+			});
+			mockAggregator.aggregateResults = aggregateResultsMock;
+			mockOutputWriter.writeAggregates = writeAggregatesMock;
+
 			await executeRun("/test/config.json", defaultOptions, {
 				logger: mockLogger,
 				configLoader: mockConfigLoader,
@@ -379,11 +436,14 @@ describe("run command", () => {
 				processExit: mockProcessExit,
 			});
 
-			assert.strictEqual(mockAggregator.aggregateResults.mock.calls.length, 1);
-			assert.strictEqual(mockOutputWriter.writeAggregates.mock.calls.length, 1);
+			assert.strictEqual(aggregateResultsMock.mock.calls.length, 1);
+			assert.strictEqual(writeAggregatesMock.mock.calls.length, 1);
 		});
 
 		it("should skip aggregation when noAggregate is true", async () => {
+			const aggregateResultsMock = mock.fn(() => []);
+			mockAggregator.aggregateResults = aggregateResultsMock;
+
 			await executeRun(
 				"/test/config.json",
 				{ ...defaultOptions, noAggregate: true },
@@ -398,7 +458,7 @@ describe("run command", () => {
 				},
 			);
 
-			assert.strictEqual(mockAggregator.aggregateResults.mock.calls.length, 0);
+			assert.strictEqual(aggregateResultsMock.mock.calls.length, 0);
 		});
 
 		it("should call process.exit on error", async () => {

@@ -108,6 +108,10 @@ describe("plan command", () => {
 							continueOnError: true,
 							collectProvenance: false,
 						},
+						metricsExtractor: {
+							module: "./metrics.js",
+							exportName: "extractMetrics",
+						},
 						output: {
 							path: "./results",
 							format: "json-pretty",
@@ -138,10 +142,12 @@ describe("plan command", () => {
 						inputs: {},
 					},
 					getInput: async () => ({}),
-					getInputs: () => ({}),
+					getInputs: () => [],
 				};
 			},
-			loadMetricsExtractor: async () => (result: unknown) => ({}),
+			loadMetricsExtractor: async () => ({
+				extract: (result: unknown, input: unknown) => ({}),
+			}),
 		};
 
 		// Mock executor
@@ -239,7 +245,7 @@ describe("plan command", () => {
 						inputs: {},
 					},
 					getInput: async () => ({}),
-					getInputs: () => ({}),
+					getInputs: () => [],
 				};
 			};
 

@@ -59,7 +59,6 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 		(code) => {
 			process.exit(code);
 		},
-		// eslint-disable-next-line @typescript-eslint/use-unknown-in-catch-callback-variable
 		(error) => {
 			console.error("Fatal error:", error);
 			process.exit(1);
