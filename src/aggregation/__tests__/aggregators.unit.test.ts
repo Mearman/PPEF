@@ -13,6 +13,7 @@ import {
 	computeMaxSpeedup,
 	computeComparison,
 	computeRankings,
+	getTValue,
 } from "../aggregators.js";
 import { createMockResult, createMockResults } from "../../__tests__/test-helpers.js";
 
@@ -389,5 +390,33 @@ describe("computeRankings", () => {
 		assert.strictEqual(rankings.length, 2);
 		// Both have rank 1 and 2 due to sort stability
 		assert.ok(rankings.every((r) => r.value === 0.9));
+	});
+});
+
+describe("getTValue", () => {
+	it("should return t-value from lookup table for 95% CI", () => {
+		const t10 = getTValue(10, 0.975);
+		assert.strictEqual(t10, 2.228);
+
+		const t30 = getTValue(30, 0.975);
+		assert.strictEqual(t30, 2.042);
+
+		const t100 = getTValue(100, 0.975);
+		assert.strictEqual(t100, 1.984);
+	});
+
+	it("should return z-value fallback for non-standard probability", () => {
+		const result = getTValue(50, 0.99);
+		assert.strictEqual(result, 1.96); // z-value for large samples
+	});
+
+	it("should return z-value fallback for 90% CI", () => {
+		const result = getTValue(50, 0.95); // 90% two-tailed = 0.95
+		assert.strictEqual(result, 1.96);
+	});
+
+	it("should return z-value fallback for 99% CI", () => {
+		const result = getTValue(50, 0.995); // 99% two-tailed = 0.995
+		assert.strictEqual(result, 1.96);
 	});
 });

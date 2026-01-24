@@ -106,6 +106,18 @@ describe("schema validators", () => {
 			assert.ok(result.errors.some((e) => e.includes("metrics")));
 		});
 
+		it("should require metrics.numeric to be an object", () => {
+			const result = validateResult({
+				run: { runId: "test-1", sut: "sut-1", sutRole: "primary", caseId: "case-1" },
+				correctness: { expectedExists: true, producedOutput: true, valid: true },
+				metrics: {
+					numeric: "not-an-object",
+				},
+			});
+			assert.strictEqual(result.valid, false);
+			assert.ok(result.errors.some((e) => e.includes("metrics.numeric must be an object")));
+		});
+
 		it("should validate numeric metrics are finite numbers", () => {
 			const result = validateResult({
 				run: { runId: "test-1", sut: "sut-1", sutRole: "primary", caseId: "case-1" },
