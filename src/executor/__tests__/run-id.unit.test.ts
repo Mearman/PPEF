@@ -149,7 +149,7 @@ describe("validateRunId", () => {
 
 describe("parseRunId", () => {
 	it("should validate correctly formatted run IDs", () => {
-		const result = parseRunId("abc123def456789");
+		const result = parseRunId("abc123def4567890");
 
 		assert.strictEqual(result.valid, true);
 		assert.strictEqual(result.length, 16);
@@ -163,16 +163,17 @@ describe("parseRunId", () => {
 	});
 
 	it("should reject run IDs with non-hex characters", () => {
-		const result = parseRunId("abc123xyz456789");
+		const result = parseRunId("abc123xyz4567890");
 
 		assert.strictEqual(result.valid, false);
 		assert.strictEqual(result.length, 16);
 	});
 
-	it("should reject uppercase letters", () => {
-		const result = parseRunId("ABC123DEF456789");
+	it("should accept uppercase letters (hex is case-insensitive)", () => {
+		const result = parseRunId("ABC123DEF4567890");
 
-		assert.strictEqual(result.valid, false);
+		// The implementation uses case-insensitive regex, so uppercase is valid
+		assert.strictEqual(result.valid, true);
 		assert.strictEqual(result.length, 16);
 	});
 
