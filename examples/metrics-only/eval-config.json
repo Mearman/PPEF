@@ -1,0 +1,52 @@
+{
+  "name": "Metrics-Only Evaluation",
+  "description": "Evaluate metrics against threshold and baseline criteria without using claims",
+  "criteria": [
+    {
+      "criterionId": "exec-time-threshold",
+      "description": "Execution time should be under 1000ms",
+      "type": "threshold",
+      "metric": "executionTime",
+      "sut": "*",
+      "threshold": {
+        "operator": "lt",
+        "value": 1000
+      }
+    },
+    {
+      "criterionId": "memory-threshold",
+      "description": "Memory usage should be under 100MB",
+      "type": "threshold",
+      "metric": "memoryUsage",
+      "sut": "*",
+      "threshold": {
+        "operator": "lte",
+        "value": 104857600
+      }
+    },
+    {
+      "criterionId": "accuracy-baseline",
+      "description": "New algorithm should have better accuracy than baseline",
+      "type": "baseline",
+      "metric": "accuracy",
+      "sut": "new-algorithm",
+      "baseline": {
+        "sut": "baseline-algorithm",
+        "operator": "gte"
+      }
+    },
+    {
+      "criterionId": "f1-target-range",
+      "description": "F1 score should be in acceptable range [0.8, 1.0]",
+      "type": "target-range",
+      "metric": "f1Score",
+      "sut": "*",
+      "targetRange": {
+        "min": 0.8,
+        "max": 1.0,
+        "minInclusive": true,
+        "maxInclusive": true
+      }
+    }
+  ]
+}
