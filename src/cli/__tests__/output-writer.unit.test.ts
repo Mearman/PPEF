@@ -219,5 +219,29 @@ describe("output-writer", () => {
 			await unlink(outputPath);
 			await rmdir(tempDir);
 		});
+
+		it("should handle directory creation errors gracefully", async () => {
+			const tempDir = await mkdtemp(join(tmpdir(), "ppef-test-"));
+			const aggregates: AggregationOutput = {
+				version: "1.0.0",
+				timestamp: new Date().toISOString(),
+				aggregates: [],
+			};
+
+			const outputPath = join(tempDir, "aggregates.json");
+			// First write creates directory successfully
+			await writeAggregates(aggregates, outputPath, "json");
+			// Second write hits the catch block in ensureDir (directory already exists)
+			await writeAggregates(aggregates, outputPath, "json");
+
+			// Verify file was written
+			const written = await readFile(outputPath, "utf-8");
+			const data = JSON.parse(written);
+			assert.strictEqual(data.version, "1.0.0");
+
+			// Cleanup
+			await unlink(outputPath);
+			await rmdir(tempDir);
+		});
 	});
 });
