@@ -1,7 +1,18 @@
 /**
- * Claims module exports
+ * Claims Module
  *
- * Universal claim evaluation utilities for hypothesis-driven testing.
+ * Claim types and definitions.
+ *
+ * The claims evaluator has been moved to src/evaluators/claims-evaluator.ts.
+ * Please import from the evaluators module for the new class-based API.
  */
 
-export { evaluateClaim, evaluateClaims, createClaimSummary } from "./evaluator.js";
+export type {
+	ClaimEvaluation,
+	ClaimEvaluationSummary,
+	ClaimEvidence,
+	ClaimStatus,
+	EvaluationClaim,
+	ValidityScope,
+	ComparisonDirection,
+} from "../types/claims.js";

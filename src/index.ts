@@ -22,10 +22,13 @@ export * from "./statistical/index.js";
 // Aggregation
 export * from "./aggregation/index.js";
 
-// Claims
+// Evaluators (new extensible evaluation system)
+export * from "./evaluators/index.js";
+
+// Claims (types only)
 export * from "./claims/index.js";
 
-// Robustness
+// Robustness (types and perturbations only)
 export * from "./robustness/index.js";
 
 // Renderers

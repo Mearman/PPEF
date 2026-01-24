@@ -1,16 +1,21 @@
 /**
  * Robustness Module
  *
- * Re-exports perturbations and robustness analysis.
+ * Robustness types and perturbation definitions.
+ *
+ * The robustness evaluator has been moved to src/evaluators/robustness-evaluator.ts.
+ * Please import from the evaluators module for the new class-based API.
  */
 
-export {
-	analyzeRobustnessForMetric,
-	analyzeRobustnessWithCurve,
-	compareRobustness,
-	createRobustnessAnalysis,
-	type RobustnessAnalysisOptions,
-} from "./analyzer.js";
+export type {
+	RobustnessAnalysisOutput,
+	RobustnessAnalysisResult,
+	RobustnessMetrics,
+	Perturbation,
+	PerturbationType,
+	PerturbationConfig,
+} from "../types/perturbation.js";
+
 export {
 	createPerturbation,
 	edgeRemovalPerturbation,
