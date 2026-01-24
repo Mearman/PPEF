@@ -1,130 +1,147 @@
 /**
  * Unit tests for worker-entry.ts
  *
- * Tests message handling, SUT execution, and error handling for the worker entry point.
+ * Tests WorkerExecutor with injected mock dependencies.
  */
 
-import { beforeEach, describe, it, mock } from "node:test";
+import { describe, it, mock, beforeEach } from "node:test";
 import { strict as assert } from "node:assert";
 
-/**
- * Type definitions for testing
- */
-interface RunConfig {
-	runId: string;
-	sutId: string;
-	caseId: string;
-	repetition: number;
-	config: unknown;
-}
-
-interface ExecutorConfig {
-	repetitions: number;
-	seedBase: number;
-	continueOnError: boolean;
-	timeoutMs: number;
-	collectProvenance: boolean;
-}
-
-interface WorkerMessage {
-	runs: RunConfig[];
-	config: ExecutorConfig;
-}
-
-interface WorkerResponse {
-	results: unknown[];
-	errors: { runId: string; error: string }[];
-}
+import type { EvaluationResult } from "../../types/result.js";
+import {
+	type IDatasetsModule,
+	type IEvaluateModule,
+	type IExecutorModule,
+	type IModuleLoader,
+	type IParentPort,
+	type IRegistryModule,
+	type ISutRegistry,
+	type ISutsModule,
+	type WorkerMessage,
+	WorkerExecutor,
+} from "../worker-executor.js";
 
 describe("worker-entry", () => {
-	const onCalls: { event: string; listener: (data: unknown) => void }[] = [];
-	const postMessageCalls: unknown[] = [];
-
-	let mockParentPort: {
-		on: (event: string, listener: (data: unknown) => void) => void;
-		postMessage: (message: unknown) => void;
-		mock: {
-			on: { calls: { event: string; listener: (data: unknown) => void }[] };
-			postMessage: { calls: unknown[] };
-		};
+	let mockParentPort: IParentPort;
+	let mockModuleLoader: IModuleLoader;
+	let mockExecutorInstance: {
+		execute: ReturnType<typeof mock.fn>;
 	};
-
-	/**
-	 * Mock Executor class for testing
-	 */
-	class MockExecutor {
-		execute: (
-			suts: unknown,
-			cases: unknown,
-			callback: () => unknown,
-		) => Promise<{
-			results: unknown[];
-			errors: { runId: string; error: string }[];
-		}>;
-
-		constructor(config: ExecutorConfig) {
-			this.execute = async (
-				_suts: unknown,
-				_cases: unknown,
-				_callback: () => unknown,
-			): Promise<{
-				results: unknown[];
-				errors: { runId: string; error: string }[];
-			}> => {
-				return {
-					results: [{ runId: "test-1", value: "success" }],
-					errors: [],
-				};
-			};
-		}
-	}
-
-	let mockExecutorInstance: MockExecutor;
-
 	let postedMessages: unknown[];
+	let onListeners: { event: string; listener: (data: unknown) => void }[];
 
 	beforeEach(() => {
 		postedMessages = [];
-		onCalls.length = 0;
-		postMessageCalls.length = 0;
+		onListeners = [];
 
 		// Mock parentPort
 		mockParentPort = {
-			on: (event: string, listener: (data: unknown) => void) => {
-				onCalls.push({ event, listener });
-			},
-			postMessage: (message: unknown) => {
-				postMessageCalls.push(message);
+			on: mock.fn((event: string, listener: (data: unknown) => void) => {
+				onListeners.push({ event, listener });
+			}),
+			postMessage: mock.fn((message: unknown) => {
 				postedMessages.push(message);
-			},
-			mock: {
-				on: { calls: onCalls },
-				postMessage: { calls: postMessageCalls },
-			},
+			}),
 		};
 
-		// Create mock Executor instance
-		mockExecutorInstance = new MockExecutor({
-			repetitions: 1,
-			seedBase: 42,
-			continueOnError: true,
-			timeoutMs: 5000,
-			collectProvenance: false,
-		});
-	});
-
-	describe("Message handling with valid run configuration", () => {
-		it("should accept valid WorkerMessage with runs array", () => {
-			const validMessage: WorkerMessage = {
-				runs: [
+		// Mock executor instance
+		mockExecutorInstance = {
+			execute: mock.fn(async () => ({
+				results: [
 					{
-						runId: "test-run-1",
+						runId: "test-1",
 						sutId: "sut-1",
 						caseId: "case-1",
 						repetition: 0,
-						config: {},
+						seed: 42,
+						input: {},
+						output: {},
+						metrics: {},
+						startedAt: new Date().toISOString(),
+						completedAt: new Date().toISOString(),
+						durationMs: 100,
 					},
-				],
+				] as EvaluationResult[],
+				errors: [],
+			})),
+		};
+
+		// Mock Executor constructor
+		const MockExecutor = mock.fn(function (this: unknown) {
+			return mockExecutorInstance;
+		});
+
+		// Mock module loader
+		mockModuleLoader = {
+			loadExecutor: async (): Promise<IExecutorModule> => {
+				return {
+					Executor: MockExecutor as unknown as new (...args: unknown[]) => unknown,
+				} as IExecutorModule;
+			},
+			loadEvaluate: async (): Promise<IEvaluateModule> => {
+				return {
+					getSutDefinitions: () => ({}),
+					getCaseDefinitions: () => ({}),
+				} as IEvaluateModule;
+			},
+			loadRegistry: async (): Promise<IRegistryModule> => {
+				return {
+					registerAllBenchmarkCases: async () => ({}),
+				} as IRegistryModule;
+			},
+			loadSuts: async (): Promise<ISutsModule> => {
+				return {
+					registerAllSuts: () => ({}),
+				} as ISutsModule;
+			},
+			loadDatasets: async (): Promise<IDatasetsModule> => {
+				return {
+					registerBenchmarkDatasets: async () => ({}),
+				} as IDatasetsModule;
+			},
+		};
+	});
+
+	describe("WorkerExecutor", () => {
+		it("should register message listener on start", () => {
+			const executor = new WorkerExecutor(mockParentPort, mockModuleLoader, "/test/root");
+			executor.start();
+
+			assert.strictEqual(onListeners.length, 1);
+			assert.strictEqual(onListeners[0].event, "message");
+			assert.strictEqual(typeof onListeners[0].listener, "function");
+		});
+
+		it("should call module loader methods in order", async () => {
+			const callOrder: string[] = [];
+
+			// Wrap each loader method to track call order
+			const originalLoader = mockModuleLoader;
+			mockModuleLoader = {
+				loadExecutor: async (...args: unknown[]) => {
+					callOrder.push("loadExecutor");
+					return originalLoader.loadExecutor(...args);
+				},
+				loadEvaluate: async (...args: unknown[]) => {
+					callOrder.push("loadEvaluate");
+					return originalLoader.loadEvaluate(...args);
+				},
+				loadRegistry: async (...args: unknown[]) => {
+					callOrder.push("loadRegistry");
+					return originalLoader.loadRegistry(...args);
+				},
+				loadSuts: async (...args: unknown[]) => {
+					callOrder.push("loadSuts");
+					return originalLoader.loadSuts(...args);
+				},
+				loadDatasets: async (...args: unknown[]) => {
+					callOrder.push("loadDatasets");
+					return originalLoader.loadDatasets(...args);
+				},
+			};
+
+			const message: WorkerMessage = {
+				runs: [{ runId: "test-1", sutId: "sut-1", caseId: "case-1", repetition: 0, config: {} }],
 				config: {
 					repetitions: 1,
 					seedBase: 42,
@@ -134,281 +151,167 @@ describe("worker-entry", () => {
 				},
 			};
 
-			// Validate message structure
-			assert.ok(Array.isArray(validMessage.runs));
-			assert.strictEqual(validMessage.runs.length, 1);
-			assert.strictEqual(validMessage.runs[0].runId, "test-run-1");
-			assert.strictEqual(validMessage.config.repetitions, 1);
-			assert.strictEqual(validMessage.config.seedBase, 42);
+			const executor = new WorkerExecutor(mockParentPort, mockModuleLoader, "/test/root");
+			await executor.handleMessage(message);
+
+			// Verify all module loaders were called in the expected order
+			assert.strictEqual(callOrder.length, 5);
+			assert.strictEqual(callOrder[0], "loadExecutor");
+			assert.strictEqual(callOrder[1], "loadEvaluate");
+			assert.strictEqual(callOrder[2], "loadRegistry");
+			assert.strictEqual(callOrder[3], "loadSuts");
+			assert.strictEqual(callOrder[4], "loadDatasets");
 		});
 
-		it("should accept valid WorkerMessage with multiple runs", () => {
-			const validMessage: WorkerMessage = {
-				runs: [
-					{
-						runId: "test-run-1",
-						sutId: "sut-1",
-						caseId: "case-1",
-						repetition: 0,
-						config: {},
-					},
-					{
-						runId: "test-run-2",
-						sutId: "sut-2",
-						caseId: "case-2",
-						repetition: 1,
-						config: {},
-					},
-					{
-						runId: "test-run-3",
-						sutId: "sut-1",
-						caseId: "case-2",
-						repetition: 0,
-						config: {},
-					},
-				],
+		it("should post done message on successful execution", async () => {
+			const message: WorkerMessage = {
+				runs: [{ runId: "test-1", sutId: "sut-1", caseId: "case-1", repetition: 0, config: {} }],
 				config: {
-					repetitions: 3,
-					seedBase: 100,
+					repetitions: 1,
+					seedBase: 42,
+					continueOnError: true,
+					timeoutMs: 5000,
+					collectProvenance: false,
+				},
+			};
+
+			const executor = new WorkerExecutor(mockParentPort, mockModuleLoader, "/test/root");
+			await executor.handleMessage(message);
+
+			assert.strictEqual(postedMessages.length, 1);
+			const posted = postedMessages[0] as { type: string; results: EvaluationResult[] };
+			assert.strictEqual(posted.type, "done");
+			assert.ok(Array.isArray(posted.results));
+			assert.strictEqual(posted.results.length, 1);
+		});
+
+		it("should post error message on exception", async () => {
+			// Make loadExecutor throw an error
+			mockModuleLoader.loadExecutor = async (): Promise<IExecutorModule> => {
+				throw new Error("Module not found");
+			};
+
+			const message: WorkerMessage = {
+				runs: [{ runId: "test-1", sutId: "sut-1", caseId: "case-1", repetition: 0, config: {} }],
+				config: {
+					repetitions: 1,
+					seedBase: 42,
+					continueOnError: true,
+					timeoutMs: 5000,
+					collectProvenance: false,
+				},
+			};
+
+			const executor = new WorkerExecutor(mockParentPort, mockModuleLoader, "/test/root");
+			await executor.handleMessage(message);
+
+			assert.strictEqual(postedMessages.length, 1);
+			const posted = postedMessages[0] as { type: string; error: string };
+			assert.strictEqual(posted.type, "error");
+			assert.strictEqual(posted.error, "Module not found");
+		});
+
+		it("should post error message with string error", async () => {
+			mockModuleLoader.loadExecutor = async (): Promise<IExecutorModule> => {
+				throw new Error("String error");
+			};
+
+			const message: WorkerMessage = {
+				runs: [{ runId: "test-1", sutId: "sut-1", caseId: "case-1", repetition: 0, config: {} }],
+				config: {
+					repetitions: 1,
+					seedBase: 42,
+					continueOnError: true,
+					timeoutMs: 5000,
+					collectProvenance: false,
+				},
+			};
+
+			const executor = new WorkerExecutor(mockParentPort, mockModuleLoader, "/test/root");
+			await executor.handleMessage(message);
+
+			assert.strictEqual(postedMessages.length, 1);
+			const posted = postedMessages[0] as { type: string; error: string };
+			assert.strictEqual(posted.type, "error");
+			assert.strictEqual(posted.error, "String error");
+		});
+
+		it("should pass executor config to Executor constructor", async () => {
+			const MockExecutor = mock.fn(function (this: unknown, config: unknown) {
+				mockExecutorInstance.execute = async () => ({
+					results: [],
+					errors: [],
+				});
+				return mockExecutorInstance;
+			});
+
+			mockModuleLoader.loadExecutor = async (): Promise<IExecutorModule> => {
+				return {
+					Executor: MockExecutor as unknown as new (...args: unknown[]) => unknown,
+				} as IExecutorModule;
+			};
+
+			const message: WorkerMessage = {
+				runs: [{ runId: "test-1", sutId: "sut-1", caseId: "case-1", repetition: 0, config: {} }],
+				config: {
+					repetitions: 5,
+					seedBase: 999,
 					continueOnError: false,
-					timeoutMs: 10000,
+					timeoutMs: 15000,
 					collectProvenance: true,
 				},
 			};
 
-			assert.strictEqual(validMessage.runs.length, 3);
-			assert.strictEqual(validMessage.config.repetitions, 3);
-			assert.strictEqual(validMessage.config.collectProvenance, true);
+			const executor = new WorkerExecutor(mockParentPort, mockModuleLoader, "/test/root");
+			await executor.handleMessage(message);
+
+			// Verify Executor was constructed with correct config
+			assert.strictEqual(MockExecutor.mock.calls.length, 1);
+			const executorConfig = MockExecutor.mock.calls[0].arguments[0];
+			assert.strictEqual(executorConfig.repetitions, 5);
+			assert.strictEqual(executorConfig.seedBase, 999);
+			assert.strictEqual(executorConfig.continueOnError, false);
+			assert.strictEqual(executorConfig.timeoutMs, 15000);
+			assert.strictEqual(executorConfig.collectProvenance, true);
 		});
 
-		it("should accept WorkerMessage with empty runs array", () => {
-			const validMessage: WorkerMessage = {
-				runs: [],
-				config: {
-					repetitions: 1,
-					seedBase: 0,
-					continueOnError: false,
-					timeoutMs: 1000,
-					collectProvenance: false,
-				},
-			};
-
-			assert.strictEqual(validMessage.runs.length, 0);
-			assert.ok(Array.isArray(validMessage.runs));
-		});
-
-		it("should validate run config structure", () => {
-			const runConfig: RunConfig = {
-				runId: "run-001",
-				sutId: "my-sut",
-				caseId: "test-case",
-				repetition: 5,
-				config: { param1: "value1", param2: 42 },
-			};
-
-			assert.strictEqual(typeof runConfig.runId, "string");
-			assert.strictEqual(typeof runConfig.sutId, "string");
-			assert.strictEqual(typeof runConfig.caseId, "string");
-			assert.strictEqual(typeof runConfig.repetition, "number");
-			assert.ok(runConfig.repetition >= 0);
-		});
-
-		it("should validate executor config structure", () => {
-			const executorConfig: ExecutorConfig = {
-				repetitions: 10,
-				seedBase: 12345,
-				continueOnError: true,
-				timeoutMs: 30000,
-				collectProvenance: true,
-			};
-
-			assert.strictEqual(typeof executorConfig.repetitions, "number");
-			assert.strictEqual(typeof executorConfig.seedBase, "number");
-			assert.strictEqual(typeof executorConfig.continueOnError, "boolean");
-			assert.strictEqual(typeof executorConfig.timeoutMs, "number");
-			assert.strictEqual(typeof executorConfig.collectProvenance, "boolean");
-		});
-	});
-
-	describe("SUT execution and result return", () => {
-		it("should create Executor with config from message", () => {
+		it("should handle multiple runs in a batch", async () => {
 			const message: WorkerMessage = {
 				runs: [
-					{
-						runId: "test-1",
-						sutId: "sut-1",
-						caseId: "case-1",
-						repetition: 0,
-						config: {},
-					},
+					{ runId: "test-1", sutId: "sut-1", caseId: "case-1", repetition: 0, config: {} },
+					{ runId: "test-2", sutId: "sut-2", caseId: "case-2", repetition: 1, config: {} },
+					{ runId: "test-3", sutId: "sut-1", caseId: "case-2", repetition: 0, config: {} },
 				],
 				config: {
-					repetitions: 5,
-					seedBase: 999,
+					repetitions: 3,
+					seedBase: 100,
 					continueOnError: true,
-					timeoutMs: 15000,
+					timeoutMs: 10000,
 					collectProvenance: false,
 				},
 			};
 
-			const executor = new MockExecutor(message.config);
-
-			assert.ok(executor instanceof MockExecutor);
-			assert.ok(executor.execute);
-		});
-
-		it("should return WorkerResponse with results", async () => {
-			const message: WorkerMessage = {
-				runs: [
-					{
-						runId: "test-1",
-						sutId: "sut-1",
-						caseId: "case-1",
-						repetition: 0,
-						config: {},
-					},
-				],
-				config: {
-					repetitions: 1,
-					seedBase: 42,
-					continueOnError: true,
-					timeoutMs: 5000,
-					collectProvenance: false,
-				},
-			};
-
-			const executor = new MockExecutor(message.config);
-			const mockSuts = {};
-			const mockCases = {};
-			const mockCallback = () => ({});
-
-			const result = await executor.execute(mockSuts, mockCases, mockCallback);
-
-			assert.ok(result.results);
-			assert.ok(Array.isArray(result.results));
-			assert.ok(result.errors);
-			assert.ok(Array.isArray(result.errors));
-		});
-
-		it("should post message with type 'done' on success", async () => {
-			const message: WorkerMessage = {
-				runs: [
-					{
-						runId: "test-1",
-						sutId: "sut-1",
-						caseId: "case-1",
-						repetition: 0,
-						config: {},
-					},
-				],
-				config: {
-					repetitions: 1,
-					seedBase: 42,
-					continueOnError: true,
-					timeoutMs: 5000,
-					collectProvenance: false,
-				},
-			};
-
-			// Simulate successful execution
-			const response: WorkerResponse = {
-				results: [{ runId: "test-1", value: "success" }],
-				errors: [],
-			};
-
-			// Simulate posting the response
-			const successMessage = { type: "done", ...response };
-			mockParentPort.postMessage(successMessage);
+			const executor = new WorkerExecutor(mockParentPort, mockModuleLoader, "/test/root");
+			await executor.handleMessage(message);
 
 			assert.strictEqual(postedMessages.length, 1);
-			const posted = postedMessages[0] as { type: string; results: unknown[] };
+			const posted = postedMessages[0] as { type: string; results: EvaluationResult[] };
 			assert.strictEqual(posted.type, "done");
-			assert.ok(posted.results);
 			assert.ok(Array.isArray(posted.results));
 		});
-
-		it("should include all results in WorkerResponse", () => {
-			const response: WorkerResponse = {
-				results: [
-					{ runId: "test-1", value: "result1" },
-					{ runId: "test-2", value: "result2" },
-					{ runId: "test-3", value: "result3" },
-				],
-				errors: [],
-			};
-
-			assert.strictEqual(response.results.length, 3);
-			const result0 = response.results[0] as { runId: string };
-			const result1 = response.results[1] as { runId: string };
-			const result2 = response.results[2] as { runId: string };
-			assert.strictEqual(result0.runId, "test-1");
-			assert.strictEqual(result1.runId, "test-2");
-			assert.strictEqual(result2.runId, "test-3");
-		});
-
-		it("should include errors in WorkerResponse when present", () => {
-			const response: WorkerResponse = {
-				results: [{ runId: "test-1", value: "success" }],
-				errors: [
-					{ runId: "test-2", error: "Timeout exceeded" },
-					{ runId: "test-3", error: "Invalid configuration" },
-				],
-			};
-
-			assert.strictEqual(response.errors.length, 2);
-			assert.strictEqual(response.errors[0].runId, "test-2");
-			assert.strictEqual(response.errors[0].error, "Timeout exceeded");
-			assert.strictEqual(response.errors[1].runId, "test-3");
-			assert.strictEqual(response.errors[1].error, "Invalid configuration");
-		});
 	});
 
-	describe("Error handling for invalid messages", () => {
-		it("should post message with type 'error' on exception", async () => {
-			// Simulate error during execution
-			const errorMessage = {
-				type: "error",
-				error: "Failed to import executor module",
+	describe("executeBatch", () => {
+		it("should call registerBenchmarkDatasets on datasets module", async () => {
+			const registerSpy = mock.fn(async () => ({}));
+			mockModuleLoader.loadDatasets = async (): Promise<IDatasetsModule> => {
+				return {
+					registerBenchmarkDatasets: registerSpy,
+				} as IDatasetsModule;
 			};
 
-			mockParentPort.postMessage(errorMessage);
-
-			assert.strictEqual(postedMessages.length, 1);
-			const posted = postedMessages[0] as { type: string; error: string };
-			assert.strictEqual(posted.type, "error");
-			assert.strictEqual(typeof posted.error, "string");
-		});
-
-		it("should handle Error objects in error messages", () => {
-			const error = new Error("Test error message");
-			const errorMessage = {
-				type: "error",
-				error: error.message,
-			};
-
-			mockParentPort.postMessage(errorMessage);
-
-			assert.strictEqual(postedMessages.length, 1);
-			const posted = postedMessages[0] as { type: string; error: string };
-			assert.strictEqual(posted.error, "Test error message");
-		});
-
-		it("should handle non-Error objects in error messages", () => {
-			const errorMessage = {
-				type: "error",
-				error: "String error representation",
-			};
-
-			mockParentPort.postMessage(errorMessage);
-
-			assert.strictEqual(postedMessages.length, 1);
-			const posted = postedMessages[0] as { type: string; error: string };
-			assert.strictEqual(posted.error, "String error representation");
-		});
-
-		it("should handle missing runs array in message", () => {
-			const invalidMessage = {
-				runs: undefined,
+			const message: WorkerMessage = {
+				runs: [{ runId: "test-1", sutId: "sut-1", caseId: "case-1", repetition: 0, config: {} }],
 				config: {
 					repetitions: 1,
 					seedBase: 42,
@@ -418,139 +321,91 @@ describe("worker-entry", () => {
 				},
 			};
 
-			// This would cause a runtime error when trying to access runs array
-			// The worker should catch this and post an error message
-			const errorMessage = {
-				type: "error",
-				error: "Invalid message structure",
-			};
+			const executor = new WorkerExecutor(mockParentPort, mockModuleLoader, "/test/root");
+			await executor.executeBatch(message);
 
-			mockParentPort.postMessage(errorMessage);
-
-			assert.strictEqual(postedMessages.length, 1);
-			const posted = postedMessages[0] as { type: string; error: string };
-			assert.strictEqual(posted.type, "error");
+			assert.strictEqual(registerSpy.mock.calls.length, 1);
 		});
 
-		it("should handle missing config in message", () => {
-			const invalidMessage = {
-				runs: [
-					{
-						runId: "test-1",
-						sutId: "sut-1",
-						caseId: "case-1",
-						repetition: 0,
-						config: {},
+		it("should call registerAllSuts on SUTs module", async () => {
+			const registerSpy = mock.fn(() => ({}));
+			mockModuleLoader.loadSuts = async (): Promise<ISutsModule> => {
+				return {
+					registerAllSuts: registerSpy,
+				} as ISutsModule;
+			};
+
+			const message: WorkerMessage = {
+				runs: [{ runId: "test-1", sutId: "sut-1", caseId: "case-1", repetition: 0, config: {} }],
+				config: {
+					repetitions: 1,
+					seedBase: 42,
+					continueOnError: true,
+					timeoutMs: 5000,
+					collectProvenance: false,
+				},
+			};
+
+			const executor = new WorkerExecutor(mockParentPort, mockModuleLoader, "/test/root");
+			await executor.executeBatch(message);
+
+			assert.strictEqual(registerSpy.mock.calls.length, 1);
+		});
+
+		it("should call registerAllBenchmarkCases on registry module", async () => {
+			const registerSpy = mock.fn(async () => ({}));
+			mockModuleLoader.loadRegistry = async (): Promise<IRegistryModule> => {
+				return {
+					registerAllBenchmarkCases: registerSpy,
+				} as IRegistryModule;
+			};
+
+			const message: WorkerMessage = {
+				runs: [{ runId: "test-1", sutId: "sut-1", caseId: "case-1", repetition: 0, config: {} }],
+				config: {
+					repetitions: 1,
+					seedBase: 42,
+					continueOnError: true,
+					timeoutMs: 5000,
+					collectProvenance: false,
+				},
+			};
+
+			const executor = new WorkerExecutor(mockParentPort, mockModuleLoader, "/test/root");
+			await executor.executeBatch(message);
+
+			assert.strictEqual(registerSpy.mock.calls.length, 1);
+		});
+
+		it("should create sutRegistry with list and getFactory methods", async () => {
+			let capturedSutRegistry: ISutRegistry | undefined;
+			mockModuleLoader.loadEvaluate = async (): Promise<IEvaluateModule> => {
+				return {
+					getSutDefinitions: (registry: ISutRegistry) => {
+						capturedSutRegistry = registry;
+						return {};
 					},
-				],
-				config: undefined,
+					getCaseDefinitions: () => ({}),
+				} as IEvaluateModule;
 			};
 
-			// This would cause a runtime error when trying to access config
-			// The worker should catch this and post an error message
-			const errorMessage = {
-				type: "error",
-				error: "Invalid message structure",
+			const message: WorkerMessage = {
+				runs: [{ runId: "test-1", sutId: "sut-1", caseId: "case-1", repetition: 0, config: {} }],
+				config: {
+					repetitions: 1,
+					seedBase: 42,
+					continueOnError: true,
+					timeoutMs: 5000,
+					collectProvenance: false,
+				},
 			};
 
-			mockParentPort.postMessage(errorMessage);
+			const executor = new WorkerExecutor(mockParentPort, mockModuleLoader, "/test/root");
+			await executor.executeBatch(message);
 
-			assert.strictEqual(postedMessages.length, 1);
-			const posted = postedMessages[0] as { type: string; error: string };
-			assert.strictEqual(posted.type, "error");
-		});
-
-		it("should handle null message data", () => {
-			const invalidMessage = null;
-
-			// When message is null, type assertion to WorkerMessage will fail
-			// The worker should catch this and post an error message
-			const errorMessage = {
-				type: "error",
-				error: "Cannot read properties of null",
-			};
-
-			mockParentPort.postMessage(errorMessage);
-
-			assert.strictEqual(postedMessages.length, 1);
-			const posted = postedMessages[0] as { type: string; error: string };
-			assert.strictEqual(posted.type, "error");
-		});
-	});
-
-	describe("Worker message listener registration", () => {
-		it("should register listener for 'message' event", () => {
-			const eventName = "message";
-			const listener = (data: unknown) => {
-				// Mock listener
-			};
-
-			mockParentPort.on(eventName, listener);
-
-			assert.strictEqual(mockParentPort.mock.on.calls.length, 1);
-			assert.strictEqual(mockParentPort.mock.on.calls[0].event, "message");
-			assert.strictEqual(typeof mockParentPort.mock.on.calls[0].listener, "function");
-		});
-
-		it("should handle asynchronous execution without blocking", async () => {
-			let executionCompleted = false;
-
-			// Simulate async execution
-			const asyncExecution = async () => {
-				await new Promise((resolve) => setTimeout(resolve, 10));
-				executionCompleted = true;
-				return { results: [], errors: [] };
-			};
-
-			// Start execution (non-blocking)
-			const executionPromise = asyncExecution();
-
-			// Should not block
-			assert.strictEqual(executionCompleted, false);
-
-			// Wait for completion
-			await executionPromise;
-			assert.strictEqual(executionCompleted, true);
-		});
-	});
-
-	describe("Response message structure", () => {
-		it("should maintain type field in done response", () => {
-			const response: WorkerResponse = {
-				results: [{ runId: "test-1", value: "success" }],
-				errors: [],
-			};
-
-			const doneMessage = { type: "done", ...response };
-
-			assert.strictEqual(doneMessage.type, "done");
-			assert.ok("results" in doneMessage);
-			assert.ok("errors" in doneMessage);
-		});
-
-		it("should maintain type field in error response", () => {
-			const errorMessage = {
-				type: "error",
-				error: "Something went wrong",
-			};
-
-			assert.strictEqual(errorMessage.type, "error");
-			assert.ok("error" in errorMessage);
-			assert.ok(!("results" in errorMessage));
-		});
-
-		it("should preserve error message content", () => {
-			const testCases = [
-				"Module not found",
-				"Timeout exceeded",
-				"Invalid configuration",
-				"Null reference error",
-			];
-
-			for (const error of testCases) {
-				const errorMessage = { type: "error", error };
-				assert.strictEqual(errorMessage.error, error);
-			}
+			assert.ok(capturedSutRegistry);
+			assert.strictEqual(typeof capturedSutRegistry.list, "function");
+			assert.strictEqual(typeof capturedSutRegistry.getFactory, "function");
 		});
 	});
 });
