@@ -322,7 +322,11 @@ describe("perturbations", () => {
 
 		it("should throw error for unknown perturbation type", () => {
 			assert.throws(
-				() => createPerturbation({ type: "unknown-type", intensity: 0.1 }),
+				() =>
+					createPerturbation({
+						type: "unknown-type" as never,
+						intensity: 0.1,
+					}),
 				/Unknown perturbation type: unknown-type/,
 			);
 		});

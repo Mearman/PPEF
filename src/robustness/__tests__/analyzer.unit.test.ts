@@ -28,17 +28,18 @@ function createMockResult(
 	perturbationIntensity?: number,
 	perturbation?: string,
 ): EvaluationResult {
+	const config: Record<string, string | number> = {};
+	if (perturbation !== undefined) config.perturbation = perturbation;
+	if (perturbationIntensity !== undefined) config.perturbationIntensity = perturbationIntensity;
+
 	return {
 		run: {
 			runId: `run-${Math.random()}`,
 			sut: "test-sut",
-			case: "test-case",
+			sutRole: "primary",
+			caseId: "test-case",
 			repetition: 0,
-			timestamp: new Date().toISOString(),
-			config: {
-				perturbation,
-				perturbationIntensity,
-			},
+			config: Object.keys(config).length > 0 ? config : undefined,
 		},
 		metrics: {
 			numeric: {
@@ -46,7 +47,20 @@ function createMockResult(
 				precision: metricValue * 0.9,
 				recall: metricValue * 0.95,
 			},
-			categorical: {},
+		},
+		correctness: {
+			expectedExists: true,
+			producedOutput: true,
+			valid: true,
+			matchesExpected: true,
+		},
+		outputs: {},
+		provenance: {
+			runtime: {
+				platform: "test",
+				arch: "test",
+				nodeVersion: "test",
+			},
 		},
 	};
 }
@@ -225,7 +239,7 @@ describe("analyzeRobustnessWithCurve", () => {
 		const result = analyzeRobustnessWithCurve(results, "accuracy", [1, 2]);
 
 		// Should have degradation curve points
-		assert.ok(result.degradationCurve.length >= 2);
+		assert.ok(result.degradationCurve!.length >= 2);
 	});
 
 	it("should include level 0 (base) in degradation curve", () => {
@@ -237,7 +251,7 @@ describe("analyzeRobustnessWithCurve", () => {
 		const result = analyzeRobustnessWithCurve(results, "accuracy", [1]);
 
 		// Should have base level
-		const baseLevel = result.degradationCurve.find((d) => d.perturbationLevel === 0);
+		const baseLevel = result.degradationCurve!.find((d) => d.perturbationLevel === 0);
 		assert.ok(baseLevel);
 		assert.strictEqual(baseLevel.metricValue, 0.85);
 	});
@@ -252,10 +266,10 @@ describe("analyzeRobustnessWithCurve", () => {
 		const result = analyzeRobustnessWithCurve(results, "accuracy", [1, 2]);
 
 		// Check sorted order
-		for (let i = 1; i < result.degradationCurve.length; i++) {
+		for (let i = 1; i < result.degradationCurve!.length; i++) {
 			assert.ok(
-				result.degradationCurve[i].perturbationLevel >=
-					result.degradationCurve[i - 1].perturbationLevel,
+				result.degradationCurve![i].perturbationLevel >=
+					result.degradationCurve![i - 1].perturbationLevel,
 			);
 		}
 	});
@@ -265,7 +279,7 @@ describe("analyzeRobustnessWithCurve", () => {
 
 		const result = analyzeRobustnessWithCurve(results, "accuracy", [1]);
 
-		const level1 = result.degradationCurve.find((d) => d.perturbationLevel === 1);
+		const level1 = result.degradationCurve!.find((d) => d.perturbationLevel === 1);
 		assert.ok(level1);
 		assert.ok(level1.stdDev !== undefined);
 	});
@@ -321,8 +335,8 @@ describe("analyzeRobustnessWithCurve", () => {
 		const result = analyzeRobustnessWithCurve(results, "accuracy", [1, 2, 3]);
 
 		// Should only have levels with data
-		assert.ok(result.degradationCurve.length >= 1);
-		assert.ok(result.degradationCurve.length <= 2); // Base + level 1
+		assert.ok(result.degradationCurve!.length >= 1);
+		assert.ok(result.degradationCurve!.length <= 2); // Base + level 1
 	});
 
 	it("should filter NaN values from curve computation", () => {
@@ -330,7 +344,7 @@ describe("analyzeRobustnessWithCurve", () => {
 
 		const result = analyzeRobustnessWithCurve(results, "accuracy", [1]);
 
-		const level1 = result.degradationCurve.find((d) => d.perturbationLevel === 1);
+		const level1 = result.degradationCurve!.find((d) => d.perturbationLevel === 1);
 		assert.ok(level1);
 		// Should compute from non-NaN values
 		assert.strictEqual(level1.metricValue, 0.82);

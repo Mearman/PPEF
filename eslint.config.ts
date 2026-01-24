@@ -1,5 +1,6 @@
 import eslint from "@eslint/js";
 import markdown from "@eslint/markdown";
+import eslintComments from "@eslint-community/eslint-plugin-eslint-comments";
 import jsonc from "eslint-plugin-jsonc";
 import tseslint from "typescript-eslint";
 import prettierRecommended from "eslint-config-prettier";
@@ -8,11 +9,7 @@ import prettierPlugin from "eslint-plugin-prettier";
 export default [
 	// Ignore patterns
 	{
-		ignores: [
-			"dist/**",
-			"coverage/**",
-			"node_modules/**",
-		],
+		ignores: ["dist/**", "coverage/**", "node_modules/**"],
 	},
 
 	// Base JavaScript/TypeScript rules (scoped to JS/TS files only)
@@ -55,10 +52,14 @@ export default [
 	// TypeScript files - custom rule overrides
 	{
 		files: ["**/*.ts", "**/*.tsx"],
+		plugins: {
+			"eslint-comments": eslintComments,
+		},
 		rules: {
 			indent: ["error", "tab"],
 			quotes: ["error", "double", { avoidEscape: true }],
 			"@typescript-eslint/restrict-template-expressions": ["error", { allowNumber: true }],
+			"eslint-comments/no-use": ["error", { allow: [] }],
 		},
 	},
 
@@ -93,6 +94,9 @@ export default [
 	// Test files - relax strict rules
 	{
 		files: ["**/*.test.ts", "**/*.spec.ts"],
+		plugins: {
+			"eslint-comments": eslintComments,
+		},
 		rules: {
 			"@typescript-eslint/no-floating-promises": "off",
 			"@typescript-eslint/require-await": "off",
@@ -105,6 +109,7 @@ export default [
 			"@typescript-eslint/ban-ts-comment": "off",
 			"@typescript-eslint/no-unused-vars": "off",
 			"@typescript-eslint/no-empty-function": "off",
+			"eslint-comments/no-use": "off",
 		},
 	},
 ];
