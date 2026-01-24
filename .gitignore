@@ -45,3 +45,4 @@ Thumbs.db
 *.temp
 .cache/
 test-checkpoints/
+test-parallel-executor/
