@@ -55,11 +55,7 @@ function createMockResult(
  * Create mock base results.
  */
 function createBaseResults(): EvaluationResult[] {
-	return [
-		createMockResult(0.85),
-		createMockResult(0.87),
-		createMockResult(0.86),
-	];
+	return [createMockResult(0.85), createMockResult(0.87), createMockResult(0.86)];
 }
 
 /**
@@ -73,7 +69,7 @@ describe("analyzeRobustnessForMetric", () => {
 	describe("with valid base and perturbed results", () => {
 		it("should compute variance under perturbation", () => {
 			const baseResults = createBaseResults();
-			const perturbedResults = createPerturbedResults([0.82, 0.84, 0.86, 0.88, 0.90]);
+			const perturbedResults = createPerturbedResults([0.82, 0.84, 0.86, 0.88, 0.9]);
 
 			const result = analyzeRobustnessForMetric(baseResults, perturbedResults, "accuracy");
 
@@ -84,7 +80,7 @@ describe("analyzeRobustnessForMetric", () => {
 
 		it("should compute standard deviation under perturbation", () => {
 			const baseResults = createBaseResults();
-			const perturbedResults = createPerturbedResults([0.80, 0.85, 0.90]);
+			const perturbedResults = createPerturbedResults([0.8, 0.85, 0.9]);
 
 			const result = analyzeRobustnessForMetric(baseResults, perturbedResults, "accuracy");
 
@@ -95,7 +91,7 @@ describe("analyzeRobustnessForMetric", () => {
 
 		it("should compute coefficient of variation for non-zero mean", () => {
 			const baseResults = createBaseResults();
-			const perturbedResults = createPerturbedResults([0.82, 0.84, 0.86, 0.88, 0.90]);
+			const perturbedResults = createPerturbedResults([0.82, 0.84, 0.86, 0.88, 0.9]);
 
 			const result = analyzeRobustnessForMetric(baseResults, perturbedResults, "accuracy");
 
@@ -265,11 +261,7 @@ describe("analyzeRobustnessWithCurve", () => {
 	});
 
 	it("should include stdDev in degradation curve", () => {
-		const results = [
-			createMockResult(0.85),
-			createMockResult(0.82, 1),
-			createMockResult(0.84, 1),
-		];
+		const results = [createMockResult(0.85), createMockResult(0.82, 1), createMockResult(0.84, 1)];
 
 		const result = analyzeRobustnessWithCurve(results, "accuracy", [1]);
 
@@ -280,9 +272,9 @@ describe("analyzeRobustnessWithCurve", () => {
 
 	it("should detect breakpoint when degradation exceeds 10%", () => {
 		const results = [
-			createMockResult(0.90), // Base
+			createMockResult(0.9), // Base
 			createMockResult(0.89, 1), // 1.1% change - no breakpoint
-			createMockResult(0.80, 2), // 11% change - breakpoint!
+			createMockResult(0.8, 2), // 11% change - breakpoint!
 		];
 
 		const result = analyzeRobustnessWithCurve(results, "accuracy", [1, 2]);
@@ -293,7 +285,7 @@ describe("analyzeRobustnessWithCurve", () => {
 
 	it("should not detect breakpoint when degradation is under 10%", () => {
 		const results = [
-			createMockResult(0.90), // Base
+			createMockResult(0.9), // Base
 			createMockResult(0.89, 1), // 1.1% change
 			createMockResult(0.88, 2), // 2.2% change
 		];
@@ -310,7 +302,7 @@ describe("analyzeRobustnessWithCurve", () => {
 			createMockResult(0.82, 1),
 			createMockResult(0.84, 1),
 			createMockResult(0.78, 2),
-			createMockResult(0.80, 2),
+			createMockResult(0.8, 2),
 		];
 
 		const result = analyzeRobustnessWithCurve(results, "accuracy", [1, 2]);
@@ -334,11 +326,7 @@ describe("analyzeRobustnessWithCurve", () => {
 	});
 
 	it("should filter NaN values from curve computation", () => {
-		const results = [
-			createMockResult(0.85),
-			createMockResult(NaN, 1),
-			createMockResult(0.82, 1),
-		];
+		const results = [createMockResult(0.85), createMockResult(NaN, 1), createMockResult(0.82, 1)];
 
 		const result = analyzeRobustnessWithCurve(results, "accuracy", [1]);
 
@@ -357,7 +345,7 @@ describe("compareRobustness", () => {
 			createMockResult(0.83, 1),
 		];
 		const sutBResults = [
-			createMockResult(0.80),
+			createMockResult(0.8),
 			createMockResult(0.78, 1),
 			createMockResult(0.82, 1),
 		];
@@ -375,9 +363,9 @@ describe("compareRobustness", () => {
 			createMockResult(0.83, 1),
 		];
 		const sutBResults = [
-			createMockResult(0.80),
-			createMockResult(0.70, 1), // High variance
-			createMockResult(0.90, 1),
+			createMockResult(0.8),
+			createMockResult(0.7, 1), // High variance
+			createMockResult(0.9, 1),
 		];
 
 		const result = compareRobustness(sutAResults, sutBResults, "accuracy");
@@ -410,7 +398,7 @@ describe("compareRobustness", () => {
 			createMockResult(0.83, 1),
 		];
 		const sutBResults = [
-			createMockResult(0.80),
+			createMockResult(0.8),
 			createMockResult(0.77, 1),
 			createMockResult(0.78, 1),
 		];
@@ -480,7 +468,7 @@ describe("createRobustnessAnalysis", () => {
 		const results = [
 			createMockResult(0.85),
 			createMockResult(0.82, 1, "noise"),
-			createMockResult(0.80, 1, "blur"),
+			createMockResult(0.8, 1, "blur"),
 		];
 
 		const options: RobustnessAnalysisOptions = {

@@ -72,9 +72,11 @@ describe("perturbations", () => {
 			const mockCase = createMockCase("case-001");
 			const perturbed = edgeRemovalPerturbation.apply(mockCase, 42);
 
-			assert.strictEqual(perturbed.inputs.summary?.perturbation, "edge-removal");
-			assert.strictEqual(perturbed.inputs.summary?.perturbationIntensity, 0.1);
-			assert.strictEqual(perturbed.inputs.summary?.perturbationSeed, 42);
+			assert.ok(perturbed.inputs.summary);
+			const summary = perturbed.inputs.summary;
+			assert.strictEqual(summary.perturbation, "edge-removal");
+			assert.strictEqual(summary.perturbationIntensity, 0.1);
+			assert.strictEqual(summary.perturbationSeed, 42);
 		});
 
 		it("should add perturbation metadata to artefacts", () => {
@@ -82,19 +84,13 @@ describe("perturbations", () => {
 			const perturbed = edgeRemovalPerturbation.apply(mockCase, 42);
 
 			assert.ok(perturbed.inputs.artefacts);
-			assert.strictEqual(perturbed.inputs.artefacts.length, 1);
-			assert.strictEqual(
-				(perturbed.inputs.artefacts[0] as ArtefactReference).metadata?.perturbation,
-				"edge-removal",
-			);
-			assert.strictEqual(
-				(perturbed.inputs.artefacts[0] as ArtefactReference).metadata?.perturbationIntensity,
-				0.1,
-			);
-			assert.strictEqual(
-				(perturbed.inputs.artefacts[0] as ArtefactReference).metadata?.perturbationSeed,
-				42,
-			);
+			const artefacts = perturbed.inputs.artefacts;
+			assert.strictEqual(artefacts.length, 1);
+			assert.ok(artefacts[0].metadata);
+			const metadata = artefacts[0].metadata;
+			assert.strictEqual(metadata.perturbation, "edge-removal");
+			assert.strictEqual(metadata.perturbationIntensity, 0.1);
+			assert.strictEqual(metadata.perturbationSeed, 42);
 		});
 
 		it("should add perturbation tags", () => {
@@ -118,9 +114,11 @@ describe("perturbations", () => {
 			const mockCase = createMockCase("case-001");
 			const perturbed = edgeRemovalPerturbation.apply(mockCase, 42);
 
-			assert.strictEqual(perturbed.inputs.summary?.nodes, 100);
-			assert.strictEqual(perturbed.inputs.summary?.edges, 500);
-			assert.deepStrictEqual(perturbed.inputs.summary?.seeds, ["node1", "node2"]);
+			assert.ok(perturbed.inputs.summary);
+			const summary = perturbed.inputs.summary;
+			assert.strictEqual(summary.nodes, 100);
+			assert.strictEqual(summary.edges, 500);
+			assert.deepStrictEqual(summary.seeds, ["node1", "node2"]);
 		});
 	});
 
@@ -146,8 +144,10 @@ describe("perturbations", () => {
 			const mockCase = createMockCase("case-002");
 			const perturbed = seedShiftPerturbation.apply(mockCase, 42);
 
-			assert.strictEqual(perturbed.inputs.summary?.perturbation, "seed-shift");
-			assert.strictEqual(perturbed.inputs.summary?.perturbationSeed, 42);
+			assert.ok(perturbed.inputs.summary);
+			const summary = perturbed.inputs.summary;
+			assert.strictEqual(summary.perturbation, "seed-shift");
+			assert.strictEqual(summary.perturbationSeed, 42);
 		});
 
 		it("should add perturbation tags", () => {
@@ -188,9 +188,11 @@ describe("perturbations", () => {
 			const mockCase = createMockCase("case-003");
 			const perturbed = nodeRemovalPerturbation.apply(mockCase, 42);
 
-			assert.strictEqual(perturbed.inputs.summary?.perturbation, "node-removal");
-			assert.strictEqual(perturbed.inputs.summary?.perturbationIntensity, 0.05);
-			assert.strictEqual(perturbed.inputs.summary?.perturbationSeed, 42);
+			assert.ok(perturbed.inputs.summary);
+			const summary = perturbed.inputs.summary;
+			assert.strictEqual(summary.perturbation, "node-removal");
+			assert.strictEqual(summary.perturbationIntensity, 0.05);
+			assert.strictEqual(summary.perturbationSeed, 42);
 		});
 
 		it("should add perturbation tags", () => {
@@ -232,9 +234,11 @@ describe("perturbations", () => {
 			const mockCase = createMockCase("case-004");
 			const perturbed = weightNoisePerturbation.apply(mockCase, 42);
 
-			assert.strictEqual(perturbed.inputs.summary?.perturbation, "weight-noise");
-			assert.strictEqual(perturbed.inputs.summary?.perturbationIntensity, 0.1);
-			assert.strictEqual(perturbed.inputs.summary?.perturbationSeed, 42);
+			assert.ok(perturbed.inputs.summary);
+			const summary = perturbed.inputs.summary;
+			assert.strictEqual(summary.perturbation, "weight-noise");
+			assert.strictEqual(summary.perturbationIntensity, 0.1);
+			assert.strictEqual(summary.perturbationSeed, 42);
 		});
 
 		it("should add perturbation tags", () => {
@@ -294,7 +298,7 @@ describe("perturbations", () => {
 			for (const id of ids) {
 				const perturbation = getPerturbation(id);
 				assert.ok(perturbation, `Should find perturbation with id: ${id}`);
-				assert.strictEqual(perturbation?.id, id);
+				assert.strictEqual(perturbation.id, id);
 			}
 		});
 	});

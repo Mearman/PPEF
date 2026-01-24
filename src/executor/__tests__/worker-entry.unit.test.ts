@@ -37,14 +37,14 @@ interface WorkerResponse {
 }
 
 describe("worker-entry", () => {
-	const onCalls: Array<{ event: string; listener: (data: unknown) => void }> = [];
+	const onCalls: { event: string; listener: (data: unknown) => void }[] = [];
 	const postMessageCalls: unknown[] = [];
 
 	let mockParentPort: {
 		on: (event: string, listener: (data: unknown) => void) => void;
 		postMessage: (message: unknown) => void;
 		mock: {
-			on: { calls: Array<{ event: string; listener: (data: unknown) => void }> };
+			on: { calls: { event: string; listener: (data: unknown) => void }[] };
 			postMessage: { calls: unknown[] };
 		};
 	};
