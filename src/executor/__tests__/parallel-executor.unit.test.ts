@@ -582,7 +582,11 @@ describe("ParallelExecutor class with DI", () => {
 
 		it("should handle custom worker count", async () => {
 			const executor = new ParallelExecutor(mockLogger, mockSpawner, mockSystemInfo);
-			const runs: PlannedRun[] = [createTestRun({ runId: "run1", caseId: "case1" })];
+			const runs: PlannedRun[] = [
+				createTestRun({ runId: "run1", caseId: "case1" }),
+				createTestRun({ runId: "run2", caseId: "case2" }),
+				createTestRun({ runId: "run3", caseId: "case3" }),
+			];
 
 			// Simulate worker exits
 			setTimeout(() => {
