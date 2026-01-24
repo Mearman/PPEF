@@ -271,4 +271,42 @@ describe("Executor", () => {
 			assert.strictEqual(summary.failedRuns, 1);
 		});
 	});
+
+	describe("execute with callbacks", () => {
+		it("should call onProgress callback during execution", async () => {
+			const progressUpdates: unknown[] = [];
+			const executorWithProgress = new Executor({
+				onProgress: (progress) => {
+					progressUpdates.push(progress);
+				},
+			});
+
+			const suts = [createMockSut("sut1")];
+			const cases = [createMockCase("case1")];
+
+			await executorWithProgress.execute(suts as never, cases as never, () => ({}));
+
+			assert.ok(progressUpdates.length > 0);
+			const firstUpdate = progressUpdates[0] as { total: number; completed: number };
+			assert.strictEqual(firstUpdate.total, 1);
+			assert.strictEqual(firstUpdate.completed, 1);
+		});
+
+		it("should call onResult callback for each completed run", async () => {
+			const results: unknown[] = [];
+			const executorWithCallback = new Executor({
+				onResult: (result) => {
+					results.push(result);
+				},
+			});
+
+			const suts = [createMockSut("sut1")];
+			const cases = [createMockCase("case1")];
+
+			await executorWithCallback.execute(suts as never, cases as never, () => ({}));
+
+			assert.strictEqual(results.length, 1);
+			assert.ok(results[0]);
+		});
+	});
 });
