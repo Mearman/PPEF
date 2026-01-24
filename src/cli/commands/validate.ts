@@ -9,6 +9,8 @@ import type { Command } from "commander";
 import { loadAndValidateConfig } from "../config-loader.js";
 import type { IConfigLoader, ICommandLogger } from "../command-deps.js";
 
+// Note: createLogger imported lazily in action handler to avoid circular dependency
+
 /**
  * Execute validate command with injected dependencies.
  *

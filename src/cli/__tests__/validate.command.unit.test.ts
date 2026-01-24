@@ -237,8 +237,10 @@ describe("validate command", () => {
 				processExit: mockProcessExit,
 			});
 
-			assert.ok(loggedMessages.some((msg) => msg.includes("[info] Version: default")));
-			assert.ok(loggedMessages.some((msg) => msg.includes("[info] Path: ./results")));
+			// Check that default values are logged for optional fields
+			assert.ok(loggedMessages.some((msg) => msg.includes("Repetitions: default")));
+			assert.ok(loggedMessages.some((msg) => msg.includes("Seed base: default")));
+			assert.ok(loggedMessages.some((msg) => msg.includes("Path: ./results")));
 		});
 	});
 });
