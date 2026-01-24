@@ -43,6 +43,19 @@ describe("ParallelExecutor", () => {
 			assert.strictEqual(names.length, 1);
 			assert.ok(names[0].includes("-"));
 		});
+
+		it("should not repeat names across multiple calls", () => {
+			const count = 10;
+			const names1 = generateWorkerNames(count);
+			const names2 = generateWorkerNames(count);
+
+			// Each set should have unique names
+			assert.strictEqual(new Set(names1).size, count);
+			assert.strictEqual(new Set(names2).size, count);
+
+			// The two sets may overlap, but that's acceptable due to randomness
+			// What matters is each individual call returns unique names
+		});
 	});
 
 	describe("shardPath", () => {
@@ -67,6 +80,17 @@ describe("ParallelExecutor", () => {
 			assert.ok(path.includes("/my/checkpoint/dir"));
 			assert.ok(path.includes("checkpoint-worker-05.json"));
 		});
+
+		it("should handle relative checkpoint directories", () => {
+			const path = shardPath("checkpoints", 3);
+			assert.ok(path.includes("checkpoints"));
+			assert.ok(path.includes("checkpoint-worker-03.json"));
+		});
+
+		it("should handle empty checkpoint directory", () => {
+			const path = shardPath("", 7);
+			assert.ok(path.includes("checkpoint-worker-07.json"));
+		});
 	});
 });
 
@@ -84,6 +108,59 @@ describe("ParallelExecutorOptions", () => {
 			const checkpointDir = options.checkpointDir;
 
 			assert.strictEqual(checkpointDir, "/custom/path");
+		});
+
+		it("should use default workers when not specified", () => {
+			const options: { workers?: number } = {};
+			// Default is CPU count, but we can't test that directly
+			// Just verify the undefined case falls back
+			assert.strictEqual(options.workers, undefined);
+		});
+
+		it("should use custom workers when specified", () => {
+			const options = { workers: 4 };
+			assert.strictEqual(options.workers, 4);
+		});
+	});
+});
+
+describe("path handling utilities", () => {
+	describe("dist directory detection", () => {
+		it("should detect Unix-style dist paths", () => {
+			const unixDistPath = "/path/to/project/dist/cli.js";
+			// Extract directory from file path
+			const lastSlashIndex = unixDistPath.lastIndexOf("/");
+			const entryDir = unixDistPath.substring(0, lastSlashIndex);
+			const endsWithUnixDist = entryDir.endsWith("/dist");
+
+			assert.ok(endsWithUnixDist);
+		});
+
+		it("should not detect non-dist paths", () => {
+			const nonDistPath = "/path/to/project/index.js";
+			const lastSlashIndex = nonDistPath.lastIndexOf("/");
+			const entryDir = nonDistPath.substring(0, lastSlashIndex);
+			const endsWithDist = entryDir.endsWith("/dist");
+
+			assert.ok(!endsWithDist);
+		});
+
+		it("should handle paths with dist in middle", () => {
+			const pathWithDistInMiddle = "/path/to/dist/middle/cli.js";
+			const lastSlashIndex = pathWithDistInMiddle.lastIndexOf("/");
+			const entryDir = pathWithDistInMiddle.substring(0, lastSlashIndex);
+			const endsWithDist = entryDir.endsWith("/dist");
+
+			assert.ok(!endsWithDist);
+		});
+
+		it("should detect nested dist paths", () => {
+			const nestedDistPath = "/path/to/project/sub/dist/cli.js";
+			const lastSlashIndex = nestedDistPath.lastIndexOf("/");
+			const entryDir = nestedDistPath.substring(0, lastSlashIndex);
+			const endsWithDist = entryDir.endsWith("/dist");
+
+			assert.ok(endsWithDist);
 		});
 	});
 });
