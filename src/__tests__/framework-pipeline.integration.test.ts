@@ -8,13 +8,17 @@ import { describe, it } from "node:test";
 import { strict as assert } from "node:assert";
 
 import { aggregateResults } from "../aggregation/pipeline.js";
-import { createClaimSummary, evaluateClaims } from "../claims/evaluator.js";
+import { ClaimsEvaluator } from "../evaluators/claims-evaluator.js";
 import { ResultCollector } from "../collector/result-collector.js";
 import { LaTeXRenderer } from "../renderers/latex-renderer.js";
 import type { TableRenderSpec } from "../renderers/types.js";
 import type { EvaluationClaim } from "../types/claims.js";
 import type { EvaluationResult } from "../types/result.js";
+import type { EvaluationContext } from "../types/evaluator.js";
 import { createMockResult } from "./test-helpers.js";
+
+// Create a singleton evaluator instance for testing
+const claimsEvaluator = new ClaimsEvaluator();
 
 describe("Framework Pipeline Integration", () => {
 	/**
@@ -164,21 +168,26 @@ describe("Framework Pipeline Integration", () => {
 			},
 		];
 
-		const evaluations = evaluateClaims(claims, aggregates);
+		// Create evaluation context
+		const context: EvaluationContext = {
+			aggregates,
+			metadata: { source: "test" },
+		};
+
+		// Evaluate claims using the new evaluator API
+		const evalOutput = claimsEvaluator.evaluate({ claims }, context);
+		const evaluations = evalOutput.data.evaluations;
 
 		assert.strictEqual(evaluations.length, 3);
 		assert.ok(
 			evaluations.every((e) => ["satisfied", "violated", "inconclusive"].includes(e.status)),
 		);
 
-		// Step 4: Create summary
-		const summary = createClaimSummary(evaluations);
+		// Step 4: Summary is included in evaluation output
+		const summary = evalOutput.data.summary;
 
-		assert.strictEqual(summary.summary.total, 3);
-		assert.strictEqual(
-			summary.summary.satisfied + summary.summary.violated + summary.summary.inconclusive,
-			3,
-		);
+		assert.strictEqual(summary.total, 3);
+		assert.strictEqual(summary.satisfied + summary.violated + summary.inconclusive, 3);
 
 		// Step 5: Render
 		const renderer = new LaTeXRenderer();
@@ -285,7 +294,13 @@ describe("Framework Pipeline Integration", () => {
 			},
 		];
 
-		const evaluations = evaluateClaims(claims, aggregates);
+		// Evaluate claims using the new evaluator API
+		const context: EvaluationContext = {
+			aggregates,
+			metadata: { source: "test" },
+		};
+		const evalOutput = claimsEvaluator.evaluate({ claims }, context);
+		const evaluations = evalOutput.data.evaluations;
 
 		// Both claims should be satisfied
 		assert.strictEqual(evaluations.find((e) => e.claim.claimId === "SPEED")?.status, "satisfied");
@@ -447,7 +462,13 @@ describe("Framework Pipeline Integration", () => {
 			scopeConstraints: { caseClass: "scale-free" },
 		};
 
-		const evaluations = evaluateClaims([scopedClaim], aggregates);
+		// Evaluate claims using the new evaluator API
+		const context: EvaluationContext = {
+			aggregates,
+			metadata: { source: "test" },
+		};
+		const evalOutput = claimsEvaluator.evaluate({ claims: [scopedClaim] }, context);
+		const evaluations = evalOutput.data.evaluations;
 
 		assert.strictEqual(evaluations[0].status, "satisfied");
 	});
@@ -494,7 +515,13 @@ describe("Framework Pipeline Integration", () => {
 			scope: "global",
 		};
 
-		const evaluations = evaluateClaims([claim], aggregates);
+		// Evaluate claims using the new evaluator API
+		const context: EvaluationContext = {
+			aggregates,
+			metadata: { source: "test" },
+		};
+		const evalOutput = claimsEvaluator.evaluate({ claims: [claim] }, context);
+		const evaluations = evalOutput.data.evaluations;
 
 		assert.strictEqual(evaluations[0].status, "violated");
 		assert.ok(evaluations[0].evidence.delta > 0); // 150 - 100 = 50

@@ -45,16 +45,11 @@ describe("index.ts export verification", () => {
 		);
 	});
 
-	test("src/claims/index.ts exports evaluator", async () => {
+	test("src/claims/index.ts exports types", async () => {
 		const claimsModule = await import("../claims/index.js");
 
 		assert.ok(claimsModule, "claims module should import");
-		assert.ok(typeof claimsModule.evaluateClaim === "function", "should export evaluateClaim");
-		assert.ok(typeof claimsModule.evaluateClaims === "function", "should export evaluateClaims");
-		assert.ok(
-			typeof claimsModule.createClaimSummary === "function",
-			"should export createClaimSummary",
-		);
+		// Claims module now only exports types - use evaluators module for ClaimsEvaluator class
 	});
 
 	test("src/collector/index.ts exports result-collector and schema", async () => {
@@ -141,26 +136,11 @@ describe("index.ts export verification", () => {
 		assert.ok(renderersModule.UNICODE_CLAIM_STATUS, "should export UNICODE_CLAIM_STATUS");
 	});
 
-	test("src/robustness/index.ts exports analyzer and perturbations", async () => {
+	test("src/robustness/index.ts exports types and perturbations", async () => {
 		const robustnessModule = await import("../robustness/index.js");
 
 		assert.ok(robustnessModule, "robustness module should import");
-		assert.ok(
-			typeof robustnessModule.analyzeRobustnessForMetric === "function",
-			"should export analyzeRobustnessForMetric",
-		);
-		assert.ok(
-			typeof robustnessModule.analyzeRobustnessWithCurve === "function",
-			"should export analyzeRobustnessWithCurve",
-		);
-		assert.ok(
-			typeof robustnessModule.compareRobustness === "function",
-			"should export compareRobustness",
-		);
-		assert.ok(
-			typeof robustnessModule.createRobustnessAnalysis === "function",
-			"should export createRobustnessAnalysis",
-		);
+		// Robustness module now only exports types and perturbations - use evaluators module for RobustnessEvaluator class
 		assert.ok(
 			typeof robustnessModule.createPerturbation === "function",
 			"should export createPerturbation",
@@ -208,7 +188,6 @@ describe("index.ts export verification", () => {
 		assert.ok(mainModule, "main module should import");
 
 		// Verify all sub-modules are re-exported
-		// Types module (type-only exports, so we check other modules)
 		assert.ok(
 			typeof mainModule.CaseRegistry === "function",
 			"should export CaseRegistry from registry",
@@ -234,13 +213,22 @@ describe("index.ts export verification", () => {
 			typeof mainModule.computeSpeedup === "function",
 			"should export computeSpeedup from aggregation",
 		);
+		// New evaluator exports
 		assert.ok(
-			typeof mainModule.evaluateClaim === "function",
-			"should export evaluateClaim from claims",
+			typeof mainModule.ClaimsEvaluator === "function",
+			"should export ClaimsEvaluator from evaluators",
 		);
 		assert.ok(
-			typeof mainModule.analyzeRobustnessForMetric === "function",
-			"should export analyzeRobustnessForMetric from robustness",
+			typeof mainModule.RobustnessEvaluator === "function",
+			"should export RobustnessEvaluator from evaluators",
+		);
+		assert.ok(
+			typeof mainModule.MetricsEvaluator === "function",
+			"should export MetricsEvaluator from evaluators",
+		);
+		assert.ok(
+			typeof mainModule.EvaluatorRegistry === "object",
+			"should export EvaluatorRegistry from evaluators",
 		);
 		assert.ok(
 			typeof mainModule.LaTeXRenderer === "function",
