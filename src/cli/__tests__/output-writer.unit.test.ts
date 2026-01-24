@@ -24,7 +24,8 @@ describe("output-writer", () => {
 	describe("generateOutputFilename", () => {
 		it("should generate filename with timestamp", () => {
 			const filename = generateOutputFilename("experiment", "results");
-			assert.match(filename, /experiment-results-\d{8}-T\d{6}\.json/);
+			// Format: experiment-results-YYYY-MM-DDTHH-MM-SS.json (ISO format with colons replaced)
+			assert.match(filename, /experiment-results-\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}\.json/);
 		});
 
 		it("should generate aggregates filename", () => {
