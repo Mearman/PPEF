@@ -49,17 +49,29 @@ describe("worker-entry", () => {
 			execute: mock.fn(async () => ({
 				results: [
 					{
-						runId: "test-1",
-						sutId: "sut-1",
-						caseId: "case-1",
-						repetition: 0,
-						seed: 42,
-						input: {},
-						output: {},
-						metrics: {},
-						startedAt: new Date().toISOString(),
-						completedAt: new Date().toISOString(),
-						durationMs: 100,
+						run: {
+							runId: "test-1",
+							sut: "sut-1",
+							sutRole: "primary" as const,
+							caseId: "case-1",
+							repetition: 0,
+							seed: 42,
+						},
+						correctness: {
+							expectedExists: true,
+							producedOutput: true,
+							valid: true,
+							matchesExpected: true,
+						},
+						outputs: {},
+						metrics: { numeric: {} },
+						provenance: {
+							runtime: {
+								platform: "test",
+								arch: "test",
+								nodeVersion: "test",
+							},
+						},
 					},
 				] as EvaluationResult[],
 				errors: [],
@@ -96,7 +108,9 @@ describe("worker-entry", () => {
 			},
 			loadDatasets: async (): Promise<IDatasetsModule> => {
 				return {
-					registerBenchmarkDatasets: async () => ({}),
+					registerBenchmarkDatasets: async () => {
+						return;
+					},
 				} as IDatasetsModule;
 			},
 		};
@@ -118,25 +132,25 @@ describe("worker-entry", () => {
 			// Wrap each loader method to track call order
 			const originalLoader = mockModuleLoader;
 			mockModuleLoader = {
-				loadExecutor: async (...args: unknown[]) => {
+				loadExecutor: async () => {
 					callOrder.push("loadExecutor");
-					return originalLoader.loadExecutor(...args);
+					return originalLoader.loadExecutor();
 				},
-				loadEvaluate: async (...args: unknown[]) => {
+				loadEvaluate: async () => {
 					callOrder.push("loadEvaluate");
-					return originalLoader.loadEvaluate(...args);
+					return originalLoader.loadEvaluate();
 				},
-				loadRegistry: async (...args: unknown[]) => {
+				loadRegistry: async () => {
 					callOrder.push("loadRegistry");
-					return originalLoader.loadRegistry(...args);
+					return originalLoader.loadRegistry();
 				},
-				loadSuts: async (...args: unknown[]) => {
+				loadSuts: async () => {
 					callOrder.push("loadSuts");
-					return originalLoader.loadSuts(...args);
+					return originalLoader.loadSuts();
 				},
-				loadDatasets: async (...args: unknown[]) => {
+				loadDatasets: async () => {
 					callOrder.push("loadDatasets");
-					return originalLoader.loadDatasets(...args);
+					return originalLoader.loadDatasets();
 				},
 			};
 
@@ -237,11 +251,11 @@ describe("worker-entry", () => {
 		});
 
 		it("should pass executor config to Executor constructor", async () => {
-			const MockExecutor = mock.fn(function (this: unknown, config: unknown) {
-				mockExecutorInstance.execute = async () => ({
+			const MockExecutor = mock.fn(function (this: unknown, _config: unknown) {
+				mockExecutorInstance.execute = mock.fn(async () => ({
 					results: [],
 					errors: [],
-				});
+				}));
 				return mockExecutorInstance;
 			});
 
@@ -267,7 +281,13 @@ describe("worker-entry", () => {
 
 			// Verify Executor was constructed with correct config
 			assert.strictEqual(MockExecutor.mock.calls.length, 1);
-			const executorConfig = MockExecutor.mock.calls[0].arguments[0];
+			const executorConfig = MockExecutor.mock.calls[0].arguments[0] as {
+				repetitions: number;
+				seedBase: number;
+				continueOnError: boolean;
+				timeoutMs: number;
+				collectProvenance: boolean;
+			};
 			assert.strictEqual(executorConfig.repetitions, 5);
 			assert.strictEqual(executorConfig.seedBase, 999);
 			assert.strictEqual(executorConfig.continueOnError, false);
@@ -303,7 +323,9 @@ describe("worker-entry", () => {
 
 	describe("executeBatch", () => {
 		it("should call registerBenchmarkDatasets on datasets module", async () => {
-			const registerSpy = mock.fn(async () => ({}));
+			const registerSpy = mock.fn(async () => {
+				return;
+			});
 			mockModuleLoader.loadDatasets = async (): Promise<IDatasetsModule> => {
 				return {
 					registerBenchmarkDatasets: registerSpy,
