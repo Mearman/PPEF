@@ -12,11 +12,13 @@ import { registerRunCommand } from "./commands/run.js";
 import { registerValidateCommand } from "./commands/validate.js";
 
 /**
- * Run the CLI and return exit code.
+ * Create and configure the CLI program.
  *
- * @returns Exit code (0 for success, 1 for error)
+ * This function is exported for testing purposes.
+ *
+ * @returns Configured Commander program
  */
-export async function runCli(): Promise<number> {
+export function createCliProgram(): Command {
 	const program = new Command();
 
 	program
@@ -29,6 +31,17 @@ export async function runCli(): Promise<number> {
 	registerValidateCommand(program);
 	registerPlanCommand(program);
 	registerAggregateCommand(program);
+
+	return program;
+}
+
+/**
+ * Run the CLI and return exit code.
+ *
+ * @returns Exit code (0 for success, 1 for error)
+ */
+export async function runCli(): Promise<number> {
+	const program = createCliProgram();
 
 	try {
 		await program.parseAsync(process.argv);
