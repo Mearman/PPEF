@@ -4,13 +4,12 @@
  * Tests the worker entry point by actually spawning a worker thread
  * and sending messages to it.
  *
- * Note: These tests are skipped because running TypeScript in worker threads
- * requires either a build or complex loader setup. The WorkerExecutor logic is
- * thoroughly tested in worker-executor.unit.test.ts (98.27% coverage).
+ * These tests automatically skip if the build output doesn't exist.
  */
 
 import { describe, it } from "node:test";
 import { strict as assert } from "node:assert";
+import { existsSync } from "node:fs";
 import { Worker } from "node:worker_threads";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -20,8 +19,10 @@ const __dirname = dirname(__filename);
 
 // Path to the built worker entry (requires npm run build)
 const workerEntryPath = resolve(__dirname, "../../../dist/executor/worker-entry.js");
+// Check if build output exists - skip tests if not built
+const isBuilt = existsSync(workerEntryPath);
 
-describe("worker-entry integration", { skip: true }, () => {
+describe("worker-entry integration", { skip: !isBuilt }, () => {
 	it("should spawn worker and respond to messages", async () => {
 		// Tests skipped: Requires build (npm run build)
 		// WorkerExecutor is tested at 98.27% coverage in unit tests
@@ -81,12 +82,12 @@ describe("worker-entry integration", { skip: true }, () => {
  *
  * The core logic is tested in worker-executor.unit.test.ts with 98.27% coverage.
  *
- * These integration tests are skipped because running TypeScript in worker threads
- * requires either a build or complex loader setup. To enable:
+ * These integration tests automatically skip if the build output doesn't exist.
+ * To enable them:
  *
  * 1. Build the project: `npm run build`
- * 2. Remove `{ skip: true }` from the describe block
  *
- * Using tsx/esm with Worker was attempted but has issues resolving .js imports
- * to .ts files in the worker context.
+ * The tests check for `dist/executor/worker-entry.js` at runtime and skip
+ * if it's not found. Using tsx/esm with Worker was attempted but has
+ * issues resolving .js imports to .ts files in the worker context.
  */
