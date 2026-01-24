@@ -9,7 +9,7 @@ import { strict as assert } from "node:assert";
 
 import type { CaseDefinition } from "../../types/case.js";
 import type { SutDefinition } from "../../types/sut.js";
-import { Executor } from "../executor.js";
+import { Executor, createExecutor } from "../executor.js";
 
 /**
  * Mock expander for testing.
@@ -190,6 +190,85 @@ describe("Executor", () => {
 
 			assert.strictEqual(summary.totalRuns, 1);
 			assert.strictEqual(summary.successfulRuns, 1);
+		});
+	});
+
+	describe("createExecutor", () => {
+		it("should create executor with default config", () => {
+			const executor = createExecutor();
+			assert.ok(executor instanceof Executor);
+		});
+
+		it("should create executor with custom config", () => {
+			const executor = createExecutor({ repetitions: 5 });
+			assert.ok(executor instanceof Executor);
+		});
+	});
+
+	describe("execute with timeout", () => {
+		it("should timeout on slow resource loading", async () => {
+			// Create a case with slow getInput
+			const slowCase: CaseDefinition<MockExpander> = {
+				case: {
+					caseId: "slow-case",
+					caseClass: "test",
+					name: "Slow Loading Case",
+					version: "1.0.0",
+					inputs: {},
+				},
+				getInput: async () => {
+					// Sleep longer than timeout
+					await new Promise((resolve) => setTimeout(resolve, 200));
+					return new MockExpander();
+				},
+				getInputs: () => ({}),
+			};
+
+			const executorWithTimeout = new Executor({ timeoutMs: 50, continueOnError: true });
+			const suts = [createMockSut("sut1")];
+			const cases = [slowCase];
+
+			const summary = await executorWithTimeout.execute(suts as never, cases as never, () => ({}));
+
+			// Should fail due to timeout
+			assert.strictEqual(summary.totalRuns, 1);
+			assert.strictEqual(summary.successfulRuns, 0);
+			assert.strictEqual(summary.failedRuns, 1);
+		});
+
+		it("should timeout on slow SUT execution", async () => {
+			// Create a SUT with slow run
+			const slowSut: SutDefinition<unknown, MockResult> = {
+				registration: {
+					id: "slow-sut",
+					name: "Slow SUT",
+					role: "primary",
+					version: "1.0.0",
+					config: Object.freeze({}),
+					tags: [],
+				},
+				factory: () =>
+					({
+						id: "slow-sut",
+						config: {},
+						run: async () => {
+							// Sleep longer than timeout
+							await new Promise((resolve) => setTimeout(resolve, 200));
+							return { value: "slow" };
+						},
+					}) as never,
+			};
+
+			const executorWithTimeout = new Executor({ timeoutMs: 50, continueOnError: true });
+			const suts = [slowSut];
+			const cases = [createMockCase("case1")];
+
+			const summary = await executorWithTimeout.execute(suts as never, cases as never, () => ({}));
+
+			// Should fail due to timeout
+			assert.strictEqual(summary.totalRuns, 1);
+			assert.strictEqual(summary.successfulRuns, 0);
+			assert.strictEqual(summary.failedRuns, 1);
 		});
 	});
 });
