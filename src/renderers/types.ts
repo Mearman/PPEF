@@ -7,6 +7,7 @@
 
 import type { AggregatedResult } from "../types/aggregate.js";
 import type { ClaimEvaluation } from "../types/claims.js";
+import type { EvaluationOutput } from "../types/evaluator.js";
 
 /**
  * Column specification for a table.
@@ -103,8 +104,17 @@ export interface Renderer {
 	renderAll(aggregates: AggregatedResult[], specs: TableRenderSpec[]): RenderOutput[];
 
 	/**
+	 * Render evaluation output (generic for all evaluation types).
+	 *
+	 * @param evaluation - Evaluation output from any evaluator
+	 * @returns Rendered output
+	 */
+	renderEvaluation<T>(evaluation: EvaluationOutput<T>): RenderOutput;
+
+	/**
 	 * Render claim evaluation summary.
 	 *
+	 * @deprecated Use renderEvaluation() instead
 	 * @param evaluations - Claim evaluations
 	 * @returns Rendered output
 	 */
