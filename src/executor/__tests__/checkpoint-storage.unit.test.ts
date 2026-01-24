@@ -14,6 +14,8 @@ import {
 	GitStorage,
 	InMemoryLock,
 	NodeFileSystem,
+	createCheckpointStorage,
+	getGitNamespace,
 } from "../checkpoint-storage.js";
 
 /**
@@ -448,10 +450,133 @@ describe("GitStorage", () => {
 		});
 	});
 
+	describe("save", () => {
+		it("should not throw when git is not available", async () => {
+			const storage = new GitStorage("test-namespace", "/nonexistent");
+			const checkpoint: CheckpointData = {
+				configHash: "abc123",
+				createdAt: "2024-01-01T00:00:00.000Z",
+				updatedAt: "2024-01-01T00:00:00.000Z",
+				completedRunIds: [],
+				results: {},
+				totalPlanned: 0,
+			};
+
+			// Should not throw when git is not available
+			await assert.doesNotReject(() => storage.save(checkpoint));
+		});
+	});
+
+	describe("delete", () => {
+		it("should not throw when git is not available", () => {
+			const storage = new GitStorage("test-namespace", "/nonexistent");
+			// Should not throw when git is not available
+			assert.doesNotThrow(() => {
+				storage.delete();
+			});
+		});
+	});
+
+	describe("exists", () => {
+		it("should return false when git is not available", () => {
+			const storage = new GitStorage("test-namespace", "/nonexistent");
+			assert.strictEqual(storage.exists(), false);
+		});
+	});
+
+	describe("listHistory", () => {
+		it("should return empty array when git is not available", () => {
+			const storage = new GitStorage("test-namespace", "/nonexistent");
+			const history = storage.listHistory();
+			assert.deepStrictEqual(history, []);
+		});
+	});
+
+	describe("restoreFromCommit", () => {
+		it("should return null when git is not available", () => {
+			const storage = new GitStorage("test-namespace", "/nonexistent");
+			const restored = storage.restoreFromCommit("abc123");
+			assert.strictEqual(restored, null);
+		});
+	});
+
 	describe("type", () => {
 		it("should have type 'git'", () => {
 			const storage = new GitStorage("test-namespace");
 			assert.strictEqual(storage.type, "git");
 		});
+	});
+});
+
+describe("createCheckpointStorage", () => {
+	describe("mode selection", () => {
+		it("should create FileStorage for 'file' mode", () => {
+			const storage = createCheckpointStorage("file", "results/checkpoint.json");
+			assert.ok(storage instanceof FileStorage);
+			assert.strictEqual(storage.type, "file");
+		});
+
+		it("should create GitStorage for 'git' mode", () => {
+			const storage = createCheckpointStorage("git", "results-execute");
+			assert.ok(storage instanceof GitStorage);
+			assert.strictEqual(storage.type, "git");
+		});
+
+		it("should create GitStorage for 'auto' mode in git directory", () => {
+			// In a git directory with commits (like this repo), 'auto' should create GitStorage
+			const storage = createCheckpointStorage("auto", "results-execute");
+			assert.ok(storage instanceof GitStorage);
+			assert.strictEqual(storage.type, "git");
+		});
+	});
+
+	describe("with repoRoot", () => {
+		it("should pass repoRoot to GitStorage", () => {
+			const storage = createCheckpointStorage("git", "results-execute", "/custom/root");
+			assert.ok(storage instanceof GitStorage);
+			assert.strictEqual(storage.type, "git");
+		});
+	});
+});
+
+describe("getGitNamespace", () => {
+	it("should convert forward slashes to hyphens", () => {
+		assert.strictEqual(getGitNamespace("results/execute"), "results-execute");
+		assert.strictEqual(getGitNamespace("a/b/c/d"), "a-b-c-d");
+	});
+
+	it("should convert backslashes to hyphens", () => {
+		assert.strictEqual(getGitNamespace("results\\execute"), "results-execute");
+		assert.strictEqual(getGitNamespace("a\\b\\c"), "a-b-c");
+	});
+
+	it("should handle leading dot (slash after dot becomes hyphen, then dot is removed)", () => {
+		// "./results" -> ".-results" (slash becomes hyphen) -> "-results" (dot removed)
+		assert.strictEqual(getGitNamespace("./results"), "-results");
+
+		// ".results" -> ".results" (no slashes) -> "results" (dot removed)
+		assert.strictEqual(getGitNamespace(".results"), "results");
+	});
+
+	it("should handle leading slashes (replaced with hyphens, kept because last step only removes slashes)", () => {
+		// "/results/execute" -> "-results-execute" (slashes become hyphens)
+		assert.strictEqual(getGitNamespace("/results/execute"), "-results-execute");
+
+		// "//results" -> "--results" (slashes become hyphens)
+		assert.strictEqual(getGitNamespace("//results"), "--results");
+	});
+
+	it("should handle mixed separators", () => {
+		assert.strictEqual(getGitNamespace("results\\sub/dir"), "results-sub-dir");
+	});
+
+	it("should handle simple paths", () => {
+		assert.strictEqual(getGitNamespace("results"), "results");
+		assert.strictEqual(getGitNamespace("execute"), "execute");
+	});
+
+	it("should handle paths with only slashes", () => {
+		// "///a//b///" -> "---a--b---" (slashes become hyphens)
+		assert.strictEqual(getGitNamespace("///a//b///"), "---a--b---");
 	});
 });
