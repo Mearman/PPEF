@@ -1,13 +1,157 @@
 /**
  * Unit tests for ParallelExecutor
  *
- * Tests worker name generation, run batch distribution, and shard path generation.
+ * Tests worker name generation, run batch distribution, shard path generation,
+ * and the new DI-enabled ParallelExecutor class.
  */
 
-import { describe, it } from "node:test";
+import { describe, it, beforeEach } from "node:test";
 import { strict as assert } from "node:assert";
 
-import { shardPath, generateWorkerNames } from "../parallel-executor.js";
+import {
+	shardPath,
+	generateWorkerNames,
+	ParallelExecutor,
+	ILogger,
+	IProcessSpawner,
+	ISystemInfo,
+	IChildProcess,
+	type RunBatch,
+	type WorkerConfig,
+} from "../parallel-executor.js";
+import type { PlannedRun, ExecutorConfig } from "../executor.js";
+
+/**
+ * Create a minimal ExecutorConfig for testing.
+ */
+function createTestConfig(timeoutMs = 0): ExecutorConfig {
+	return {
+		continueOnError: false,
+		repetitions: 1,
+		seedBase: 42,
+		timeoutMs,
+		collectProvenance: false,
+	};
+}
+
+/**
+ * Create a minimal PlannedRun for testing.
+ */
+function createTestRun(override: Partial<PlannedRun> & { runId: string }): PlannedRun {
+	return {
+		sutId: "test-sut",
+		caseId: "test-case",
+		repetition: 0,
+		seed: 42,
+		...override,
+	};
+}
+
+/**
+ * Mock logger for testing.
+ */
+class MockLogger implements ILogger {
+	public logs: string[] = [];
+
+	log(message: string): void {
+		this.logs.push(message);
+	}
+
+	debug(message: string): void {
+		this.logs.push(message);
+	}
+
+	info(message: string): void {
+		this.logs.push(message);
+	}
+
+	warn(message: string): void {
+		this.logs.push(message);
+	}
+
+	clear(): void {
+		this.logs = [];
+	}
+}
+
+/**
+ * Mock child process for testing.
+ */
+class MockChildProcess implements IChildProcess {
+	private exitCode = 0;
+	private listeners = new Map<string, (...args: unknown[]) => void>();
+
+	on(event: string, listener: (...args: unknown[]) => void): this {
+		this.listeners.set(event, listener);
+		return this;
+	}
+
+	/**
+	 * Simulate process exit.
+	 */
+	exit(code: number): void {
+		const listener = this.listeners.get("exit");
+		if (listener) {
+			listener(code);
+		}
+	}
+}
+
+/**
+ * Mock process spawner for testing.
+ */
+class MockProcessSpawner implements IProcessSpawner {
+	public spawnedProcesses: {
+		command: string;
+		args: string[];
+		options: {
+			cwd?: string;
+			stdio?: "inherit" | "pipe" | "ignore";
+			env?: Record<string, string | undefined>;
+		};
+		process: MockChildProcess;
+	}[] = [];
+
+	spawn(
+		command: string,
+		args: string[],
+		options: {
+			cwd?: string;
+			stdio?: "inherit" | "pipe" | "ignore";
+			env?: Record<string, string | undefined>;
+		},
+	): IChildProcess {
+		const process = new MockChildProcess();
+		this.spawnedProcesses.push({
+			command,
+			args,
+			options: {
+				cwd: options.cwd ?? "/default",
+				stdio: options.stdio ?? "inherit",
+				env: options.env ?? {},
+			},
+			process,
+		});
+		return process;
+	}
+
+	clear(): void {
+		this.spawnedProcesses = [];
+	}
+}
+
+/**
+ * Mock system info for testing.
+ */
+class MockSystemInfo implements ISystemInfo {
+	cpuCount = 4;
+	nodePath = "/path/to/node";
+	packageRoot = "/path/to/project";
+	env: Record<string, string | undefined> = {
+		NODE_ENV: "test",
+		PATH: "/usr/bin:/bin",
+	};
+}
 
 describe("ParallelExecutor", () => {
 	describe("generateWorkerNames", () => {
@@ -161,6 +305,312 @@ describe("path handling utilities", () => {
 			const endsWithDist = entryDir.endsWith("/dist");
 
 			assert.ok(endsWithDist);
+		});
+
+		it("should handle Windows-style backslash dist paths", () => {
+			// Windows paths use backslashes
+			// String.raw`\dist` produces a literal backslash
+			const windowsBackslashDist = String.raw`\dist`;
+			assert.strictEqual(windowsBackslashDist, "\\dist");
+
+			// Test that endsWith works with backslash paths
+			const windowsDir = "C:\\path\\to\\project\\dist";
+			assert.ok(windowsDir.endsWith(windowsBackslashDist));
+		});
+	});
+});
+
+describe("ParallelExecutor class with DI", () => {
+	let mockLogger: MockLogger;
+	let mockSpawner: MockProcessSpawner;
+	let mockSystemInfo: MockSystemInfo;
+
+	beforeEach(() => {
+		mockLogger = new MockLogger();
+		mockSpawner = new MockProcessSpawner();
+		mockSystemInfo = new MockSystemInfo();
+	});
+
+	describe("constructor", () => {
+		it("should use default dependencies when none provided", () => {
+			const executor = new ParallelExecutor();
+			assert.ok(executor);
+		});
+
+		it("should use provided dependencies", () => {
+			const executor = new ParallelExecutor(mockLogger, mockSpawner, mockSystemInfo);
+			assert.ok(executor);
+		});
+
+		it("should use partial dependencies", () => {
+			const executor = new ParallelExecutor(mockLogger);
+			assert.ok(executor);
+		});
+	});
+
+	describe("createBatches", () => {
+		it("should distribute runs evenly across workers", () => {
+			const executor = new ParallelExecutor(mockLogger, mockSpawner, mockSystemInfo);
+			const runs: PlannedRun[] = [
+				{ runId: "run1", sutId: "sut1", caseId: "case1", repetition: 0, seed: 1 },
+				{ runId: "run2", sutId: "sut1", caseId: "case2", repetition: 0, seed: 2 },
+				{ runId: "run3", sutId: "sut1", caseId: "case3", repetition: 0, seed: 3 },
+				{ runId: "run4", sutId: "sut1", caseId: "case4", repetition: 0, seed: 4 },
+			];
+
+			// Access private method via testing
+			//
+			const batches = executor._createBatches(runs, 2);
+
+			assert.strictEqual(batches.length, 2);
+			assert.strictEqual(batches[0].runIds.length, 2);
+			assert.strictEqual(batches[1].runIds.length, 2);
+			assert.deepStrictEqual(batches[0].runIds, ["run1", "run2"]);
+			assert.deepStrictEqual(batches[1].runIds, ["run3", "run4"]);
+		});
+
+		it("should handle uneven distribution", () => {
+			const executor = new ParallelExecutor(mockLogger, mockSpawner, mockSystemInfo);
+			const runs: PlannedRun[] = [
+				{ runId: "run1", sutId: "sut1", caseId: "case1", repetition: 0, seed: 1 },
+				{ runId: "run2", sutId: "sut1", caseId: "case2", repetition: 0, seed: 2 },
+				{ runId: "run3", sutId: "sut1", caseId: "case3", repetition: 0, seed: 3 },
+			];
+
+			//
+			const batches = executor._createBatches(runs, 2);
+
+			assert.strictEqual(batches.length, 2);
+			assert.strictEqual(batches[0].runIds.length, 2);
+			assert.strictEqual(batches[1].runIds.length, 1);
+		});
+
+		it("should handle more workers than runs", () => {
+			const executor = new ParallelExecutor(mockLogger, mockSpawner, mockSystemInfo);
+			const runs: PlannedRun[] = [
+				{ runId: "run1", sutId: "sut1", caseId: "case1", repetition: 0, seed: 1 },
+			];
+
+			//
+			const batches = executor._createBatches(runs, 4);
+
+			assert.strictEqual(batches.length, 1);
+			assert.strictEqual(batches[0].runIds.length, 1);
+		});
+
+		it("should handle empty runs", () => {
+			const executor = new ParallelExecutor(mockLogger, mockSpawner, mockSystemInfo);
+			const runs: PlannedRun[] = [];
+
+			//
+			const batches = executor._createBatches(runs, 2);
+
+			assert.strictEqual(batches.length, 0);
+		});
+
+		it("should create proper batch metadata", () => {
+			const executor = new ParallelExecutor(mockLogger, mockSpawner, mockSystemInfo);
+			const runs: PlannedRun[] = [
+				{ runId: "run1", sutId: "sut1", caseId: "case1", repetition: 0, seed: 1 },
+				{ runId: "run2", sutId: "sut1", caseId: "case2", repetition: 0, seed: 2 },
+			];
+
+			//
+			const batches = executor._createBatches(runs, 2);
+
+			assert.strictEqual(batches[0].index, 0);
+			assert.strictEqual(batches[0].firstRunId, "run1");
+			assert.strictEqual(batches[0].lastRunId, "run1");
+			assert.ok(batches[0].filter.startsWith("["));
+			assert.ok(batches[0].filter.endsWith("]"));
+		});
+	});
+
+	describe("createWorkerConfigs", () => {
+		it("should create worker configs with proper arguments", () => {
+			const executor = new ParallelExecutor(mockLogger, mockSpawner, mockSystemInfo);
+			const batches: RunBatch[] = [
+				{
+					index: 0,
+					runIds: ["run1", "run2"],
+					filter: '["run1","run2"]',
+					firstRunId: "run1",
+					lastRunId: "run2",
+				},
+			];
+
+			//
+			const configs = executor._createWorkerConfigs(
+				batches,
+				["worker-1"],
+				"/path/to/cli.js",
+				"/checkpoints",
+				5000,
+			);
+
+			assert.strictEqual(configs.length, 1);
+			assert.strictEqual(configs[0].index, 0);
+			assert.strictEqual(configs[0].name, "worker-1");
+			assert.strictEqual(configs[0].checkpointPath, "/checkpoints/checkpoint-worker-00.json");
+			assert.deepStrictEqual(configs[0].arguments, [
+				"/path/to/cli.js",
+				"evaluate",
+				"--phase=execute",
+				"--checkpoint-mode=file",
+				'--run-filter=["run1","run2"]',
+				"--timeout=5000",
+			]);
+		});
+
+		it("should not include timeout when timeoutMs is 0", () => {
+			const executor = new ParallelExecutor(mockLogger, mockSpawner, mockSystemInfo);
+			const batches: RunBatch[] = [
+				{
+					index: 0,
+					runIds: ["run1"],
+					filter: '["run1"]',
+					firstRunId: "run1",
+					lastRunId: "run1",
+				},
+			];
+
+			//
+			const configs = executor._createWorkerConfigs(
+				batches,
+				["worker-1"],
+				"/path/to/cli.js",
+				"/checkpoints",
+				0, // No timeout
+			);
+
+			assert.ok(!configs[0].arguments.includes("--timeout="));
+		});
+
+		it("should include proper environment variables", () => {
+			const executor = new ParallelExecutor(mockLogger, mockSpawner, mockSystemInfo);
+			const batches: RunBatch[] = [
+				{
+					index: 0,
+					runIds: ["run1"],
+					filter: '["run1"]',
+					firstRunId: "run1",
+					lastRunId: "run1",
+				},
+			];
+
+			//
+			const configs = executor._createWorkerConfigs(
+				batches,
+				["worker-1"],
+				"/path/to/cli.js",
+				"/checkpoints",
+				5000,
+			);
+
+			assert.strictEqual(configs[0].env.GRAPHBOX_WORKER_NAME, "worker-1");
+			assert.strictEqual(configs[0].env.GRAPHBOX_WORKER_INDEX, "0");
+			assert.strictEqual(configs[0].env.GRAPHBOX_TOTAL_WORKERS, "1");
+			assert.strictEqual(configs[0].env.GRAPHBOX_CHECKPOINT_DIR, "/checkpoints");
+			assert.strictEqual(
+				configs[0].env.GRAPHBOX_CHECKPOINT_PATH,
+				"/checkpoints/checkpoint-worker-00.json",
+			);
+			assert.strictEqual(configs[0].env.NODE_OPTIONS, "--max-old-space-size=4096");
+		});
+	});
+
+	describe("execute", () => {
+		it("should spawn workers for each batch", async () => {
+			const executor = new ParallelExecutor(mockLogger, mockSpawner, mockSystemInfo);
+			const runs: PlannedRun[] = [
+				createTestRun({ runId: "run1", caseId: "case1" }),
+				createTestRun({ runId: "run2", caseId: "case2" }),
+				createTestRun({ runId: "run3", caseId: "case3" }),
+				createTestRun({ runId: "run4", caseId: "case4" }),
+			];
+
+			const config = createTestConfig(1000);
+
+			// Simulate worker exits
+			setTimeout(() => {
+				for (const spawned of mockSpawner.spawnedProcesses) {
+					spawned.process.exit(0);
+				}
+			}, 10);
+
+			const result = await executor.execute(runs, [], [], config);
+
+			assert.strictEqual(mockSpawner.spawnedProcesses.length, mockSystemInfo.cpuCount);
+			assert.strictEqual(result.results.length, 0);
+			assert.strictEqual(result.errors.length, 0);
+		});
+
+		it("should use system defaults when options not provided", async () => {
+			const executor = new ParallelExecutor(mockLogger, mockSpawner, mockSystemInfo);
+			const runs: PlannedRun[] = [createTestRun({ runId: "run1", caseId: "case1" })];
+
+			// Simulate worker exit
+			setTimeout(() => {
+				for (const spawned of mockSpawner.spawnedProcesses) {
+					spawned.process.exit(0);
+				}
+			}, 10);
+
+			await executor.execute(runs, [], [], createTestConfig(0));
+
+			assert.strictEqual(mockSpawner.spawnedProcesses.length, 1);
+			assert.strictEqual(mockSpawner.spawnedProcesses[0].command, mockSystemInfo.nodePath);
+		});
+
+		it("should log execution information", async () => {
+			const executor = new ParallelExecutor(mockLogger, mockSpawner, mockSystemInfo);
+			const runs: PlannedRun[] = [createTestRun({ runId: "run1", caseId: "case1" })];
+
+			// Simulate worker exit
+			setTimeout(() => {
+				for (const spawned of mockSpawner.spawnedProcesses) {
+					spawned.process.exit(0);
+				}
+			}, 10);
+
+			await executor.execute(runs, [], [], createTestConfig(5000));
+
+			assert.ok(mockLogger.logs.some((log) => log.includes("Spawning")));
+			assert.ok(mockLogger.logs.some((log) => log.includes("Checkpoint directory")));
+			assert.ok(mockLogger.logs.some((log) => log.includes("timeout")));
+		});
+
+		it("should handle custom worker count", async () => {
+			const executor = new ParallelExecutor(mockLogger, mockSpawner, mockSystemInfo);
+			const runs: PlannedRun[] = [createTestRun({ runId: "run1", caseId: "case1" })];
+
+			// Simulate worker exits
+			setTimeout(() => {
+				for (const spawned of mockSpawner.spawnedProcesses) {
+					spawned.process.exit(0);
+				}
+			}, 10);
+
+			const result = await executor.execute(runs, [], [], createTestConfig(0), { workers: 2 });
+
+			assert.strictEqual(mockSpawner.spawnedProcesses.length, 2);
+			assert.strictEqual(result.results.length, 0);
+		});
+
+		it("should return empty results by design", async () => {
+			const executor = new ParallelExecutor(mockLogger, mockSpawner, mockSystemInfo);
+			const runs: PlannedRun[] = [createTestRun({ runId: "run1", caseId: "case1" })];
+
+			// Simulate worker exit
+			setTimeout(() => {
+				for (const spawned of mockSpawner.spawnedProcesses) {
+					spawned.process.exit(0);
+				}
+			}, 10);
+
+			const result = await executor.execute(runs, [], [], createTestConfig(0));
+
+			assert.deepStrictEqual(result, { results: [], errors: [] });
 		});
 	});
 });
