@@ -8,6 +8,12 @@
 import type { AggregatedResult } from "../types/aggregate.js";
 import type { ClaimEvaluation, ClaimStatus } from "../types/claims.js";
 import type {
+	EvaluationOutput,
+	ClaimsEvaluatorData,
+	RobustnessEvaluatorData,
+	MetricsEvaluatorData,
+} from "../types/evaluator.js";
+import type {
 	ClaimStatusDisplay,
 	ColumnSpec,
 	Renderer,
@@ -93,6 +99,188 @@ export class LaTeXRenderer implements Renderer {
 	 */
 	renderAll(aggregates: AggregatedResult[], specs: TableRenderSpec[]): RenderOutput[] {
 		return specs.map((spec) => this.renderTable(aggregates, spec));
+	}
+
+	/**
+	 * Render evaluation output (generic for all evaluation types).
+	 * Dispatches to type-specific rendering methods.
+	 *
+	 * @param evaluation - Evaluation output from any evaluator
+	 * @returns Rendered output
+	 */
+	renderEvaluation<T>(evaluation: EvaluationOutput<T>): RenderOutput {
+		switch (evaluation.type) {
+			case "claims":
+				return this.renderClaimsEvaluation(evaluation as EvaluationOutput<ClaimsEvaluatorData>);
+			case "robustness":
+				return this.renderRobustnessEvaluation(
+					evaluation as EvaluationOutput<RobustnessEvaluatorData>,
+				);
+			case "metrics":
+				return this.renderMetricsEvaluation(evaluation as EvaluationOutput<MetricsEvaluatorData>);
+			case "custom":
+			default:
+				return this.renderCustomEvaluation(evaluation);
+		}
+	}
+
+	/**
+	 * Render claims evaluation output.
+	 *
+	 * @param evaluation - Claims evaluation output
+	 * @returns Rendered output
+	 */
+	private renderClaimsEvaluation(evaluation: EvaluationOutput<ClaimsEvaluatorData>): RenderOutput {
+		// Extract claim evaluations from the summary
+		const { evaluations } = evaluation.data;
+		return this.renderClaimSummary(evaluations);
+	}
+
+	/**
+	 * Render robustness evaluation output.
+	 *
+	 * @param evaluation - Robustness evaluation output
+	 * @returns Rendered output
+	 */
+	private renderRobustnessEvaluation(
+		evaluation: EvaluationOutput<RobustnessEvaluatorData>,
+	): RenderOutput {
+		const { results, config } = evaluation.data;
+
+		// Build table rows
+		const rows: string[] = [];
+		for (const result of results) {
+			const variance = this.formatNumber(result.robustness.varianceUnderPerturbation, 4);
+			const cv = this.formatNumber(result.robustness.coefficientOfVariation, 3);
+			const std = this.formatNumber(result.robustness.stdUnderPerturbation, 4);
+			const baseline = this.formatNumber(result.baselineValue, 3);
+
+			rows.push(
+				`    ${escapeLatex(result.sut)} & ` +
+					`${escapeLatex(result.perturbation)} & ` +
+					`${escapeLatex(result.metric)} & ` +
+					`${baseline} & ${std} & ${variance} & ${cv} \\\\`,
+			);
+		}
+
+		// Count summary
+		const suts = new Set(results.map((r) => r.sut)).size;
+		const caption = `Robustness analysis. ${suts} SUT(s) analyzed for ${config.metrics.length} metric(s) under ${config.perturbations.length} perturbation(s).`;
+
+		const content = String.raw`\begin{table}[htbp]
+  \centering
+  \caption{${caption}}
+  \label{tab:robustness-summary}
+  \begin{tabular}{lllrrrr}
+    \toprule
+    SUT & Perturbation & Metric & Baseline & Std & Variance & CV \\
+    \midrule
+${rows.join("\n")}
+    \bottomrule
+  \end{tabular}
+\end{table}
+`;
+
+		return {
+			id: "robustness-summary",
+			filename: "robustness-summary.tex",
+			content,
+			format: "latex",
+		};
+	}
+
+	/**
+	 * Render metrics evaluation output.
+	 *
+	 * @param evaluation - Metrics evaluation output
+	 * @returns Rendered output
+	 */
+	private renderMetricsEvaluation(
+		evaluation: EvaluationOutput<MetricsEvaluatorData>,
+	): RenderOutput {
+		const { results, summary } = evaluation.data;
+
+		// Build table rows
+		const rows: string[] = [];
+		for (const result of results) {
+			const criterionId = escapeLatex(result.criterion.criterionId);
+			const type = escapeLatex(result.criterion.type);
+			const status =
+				result.status === "pass"
+					? String.raw`\checkmark`
+					: result.status === "fail"
+						? String.raw`\times`
+						: "?";
+
+			// Format expected value based on type
+			let expected = "--";
+			switch (result.expected.type) {
+				case "threshold":
+					expected = this.formatNumber(result.expected.threshold ?? 0);
+					break;
+				case "baseline":
+					expected = this.formatNumber(result.expected.baselineValue ?? 0);
+					break;
+				case "target-range": {
+					const min = result.expected.targetRange?.min;
+					const max = result.expected.targetRange?.max;
+					expected = `[${min !== undefined ? this.formatNumber(min) : "-∞"}, ${max !== undefined ? this.formatNumber(max) : "∞"}]`;
+					break;
+				}
+			}
+
+			// Format observed values
+			const observedList = result.observed
+				.map((obs) => `${escapeLatex(obs.sut)}=${this.formatNumber(obs.value)}`)
+				.join(", ");
+
+			rows.push(`    ${criterionId} & ${type} & $${status}$ & ${expected} & ${observedList} \\\\`);
+		}
+
+		// Summary
+		const caption = `Metrics evaluation summary. ${summary.passed}/${summary.total} criteria passed (${this.formatPercentage(summary.passRate)}).`;
+
+		const content = String.raw`\begin{table}[htbp]
+  \centering
+  \caption{${caption}}
+  \label{tab:metrics-summary}
+  \begin{tabular}{lllll}
+    \toprule
+    Criterion & Type & Status & Expected & Observed \\
+    \midrule
+${rows.join("\n")}
+    \bottomrule
+  \end{tabular}
+\end{table}
+`;
+
+		return {
+			id: "metrics-summary",
+			filename: "metrics-summary.tex",
+			content,
+			format: "latex",
+		};
+	}
+
+	/**
+	 * Render custom evaluation output (generic fallback).
+	 *
+	 * @param evaluation - Custom evaluation output
+	 * @returns Rendered output
+	 */
+	private renderCustomEvaluation<T>(evaluation: EvaluationOutput<T>): RenderOutput {
+		// Generic rendering for custom evaluators - output as verbatim JSON
+		const content = String.raw`\begin{verbatim}
+${JSON.stringify(evaluation, null, 2)}
+\end{verbatim}
+`;
+
+		return {
+			id: `custom-${evaluation.type}`,
+			filename: `custom-${evaluation.type}.tex`,
+			content,
+			format: "latex",
+		};
 	}
 
 	/**
