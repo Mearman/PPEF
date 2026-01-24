@@ -61,7 +61,14 @@ export const generateRunId = (inputs: RunIdInputs): string => {
  * @returns 8-character hex string
  */
 export const generateConfigHash = (config: Record<string, unknown>): string => {
-	const canonical = JSON.stringify(config, Object.keys(config).sort());
+	// Sort keys for consistent ordering, then stringify without replacer
+	// (using replacer array would filter nested properties)
+	const sortedKeys = Object.keys(config).sort();
+	const sortedObj: Record<string, unknown> = {};
+	for (const key of sortedKeys) {
+		sortedObj[key] = config[key];
+	}
+	const canonical = JSON.stringify(sortedObj);
 	return createHash("sha256").update(canonical).digest("hex").slice(0, 8);
 };
 
