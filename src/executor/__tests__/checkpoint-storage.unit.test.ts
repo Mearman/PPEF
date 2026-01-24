@@ -343,6 +343,22 @@ describe("FileStorage", () => {
 			await storage.save(checkpoint);
 			assert.ok(getStorageFile());
 		});
+
+		it("should throw error when write fails", async () => {
+			const checkpoint: CheckpointData = {
+				configHash: "abc123",
+				createdAt: "2024-01-01T00:00:00.000Z",
+				updatedAt: "2024-01-01T00:00:00.000Z",
+				completedRunIds: [],
+				results: {},
+				totalPlanned: 0,
+			};
+
+			const resolvedPath = storage.getPath();
+			mockFs.setThrowsOnWrite(resolvedPath);
+
+			await assert.rejects(() => storage.save(checkpoint));
+		});
 	});
 
 	describe("exists", () => {
@@ -506,6 +522,23 @@ describe("GitStorage", () => {
 			assert.strictEqual(storage.type, "git");
 		});
 	});
+
+	describe("constructor", () => {
+		it("should use current directory as default repoRoot", () => {
+			const storage = new GitStorage("test-namespace");
+			assert.strictEqual(storage.type, "git");
+		});
+
+		it("should use custom repoRoot when provided", () => {
+			const storage = new GitStorage("test-namespace", "/custom/path");
+			assert.strictEqual(storage.type, "git");
+		});
+
+		it("should handle namespaces with special characters", () => {
+			const storage = new GitStorage("test/namespace-with-dashes");
+			assert.strictEqual(storage.type, "git");
+		});
+	});
 });
 
 describe("createCheckpointStorage", () => {
@@ -578,5 +611,23 @@ describe("getGitNamespace", () => {
 	it("should handle paths with only slashes", () => {
 		// "///a//b///" -> "---a--b---" (slashes become hyphens)
 		assert.strictEqual(getGitNamespace("///a//b///"), "---a--b---");
+	});
+});
+
+describe("createCheckpointStorage with auto mode", () => {
+	describe("detectPreferredMode edge cases", () => {
+		it("should create FileStorage for 'auto' mode in non-git directory", () => {
+			// /tmp is typically not a git repository
+			const storage = createCheckpointStorage("auto", "results/checkpoint.json", "/tmp");
+			assert.ok(storage instanceof FileStorage);
+			assert.strictEqual(storage.type, "file");
+		});
+
+		it("should create GitStorage for 'auto' mode in git repo with commits", () => {
+			// This repo has git and commits, so auto should create GitStorage
+			const storage = createCheckpointStorage("auto", "results-execute");
+			assert.ok(storage instanceof GitStorage);
+			assert.strictEqual(storage.type, "git");
+		});
 	});
 });
