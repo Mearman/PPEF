@@ -176,7 +176,9 @@ describe("createAggregationOutput", () => {
 		const output = createAggregationOutput(aggregates, results);
 
 		// createMockResults creates unique case IDs for each result
-		assert.ok(output.metadata?.totalCases > 0);
+		const totalCases = output.metadata?.totalCases;
+		assert.ok(totalCases !== undefined);
+		assert.ok(totalCases > 0);
 	});
 
 	it("should include case classes when present", () => {
