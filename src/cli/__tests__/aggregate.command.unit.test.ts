@@ -65,6 +65,31 @@ describe("aggregate command", () => {
 		},
 	];
 
+	const mockAggregatesWithComparisons: AggregatedResult[] = [
+		{
+			sut: "sut-1",
+			sutRole: "primary" as const,
+			caseClass: "test-class",
+			group: { runCount: 1, caseCount: 1 },
+			correctness: {
+				validRate: 1,
+				producedOutputRate: 1,
+			},
+			metrics: {
+				accuracy: { n: 1, mean: 0.9, median: 0.9, min: 0.9, max: 0.9, std: 0 },
+			},
+			comparisons: {
+				baseline: {
+					deltas: { default: 0.1 },
+					ratios: { default: 1.1 },
+					betterRate: 0.75,
+					pValue: 0.0234,
+					effectSize: 0.5678,
+				},
+			},
+		},
+	];
+
 	const mockAggregationOutput: AggregationOutput = {
 		version: "1.0.0",
 		timestamp: "2024-01-01T00:00:00Z",
@@ -452,6 +477,57 @@ describe("aggregate command", () => {
 			}
 
 			assert.ok(loggedMessages.some((msg) => msg.includes("[error] File not found")));
+			assert.strictEqual(exitCode, 1);
+		});
+
+		it("should display comparisons in summary", async () => {
+			mockAggregator.aggregateResults = mock.fn(() => mockAggregatesWithComparisons);
+			mockAggregator.createAggregationOutput = mock.fn(() => ({
+				...mockAggregationOutput,
+				aggregates: mockAggregatesWithComparisons,
+			}));
+
+			await executeAggregate(
+				"/test/results.json",
+				{},
+				{
+					logger: mockLogger,
+					fileSystem: mockFileSystem,
+					aggregator: mockAggregator,
+					outputWriter: mockOutputWriter,
+					processExit: mockProcessExit,
+				},
+			);
+
+			assert.ok(loggedMessages.some((msg) => msg.includes("Comparisons:")));
+			assert.ok(loggedMessages.some((msg) => msg.includes("vs baseline:")));
+			assert.ok(loggedMessages.some((msg) => msg.includes("p-value: 0.0234")));
+			assert.ok(loggedMessages.some((msg) => msg.includes("effect size: 0.5678")));
+		});
+
+		it("should handle non-Error objects in catch block", async () => {
+			mockFileSystem.readFile = mock.fn(async () => {
+				// eslint-disable-next-line @typescript-eslint/only-throw-error
+				throw "string error";
+			});
+
+			try {
+				await executeAggregate(
+					"/test/results.json",
+					{},
+					{
+						logger: mockLogger,
+						fileSystem: mockFileSystem,
+						aggregator: mockAggregator,
+						outputWriter: mockOutputWriter,
+						processExit: mockProcessExit,
+					},
+				);
+			} catch {
+				// Expected to throw
+			}
+
+			assert.ok(loggedMessages.some((msg) => msg.includes("[error] string error")));
 			assert.strictEqual(exitCode, 1);
 		});
 	});
