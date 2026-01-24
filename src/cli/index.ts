@@ -7,6 +7,7 @@
 import { Command } from "commander";
 
 import { registerAggregateCommand } from "./commands/aggregate.js";
+import { registerEvaluateCommand } from "./commands/evaluate.js";
 import { registerPlanCommand } from "./commands/plan.js";
 import { registerRunCommand } from "./commands/run.js";
 import { registerValidateCommand } from "./commands/validate.js";
@@ -31,6 +32,7 @@ export function createCliProgram(): Command {
 	registerValidateCommand(program);
 	registerPlanCommand(program);
 	registerAggregateCommand(program);
+	registerEvaluateCommand(program);
 
 	return program;
 }
@@ -68,6 +70,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 
 export {
 	registerAggregateCommand,
+	registerEvaluateCommand,
 	registerPlanCommand,
 	registerRunCommand,
 	registerValidateCommand,
