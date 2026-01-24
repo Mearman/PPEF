@@ -112,4 +112,13 @@ export default [
 			"eslint-comments/no-use": "off",
 		},
 	},
+
+	// CLI validation files - allow eslint-disable for user input validation
+	{
+		files: ["src/cli/**/*.ts"],
+		rules: {
+			"eslint-comments/no-use": "off",
+			"@typescript-eslint/use-unknown-in-catch-callback-variable": "off",
+		},
+	},
 ];
