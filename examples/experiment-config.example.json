@@ -1,0 +1,65 @@
+{
+  "$schema": "../schema/experiment-config.schema.json",
+  "experiment": {
+    "name": "Graph Expansion Benchmark",
+    "description": "Compare degree-prioritised expansion against baseline BFS",
+    "version": "1.0.0"
+  },
+  "executor": {
+    "continueOnError": true,
+    "repetitions": 10,
+    "seedBase": 42,
+    "timeoutMs": 30000,
+    "collectProvenance": true,
+    "concurrency": 4
+  },
+  "suts": [
+    {
+      "id": "degree-prioritised-v1.0.0",
+      "module": "./suts/degree-prioritised.js",
+      "exportName": "createSUT",
+      "config": {
+        "hubThreshold": 0.9
+      },
+      "registration": {
+        "name": "Degree-Prioritised Expansion",
+        "version": "1.0.0",
+        "role": "primary",
+        "tags": ["expansion", "hub-based"],
+        "description": "Expansion algorithm that prioritises high-degree nodes"
+      }
+    },
+    {
+      "id": "bfs-baseline-v1.0.0",
+      "module": "./suts/bfs-baseline.js",
+      "exportName": "createSUT",
+      "registration": {
+        "name": "Standard BFS",
+        "version": "1.0.0",
+        "role": "baseline",
+        "tags": ["expansion", "baseline"]
+      }
+    }
+  ],
+  "cases": [
+    {
+      "id": "karate-v1",
+      "module": "./cases/karate.js",
+      "exportName": "createCase"
+    },
+    {
+      "id": "football-v1",
+      "module": "./cases/football.js",
+      "exportName": "createCase"
+    }
+  ],
+  "metricsExtractor": {
+    "module": "./metrics/extractor.js",
+    "exportName": "extractMetrics"
+  },
+  "output": {
+    "path": "./results",
+    "format": "json-pretty",
+    "aggregate": true
+  }
+}
