@@ -170,6 +170,21 @@ export async function executeRun(
 		const sutDefinitions = await Promise.all(
 			config.suts.map(async (sutConfig) => {
 				logger.debug(`Loading SUT: ${sutConfig.id} from ${sutConfig.module}`);
+
+				// Build binary config if this is a binary SUT
+				const binaryConfig =
+					sutConfig.type === "binary" && sutConfig.binaryCommand
+						? {
+								type: "binary" as const,
+								command: sutConfig.binaryCommand,
+								args: sutConfig.binaryArgs,
+								inputFormat: sutConfig.binaryInputFormat,
+								outputFormat: sutConfig.binaryOutputFormat,
+								timeout: sutConfig.binaryTimeout,
+								successExitCode: undefined, // Could add to SutConfig if needed
+							}
+						: undefined;
+
 				return moduleLoader.loadSutFactory(
 					sutConfig.module,
 					sutConfig.exportName,
@@ -184,6 +199,7 @@ export async function executeRun(
 						description: sutConfig.registration.description,
 					},
 					sutConfig.config,
+					binaryConfig,
 				);
 			}),
 		);
