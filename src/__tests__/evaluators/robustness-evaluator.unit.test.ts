@@ -242,16 +242,44 @@ describe("RobustnessEvaluator", () => {
 		it("should compute variance and coefficient of variation", () => {
 			const config = createBaseConfig();
 
-			const results = createMockResults("test-sut", "accuracy", [0.9, 0.85, 0.88, 0.87, 0.86]);
+			// Create results with perturbation marked in config
+			const results = [
+				// Baseline (no perturbation)
+				createMockResult({
+					run: {
+						runId: "run-0",
+						sut: "test-sut",
+						sutRole: "primary",
+						caseId: "case-1",
+						caseClass: undefined,
+					},
+					metrics: { numeric: { accuracy: 0.9 } },
+				}),
+				// Perturbed results
+				...createMockResults("test-sut", "accuracy", [0.85, 0.88, 0.87, 0.86]).map((r) => ({
+					...r,
+					run: { ...r.run, config: { perturbation: "noise" } },
+				})),
+			];
 
 			const output = evaluator.evaluate(config, results);
-			const perturbation = output.data.results[0]?.perturbation?.[0];
+			const result = output.data.results[0];
 
-			assert.ok(perturbation);
-			assert.ok(typeof perturbation.stats.mean === "number");
-			assert.ok(typeof perturbation.stats.variance === "number");
-			assert.ok(typeof perturbation.stats.stdDev === "number");
-			assert.ok(typeof perturbation.stats.coefficientOfVariation === "number");
+			assert.ok(result);
+			assert.equal(result.perturbation, "noise");
+			assert.equal(result.metric, "accuracy");
+			assert.equal(result.sut, "test-sut");
+
+			// Check robustness metrics
+			const { robustness } = result;
+			assert.ok(typeof robustness.varianceUnderPerturbation === "number");
+			assert.ok(typeof robustness.stdUnderPerturbation === "number");
+			assert.ok(typeof robustness.coefficientOfVariation === "number");
+
+			// Values should be valid (not NaN) since we have perturbed results
+			assert.ok(!Number.isNaN(robustness.varianceUnderPerturbation));
+			assert.ok(!Number.isNaN(robustness.stdUnderPerturbation));
+			assert.ok(!Number.isNaN(robustness.coefficientOfVariation));
 		});
 	});
 
@@ -261,7 +289,10 @@ describe("RobustnessEvaluator", () => {
 		it("should create summary from output", () => {
 			const config = createBaseConfig();
 
-			const results = createMockResults("test-sut", "accuracy", [0.9, 0.85, 0.88]);
+			const results = createMockResults("test-sut", "accuracy", [0.9, 0.85, 0.88]).map((r) => ({
+				...r,
+				run: { ...r.run, config: { perturbation: "noise" } },
+			}));
 
 			const output = evaluator.evaluate(config, results);
 			const summary = evaluator.summarize(output);
@@ -278,12 +309,16 @@ describe("RobustnessEvaluator", () => {
 				...createMockResults("sut-1", "accuracy", [0.9, 0.85]),
 				...createMockResults("sut-1", "precision", [0.85, 0.8]),
 				...createMockResults("sut-2", "accuracy", [0.8, 0.78]),
-			];
+			].map((r) => ({
+				...r,
+				run: { ...r.run, config: { perturbation: "noise" } },
+			}));
 
 			const output = evaluator.evaluate(config, results);
 			const summary = evaluator.summarize(output);
 
-			assert.equal(summary.total, 3); // 3 combinations
+			// Evaluator creates results for all combinations: 2 SUTs × 2 metrics = 4
+			assert.equal(summary.total, 4);
 		});
 	});
 });
