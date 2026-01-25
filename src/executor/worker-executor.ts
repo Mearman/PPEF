@@ -3,6 +3,10 @@
  *
  * This class can be tested by injecting mock dependencies,
  * while worker-entry.ts provides real implementations.
+ *
+ * Two execution modes:
+ * 1. Legacy mode: Uses module loader to dynamically load SUTs/cases (for backward compatibility)
+ * 2. Serialized mode: SUTs/cases passed via WorkerMessage (for worker threads isolation)
  */
 
 import type { EvaluationResult } from "../types/result.js";
@@ -30,11 +34,47 @@ export interface ExecutorConfig {
 }
 
 /**
- * Type definition for message sent to worker
+ * Serialized SUT definition for passing via WorkerMessage.
+ */
+export interface SerializedSut {
+	id: string;
+	module: string;
+	exportName: string;
+	registration: {
+		name: string;
+		version: string;
+		role: string;
+	};
+}
+
+/**
+ * Serialized case definition for passing via WorkerMessage.
+ */
+export interface SerializedCase {
+	caseId: string;
+	module: string;
+	exportName: string;
+}
+
+/**
+ * Type definition for message sent to worker.
+ *
+ * Supports two modes:
+ * - Legacy: Only `runs` and `config` provided (uses module loader)
+ * - Serialized: `suts` and `cases` arrays provided (direct instantiation)
  */
 export interface WorkerMessage {
 	runs: RunConfig[];
 	config: ExecutorConfig;
+
+	/** Base directory for resolving module paths (required for serialized mode) */
+	baseDir?: string;
+
+	/** Serialized SUT definitions (optional, for serialized mode) */
+	suts?: SerializedSut[];
+
+	/** Serialized case definitions (optional, for serialized mode) */
+	cases?: SerializedCase[];
 }
 
 /**
@@ -140,23 +180,36 @@ export interface IModuleLoader {
 }
 
 /**
+ * Type-safe dynamic import helper.
+ * TypeScript's import() returns `any`, so we use a type assertion function
+ * to satisfy ESLint's no-unsafe-assignment rule.
+ */
+async function dynamicImport(modulePath: string): Promise<Record<string, unknown>> {
+	return import(modulePath) as Promise<Record<string, unknown>>;
+}
+
+/**
  * WorkerExecutor - Core worker execution logic with injected dependencies.
+ *
+ * Supports two execution modes:
+ * 1. Legacy mode: Uses module loader for dynamic imports (backward compatible)
+ * 2. Serialized mode: SUTs/cases passed via WorkerMessage (worker threads isolation)
  */
 export class WorkerExecutor {
 	private readonly parentPort: IParentPort;
 	private readonly moduleLoader: IModuleLoader;
+	private readonly projectRoot: string;
 
 	/**
 	 * Create a new WorkerExecutor with injected dependencies.
 	 * @param parentPort - Communication port to parent thread
-	 * @param moduleLoader - Module loader for dynamic imports
-	 * @param projectRoot - Root directory for the project (reserved for future use)
+	 * @param moduleLoader - Module loader for dynamic imports (legacy mode)
+	 * @param projectRoot - Root directory for the project (used for module resolution)
 	 */
 	constructor(parentPort: IParentPort, moduleLoader: IModuleLoader, projectRoot: string) {
 		this.parentPort = parentPort;
 		this.moduleLoader = moduleLoader;
-		// projectRoot reserved for future use
-		void projectRoot;
+		this.projectRoot = projectRoot;
 	}
 
 	/**
@@ -187,8 +240,26 @@ export class WorkerExecutor {
 
 	/**
 	 * Execute a batch of runs.
+	 *
+	 * Two execution modes:
+	 * 1. Legacy mode: Uses module loader to dynamically load SUTs/cases
+	 * 2. Serialized mode: SUTs/cases passed via WorkerMessage (for worker threads)
 	 */
 	public async executeBatch(message: WorkerMessage): Promise<WorkerResponse> {
+		// Check if serialized mode (SUTs/cases provided in message)
+		if (message.suts && message.cases && message.baseDir) {
+			return this.executeBatchSerialized(message);
+		}
+
+		// Legacy mode: Use module loader
+		return this.executeBatchLegacy(message);
+	}
+
+	/**
+	 * Execute using legacy mode with dynamic module loading.
+	 * Used for backward compatibility with existing tests.
+	 */
+	private async executeBatchLegacy(message: WorkerMessage): Promise<WorkerResponse> {
 		// Import the executor and other dependencies
 		const executorModule = await this.moduleLoader.loadExecutor();
 		const evaluateModule = await this.moduleLoader.loadEvaluate();
@@ -222,6 +293,113 @@ export class WorkerExecutor {
 		});
 
 		// Execute the runs
+		const results = await executor.execute(suts, cases, () => ({}));
+
+		return {
+			results: results.results,
+			errors: results.errors,
+		};
+	}
+
+	/**
+	 * Execute using serialized mode (SUTs/cases passed via WorkerMessage).
+	 * This mode is used for worker threads isolation.
+	 *
+	 * Dynamically imports SUT and case modules based on provided definitions,
+	 * creates an Executor instance, and executes the planned runs.
+	 */
+	private async executeBatchSerialized(message: WorkerMessage): Promise<WorkerResponse> {
+		if (!message.baseDir || !message.suts || !message.cases) {
+			throw new Error("Serialized mode requires baseDir, suts, and cases in WorkerMessage");
+		}
+
+		// Load executor module
+		const executorModule = await this.moduleLoader.loadExecutor();
+
+		// Load SUTs dynamically
+		const suts: unknown[] = [];
+		const sutMap = new Map<string, unknown>();
+
+		for (const serializedSut of message.suts) {
+			// Resolve module path (baseDir is already absolute)
+			const modulePath = `${this.projectRoot}/${serializedSut.module}`;
+
+			try {
+				// Dynamic import from the module path
+				const module = await dynamicImport(modulePath);
+				const factory: unknown = module[serializedSut.exportName];
+
+				if (typeof factory !== "function") {
+					throw new Error(`Export ${serializedSut.exportName} in ${modulePath} is not a function`);
+				}
+
+				// Build SutDefinition object
+				const sutDefinition = {
+					factory,
+					registration: {
+						...serializedSut.registration,
+						id: serializedSut.id,
+					},
+				};
+
+				suts.push(sutDefinition);
+				sutMap.set(serializedSut.id, sutDefinition);
+			} catch (error) {
+				throw new Error(
+					`Failed to load SUT "${serializedSut.id}" from ${modulePath}: ${error instanceof Error ? error.message : String(error)}`,
+				);
+			}
+		}
+
+		// Load cases dynamically
+		const cases: unknown[] = [];
+		const caseMap = new Map<string, unknown>();
+
+		for (const serializedCase of message.cases) {
+			// Resolve module path (baseDir is already absolute)
+			const modulePath = `${this.projectRoot}/${serializedCase.module}`;
+
+			try {
+				// Dynamic import from the module path
+				const module = await dynamicImport(modulePath);
+				const caseDefinitionFn: unknown = module[serializedCase.exportName];
+
+				if (typeof caseDefinitionFn !== "function") {
+					throw new Error(`Export ${serializedCase.exportName} in ${modulePath} is not a function`);
+				}
+
+				// Call the function to get the case definition
+				const caseDefinition = (caseDefinitionFn as () => Record<string, unknown>)();
+
+				// Validate that we got a proper CaseDefinition
+				if (
+					typeof caseDefinition.getInput !== "function" ||
+					typeof caseDefinition.getInputs !== "function"
+				) {
+					throw new Error(
+						`Export ${serializedCase.exportName} in ${modulePath} did not return a valid CaseDefinition`,
+					);
+				}
+
+				cases.push(caseDefinition);
+				caseMap.set(serializedCase.caseId, caseDefinition);
+			} catch (error) {
+				throw new Error(
+					`Failed to load case "${serializedCase.caseId}" from ${modulePath}: ${error instanceof Error ? error.message : String(error)}`,
+				);
+			}
+		}
+
+		// Create executor with config
+		const executor = new executorModule.Executor({
+			repetitions: message.config.repetitions,
+			seedBase: message.config.seedBase,
+			continueOnError: message.config.continueOnError,
+			timeoutMs: message.config.timeoutMs,
+			collectProvenance: message.config.collectProvenance,
+		});
+
+		// Execute the runs (pass no-op callback - workers don't save checkpoints)
 		const results = await executor.execute(suts, cases, () => ({}));
 
 		return {
