@@ -8,6 +8,7 @@
 
 import type { AggregatedResult } from "../types/aggregate.js";
 import type {
+	IEvaluator,
 	MetricsCriterion,
 	MetricsCriterionResult,
 	MetricsEvaluationSummary,
@@ -23,11 +24,9 @@ import type {
 /**
  * Metrics evaluator - evaluates metrics against criteria.
  */
-export class MetricsEvaluator implements Evaluator<
-	MetricsEvaluatorConfig,
-	EvaluationContext,
-	MetricsEvaluatorData
-> {
+export class MetricsEvaluator
+	implements Evaluator<MetricsEvaluatorConfig, EvaluationContext, MetricsEvaluatorData>, IEvaluator
+{
 	/** Type identifier */
 	readonly type = "metrics" as const;
 

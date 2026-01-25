@@ -13,6 +13,7 @@ import type {
 } from "../types/perturbation.js";
 import type { EvaluationResult } from "../types/result.js";
 import type {
+	IEvaluator,
 	RobustnessEvaluatorConfig,
 	RobustnessEvaluatorData,
 	Evaluator,
@@ -34,11 +35,11 @@ interface RobustnessAnalysisOptions {
 /**
  * Robustness evaluator - analyzes variance under perturbations.
  */
-export class RobustnessEvaluator implements Evaluator<
-	RobustnessEvaluatorConfig,
-	EvaluationResult[],
-	RobustnessEvaluatorData
-> {
+export class RobustnessEvaluator
+	implements
+		Evaluator<RobustnessEvaluatorConfig, EvaluationResult[], RobustnessEvaluatorData>,
+		IEvaluator
+{
 	/** Type identifier */
 	readonly type = "robustness" as const;
 

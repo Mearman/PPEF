@@ -16,6 +16,7 @@ import type {
 	EvaluationClaim,
 } from "../types/claims.js";
 import type {
+	IEvaluator,
 	ClaimsEvaluatorConfig,
 	ClaimsEvaluatorData,
 	EvaluationContext,
@@ -28,11 +29,9 @@ import type {
 /**
  * Claims evaluator - evaluates hypotheses against aggregated results.
  */
-export class ClaimsEvaluator implements Evaluator<
-	ClaimsEvaluatorConfig,
-	EvaluationContext,
-	ClaimsEvaluatorData
-> {
+export class ClaimsEvaluator
+	implements Evaluator<ClaimsEvaluatorConfig, EvaluationContext, ClaimsEvaluatorData>, IEvaluator
+{
 	/** Type identifier */
 	readonly type = "claims" as const;
 
