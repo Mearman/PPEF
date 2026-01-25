@@ -56,6 +56,18 @@ export interface IMetricsExtractor {
 }
 
 /**
+ * Binary SUT configuration interface.
+ */
+export interface IBinaryConfig {
+	type: "binary";
+	command: string;
+	args?: string[];
+	inputFormat?: "json" | "raw" | "lines";
+	outputFormat?: "json" | "raw" | "lines";
+	timeout?: number;
+}
+
+/**
  * Module loader interface for dynamic imports.
  */
 export interface IModuleLoader {
@@ -73,6 +85,7 @@ export interface IModuleLoader {
 			description?: string;
 		},
 		sutConfig: unknown,
+		binaryConfig?: IBinaryConfig,
 	): Promise<ISutFactory>;
 
 	loadCaseDefinition(module: string, exportName: string, baseDir: string): Promise<ICaseDefinition>;
