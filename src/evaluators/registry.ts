@@ -6,21 +6,10 @@
  * alongside built-in evaluators.
  */
 
-import type { Evaluator, EvaluationType, EvaluatorConfig } from "../types/evaluator.js";
-
-/**
- * Base evaluator type for registry storage.
- *
- * Stores only the type identifier since actual evaluator instances
- * have varying generic parameters. Full type is restored via
- * generics when retrieving from the registry.
- */
-interface BaseEvaluator {
-	readonly type: EvaluationType;
-}
+import type { IEvaluator, Evaluator, EvaluationType, EvaluatorConfig } from "../types/evaluator.js";
 
 /** Private storage for evaluators */
-const evaluators = new Map<EvaluationType, BaseEvaluator>();
+const evaluators = new Map<EvaluationType, IEvaluator>();
 
 /**
  * Registry of all available evaluators.
@@ -49,28 +38,51 @@ export const EvaluatorRegistry = {
 	},
 
 	/**
-	 * Get an evaluator by type.
+	 * Get an evaluator by type (returns base IEvaluator).
+	 *
+	 * For type-safe retrieval, use the getAs() method instead.
 	 *
 	 * @param type - Evaluation type identifier
 	 * @returns Evaluator instance or undefined if not found
 	 */
-	get<TConfig extends EvaluatorConfig, TInput, TOutput>(
-		type: EvaluationType,
-	): Evaluator<TConfig, TInput, TOutput> | undefined {
-		return evaluators.get(type) as Evaluator<TConfig, TInput, TOutput> | undefined;
+	get(type: EvaluationType): IEvaluator | undefined {
+		return evaluators.get(type);
+	},
+
+	/**
+	 * Get an evaluator by type with runtime type checking.
+	 *
+	 * Uses instanceof to verify the evaluator is of the expected class.
+	 * Returns undefined if the evaluator doesn't exist or isn't of the expected type.
+	 *
+	 * @param type - Evaluation type identifier
+	 * @param clazz - Constructor of the expected evaluator class
+	 * @returns Typed evaluator instance or undefined
+	 *
+	 * @example
+	 * ```ts
+	 * const claimsEvaluator = EvaluatorRegistry.getAs("claims", ClaimsEvaluator);
+	 * if (claimsEvaluator) {
+	 *   // Full type safety - claimsEvaluator is ClaimsEvaluator
+	 *   const validation = claimsEvaluator.validateConfig(config);
+	 * }
+	 * ```
+	 */
+	getAs<T extends IEvaluator>(type: EvaluationType, clazz: new () => T): T | undefined {
+		const evaluator = evaluators.get(type);
+		return evaluator instanceof clazz ? evaluator : undefined;
 	},
 
 	/**
 	 * Get an evaluator by type, throwing if not found.
 	 *
 	 * @param type - Evaluation type identifier
+	 * @param clazz - Constructor of the expected evaluator class
 	 * @returns Evaluator instance
-	 * @throws Error if evaluator type not found
+	 * @throws Error if evaluator type not found or wrong type
 	 */
-	getOrThrow<TConfig extends EvaluatorConfig, TInput, TOutput>(
-		type: EvaluationType,
-	): Evaluator<TConfig, TInput, TOutput> {
-		const evaluator = EvaluatorRegistry.get<TConfig, TInput, TOutput>(type);
+	getOrThrow<T extends IEvaluator>(type: EvaluationType, clazz: new () => T): T {
+		const evaluator = EvaluatorRegistry.getAs(type, clazz);
 		if (!evaluator) {
 			throw new Error(`Evaluator not found for type: ${type}`);
 		}
