@@ -60,14 +60,14 @@ export class RobustnessEvaluator
 		if (!Array.isArray(config.metrics)) {
 			errors.push("metrics must be an array");
 		} else if (config.metrics.length === 0) {
-			warnings.push("No metrics provided - evaluation will produce empty results");
+			errors.push("metrics cannot be empty");
 		}
 
 		// Check perturbations array
 		if (!Array.isArray(config.perturbations)) {
 			errors.push("perturbations must be an array");
 		} else if (config.perturbations.length === 0) {
-			warnings.push("No perturbations provided - evaluation will produce empty results");
+			errors.push("perturbations cannot be empty");
 		}
 
 		// Validate intensity levels if provided
