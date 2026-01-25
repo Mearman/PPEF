@@ -9,12 +9,18 @@ import { readFile, writeFile } from "node:fs/promises";
 
 import type { Command } from "commander";
 
-import { EvaluatorRegistry } from "../../evaluators/index.js";
+import {
+	EvaluatorRegistry,
+	ClaimsEvaluator,
+	RobustnessEvaluator,
+	MetricsEvaluator,
+} from "../../evaluators/index.js";
 import type { ICommandLogger, IFileSystem } from "../command-deps.js";
 import type {
 	EvaluationContext,
 	EvaluatorConfig,
 	EvaluationType,
+	EvaluationOutput,
 	ClaimsEvaluatorConfig,
 	RobustnessEvaluatorConfig,
 	MetricsEvaluatorConfig,
@@ -95,54 +101,161 @@ export async function executeEvaluate(
 			evaluatorConfig = {};
 		}
 
-		// Get evaluator from registry
+		// Get evaluator from registry using type-safe retrieval
 		logger.info(`Evaluator type: ${options.type}`);
-		const evaluator = EvaluatorRegistry.getOrThrow(options.type);
 
-		// Validate config
-		logger.subheader("Validating evaluator configuration...");
-		const validation = evaluator.validateConfig(
-			evaluatorConfig as ClaimsEvaluatorConfig & RobustnessEvaluatorConfig & MetricsEvaluatorConfig,
-		);
-
-		if (!validation.valid) {
-			logger.error("Evaluator configuration validation failed:");
-			for (const error of validation.errors ?? []) {
-				logger.error(`  - ${error}`);
-			}
-			processExit(1);
-			return; // Type narrowing
-		}
-
-		if (validation.warnings && validation.warnings.length > 0) {
-			logger.warn("Configuration warnings:");
-			for (const warning of validation.warnings) {
-				logger.warn(`  - ${warning}`);
-			}
-		}
-		logger.info("Configuration valid");
-
-		// Prepare evaluation context
-		const context: EvaluationContext = {
-			aggregates,
-			rawResults,
-			metadata: {
-				source: aggregatesFile,
-			},
+		// Type-safe evaluator retrieval and execution
+		let output: EvaluationOutput<unknown>;
+		let summary: {
+			total: number;
+			passed?: number;
+			failed?: number;
+			inconclusive?: number;
+			passRate?: number;
+			additional?: Record<string, number | string>;
 		};
 
-		// Run evaluation
-		logger.subheader("Running evaluation...");
-		const output = evaluator.evaluate(
-			evaluatorConfig as ClaimsEvaluatorConfig & RobustnessEvaluatorConfig & MetricsEvaluatorConfig,
-			context,
-		);
+		switch (options.type) {
+			case "claims": {
+				const evaluator = EvaluatorRegistry.getAs("claims", ClaimsEvaluator);
+				if (!evaluator) {
+					logger.error(`Evaluator not found for type: claims`);
+					processExit(1);
+					return; // Type narrowing
+				}
+
+				// Validate config
+				logger.subheader("Validating evaluator configuration...");
+				const validation = evaluator.validateConfig(evaluatorConfig as ClaimsEvaluatorConfig);
+				if (!validation.valid) {
+					logger.error("Evaluator configuration validation failed:");
+					for (const error of validation.errors ?? []) {
+						logger.error(`  - ${error}`);
+					}
+					processExit(1);
+					return; // Type narrowing
+				}
+				if (validation.warnings && validation.warnings.length > 0) {
+					logger.warn("Configuration warnings:");
+					for (const warning of validation.warnings) {
+						logger.warn(`  - ${warning}`);
+					}
+				}
+				logger.info("Configuration valid");
+
+				// Prepare evaluation context
+				const context: EvaluationContext = {
+					aggregates,
+					rawResults,
+					metadata: {
+						source: aggregatesFile,
+					},
+				};
+
+				// Run evaluation
+				logger.subheader("Running evaluation...");
+				const evalOutput = evaluator.evaluate(evaluatorConfig as ClaimsEvaluatorConfig, context);
+				output = evalOutput;
+				summary = evaluator.summarize(evalOutput);
+				break;
+			}
+			case "robustness": {
+				const evaluator = EvaluatorRegistry.getAs("robustness", RobustnessEvaluator);
+				if (!evaluator) {
+					logger.error(`Evaluator not found for type: robustness`);
+					processExit(1);
+					return; // Type narrowing
+				}
+
+				// Validate config
+				logger.subheader("Validating evaluator configuration...");
+				const validation = evaluator.validateConfig(evaluatorConfig as RobustnessEvaluatorConfig);
+				if (!validation.valid) {
+					logger.error("Evaluator configuration validation failed:");
+					for (const error of validation.errors ?? []) {
+						logger.error(`  - ${error}`);
+					}
+					processExit(1);
+					return; // Type narrowing
+				}
+				if (validation.warnings && validation.warnings.length > 0) {
+					logger.warn("Configuration warnings:");
+					for (const warning of validation.warnings) {
+						logger.warn(`  - ${warning}`);
+					}
+				}
+				logger.info("Configuration valid");
+
+				// Robustness evaluator requires raw results, not aggregates
+				if (!rawResults || rawResults.length === 0) {
+					logger.error("Robustness evaluation requires raw results, but none found");
+					processExit(1);
+					return; // Type narrowing
+				}
+
+				// Run evaluation
+				logger.subheader("Running evaluation...");
+				const evalOutput = evaluator.evaluate(
+					evaluatorConfig as RobustnessEvaluatorConfig,
+					rawResults,
+				);
+				output = evalOutput;
+				summary = evaluator.summarize(evalOutput);
+				break;
+			}
+			case "metrics": {
+				const evaluator = EvaluatorRegistry.getAs("metrics", MetricsEvaluator);
+				if (!evaluator) {
+					logger.error(`Evaluator not found for type: metrics`);
+					processExit(1);
+					return; // Type narrowing
+				}
+
+				// Validate config
+				logger.subheader("Validating evaluator configuration...");
+				const validation = evaluator.validateConfig(evaluatorConfig as MetricsEvaluatorConfig);
+				if (!validation.valid) {
+					logger.error("Evaluator configuration validation failed:");
+					for (const error of validation.errors ?? []) {
+						logger.error(`  - ${error}`);
+					}
+					processExit(1);
+					return; // Type narrowing
+				}
+				if (validation.warnings && validation.warnings.length > 0) {
+					logger.warn("Configuration warnings:");
+					for (const warning of validation.warnings) {
+						logger.warn(`  - ${warning}`);
+					}
+				}
+				logger.info("Configuration valid");
+
+				// Prepare evaluation context
+				const context: EvaluationContext = {
+					aggregates,
+					rawResults,
+					metadata: {
+						source: aggregatesFile,
+					},
+				};
+
+				// Run evaluation
+				logger.subheader("Running evaluation...");
+				const evalOutput = evaluator.evaluate(evaluatorConfig as MetricsEvaluatorConfig, context);
+				output = evalOutput;
+				summary = evaluator.summarize(evalOutput);
+				break;
+			}
+			default:
+				logger.error(`Unsupported evaluator type: ${options.type}`);
+				processExit(1);
+				return; // Type narrowing
+		}
 
 		logger.info(`Evaluation complete: ${output.type}`);
 
 		// Display summary
 		if (options.verbose) {
-			const summary = evaluator.summarize(output);
 			logger.subheader("Evaluation Summary");
 			logger.info(`Total items: ${summary.total}`);
 			if (summary.passed !== undefined) {
