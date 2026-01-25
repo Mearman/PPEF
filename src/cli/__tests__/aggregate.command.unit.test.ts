@@ -137,6 +137,9 @@ describe("aggregate command", () => {
 			readFile: mock.fn(async (path: string, encoding: string) => {
 				return JSON.stringify({ results: mockResults });
 			}),
+			writeFile: mock.fn(async (_path: string, _data: string) => {
+				// Do nothing
+			}),
 		};
 
 		// Mock aggregator

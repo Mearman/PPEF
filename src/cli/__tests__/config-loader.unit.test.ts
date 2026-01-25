@@ -84,7 +84,6 @@ describe("config-loader", () => {
 				cases: [{ id: "case1", module: "./case.js", exportName: "createCase" }],
 				metricsExtractor: { module: "./metrics.js", exportName: "extract" },
 				output: {},
-				output: {},
 			};
 
 			const configPath = await createConfigFile(config);
@@ -319,7 +318,7 @@ describe("config-loader", () => {
 						id: "sut1",
 						module: "./sut.js",
 						exportName: "createSut",
-						registration: { name: "SUT 1", version: "", role: "primary", config: {}, tags: [] },
+						registration: { name: "SUT 1", version: "", role: "primary", tags: [] },
 					},
 				],
 				cases: [{ id: "case1", module: "./case.js", exportName: "createCase" }],
@@ -345,7 +344,6 @@ describe("config-loader", () => {
 							name: "SUT 1",
 							version: "1.0.0",
 							role: undefined as never,
-							config: {},
 							tags: [],
 						},
 					},
@@ -373,7 +371,6 @@ describe("config-loader", () => {
 							name: "SUT 1",
 							version: "1.0.0",
 							role: "invalid" as never,
-							config: {},
 							tags: [],
 						},
 					},
@@ -398,11 +395,12 @@ describe("config-loader", () => {
 							id: "sut1",
 							module: "./sut.js",
 							exportName: "createSut",
-							registration: { name: "SUT 1", version: "1.0.0", role, config: {}, tags: [] },
+							registration: { name: "SUT 1", version: "1.0.0", role, tags: [] },
 						},
 					],
 					cases: [{ id: "case1", module: "./case.js", exportName: "createCase" }],
 					metricsExtractor: { module: "./metrics.js", exportName: "extractMetrics" },
+					output: {},
 				};
 
 				const result = validateConfig(config);
@@ -432,7 +430,6 @@ describe("config-loader", () => {
 							name: "SUT 2",
 							version: "1.0.0",
 							role: "baseline",
-							config: {},
 							tags: [],
 						},
 					},
@@ -531,6 +528,7 @@ describe("config-loader", () => {
 				],
 				cases: [{ id: "case1", module: "./case.js", exportName: "createCase" }],
 				metricsExtractor: undefined as never,
+				output: {},
 			};
 
 			const result = validateConfig(config);
@@ -554,6 +552,7 @@ describe("config-loader", () => {
 				],
 				cases: [{ id: "case1", module: "./case.js", exportName: "createCase" }],
 				metricsExtractor: { module: "", exportName: "extractMetrics" },
+				output: {},
 			};
 
 			const result = validateConfig(config);
