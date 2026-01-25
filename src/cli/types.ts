@@ -59,6 +59,24 @@ export interface SutConfig {
 	/** Optional configuration to pass to factory */
 	config?: Record<string, unknown>;
 
+	/** SUT type: "module" (default) or "binary" */
+	type?: "module" | "binary";
+
+	/** Binary SUT: command to execute (when type="binary") */
+	binaryCommand?: string;
+
+	/** Binary SUT: arguments to pass to command */
+	binaryArgs?: string[];
+
+	/** Binary SUT: how to serialize inputs to stdin */
+	binaryInputFormat?: "json" | "raw" | "lines";
+
+	/** Binary SUT: how to deserialize stdout */
+	binaryOutputFormat?: "json" | "raw" | "lines";
+
+	/** Binary SUT: timeout per run in milliseconds */
+	binaryTimeout?: number;
+
 	/** SUT registration metadata */
 	registration: {
 		/** Human-readable name */
