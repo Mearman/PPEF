@@ -13,6 +13,7 @@ import type {
 	ValidationResult,
 	EvaluationOutput,
 	EvaluationSummary,
+	EvaluationType,
 } from "../../types/evaluator.js";
 
 /**
@@ -178,8 +179,8 @@ describe("EvaluatorRegistry", () => {
 		});
 
 		it("should return false when evaluator not found", () => {
-			const result = EvaluatorRegistry.unregister("metrics" as const); // Valid type but not our mock
-			assert.ok(!result);
+			const result = EvaluatorRegistry.unregister("unknown-type" as EvaluationType);
+			assert.strictEqual(result, false);
 		});
 	});
 
