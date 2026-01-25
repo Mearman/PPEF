@@ -45,6 +45,15 @@ export interface SerializedSut {
 		version: string;
 		role: string;
 	};
+
+	/** Binary SUT configuration (if type="binary") */
+	binary?: {
+		command: string;
+		args?: string[];
+		inputFormat?: "json" | "raw" | "lines";
+		outputFormat?: "json" | "raw" | "lines";
+		timeout?: number;
+	};
 }
 
 /**
@@ -321,10 +330,32 @@ export class WorkerExecutor {
 		const sutMap = new Map<string, unknown>();
 
 		for (const serializedSut of message.suts) {
-			// Resolve module path (baseDir is already absolute)
-			const modulePath = `${this.projectRoot}/${serializedSut.module}`;
-
 			try {
+				// Handle binary SUTs
+				if (serializedSut.binary) {
+					const binarySutModule = await dynamicImport(
+						`${this.projectRoot}/dist/executor/binary-sut.js`,
+					);
+					const BinarySutClass = binarySutModule.BinarySut as new (
+						id: string,
+						config: unknown,
+					) => { id: string; config: unknown; run: (inputs: unknown) => Promise<unknown> };
+					const sut = new BinarySutClass(serializedSut.id, serializedSut.binary);
+					const sutDefinition = {
+						factory: () => sut,
+						registration: {
+							...serializedSut.registration,
+							id: serializedSut.id,
+						},
+					};
+					suts.push(sutDefinition);
+					sutMap.set(serializedSut.id, sutDefinition);
+					continue;
+				}
+
+				// Resolve module path (baseDir is already absolute)
+				const modulePath = `${this.projectRoot}/${serializedSut.module}`;
+
 				// Dynamic import from the module path
 				const module = await dynamicImport(modulePath);
 				const factory: unknown = module[serializedSut.exportName];
@@ -346,7 +377,7 @@ export class WorkerExecutor {
 				sutMap.set(serializedSut.id, sutDefinition);
 			} catch (error) {
 				throw new Error(
-					`Failed to load SUT "${serializedSut.id}" from ${modulePath}: ${error instanceof Error ? error.message : String(error)}`,
+					`Failed to load SUT "${serializedSut.id}": ${error instanceof Error ? error.message : String(error)}`,
 				);
 			}
 		}
