@@ -28,6 +28,8 @@ import { fileURLToPath } from "node:url";
 import type { EvaluationResult } from "../types/result.js";
 import type { ExecutorConfig, PlannedRun } from "./executor.js";
 import type {
+	SerializedSut,
+	SerializedCase,
 	WorkerMessage,
 	WorkerOutputMessage,
 	WorkerSuccessMessage,
@@ -160,6 +162,9 @@ export interface WorkerThreadsExecutorOptions {
 
 	/** Worker entry path resolver */
 	workerEntryPath?: IWorkerEntryPath;
+
+	/** Base directory for resolving module paths (default: process.cwd()) */
+	baseDir?: string;
 }
 
 /**
@@ -198,11 +203,13 @@ export class WorkerThreadsExecutor {
 	private readonly logger: ILogger;
 	private readonly workerFactory: IWorkerFactory;
 	private readonly workerEntryPath: IWorkerEntryPath;
+	private readonly baseDir: string;
 
 	constructor(options: WorkerThreadsExecutorOptions = {}) {
 		this.logger = options.logger ?? new ConsoleLogger();
 		this.workerFactory = options.workerFactory ?? new WorkerFactory();
 		this.workerEntryPath = options.workerEntryPath ?? new WorkerEntryPath();
+		this.baseDir = options.baseDir ?? process.cwd();
 	}
 
 	/**
@@ -239,8 +246,8 @@ export class WorkerThreadsExecutor {
 	 * After all workers complete, results are aggregated and returned.
 	 *
 	 * @param runs - Planned runs to execute
-	 * @param _suts - SUT definitions (not used directly, passed to workers)
-	 * @param _cases - Case definitions (not used directly, passed to workers)
+	 * @param suts - SUT definitions (serialized and passed to workers)
+	 * @param cases - Case definitions (serialized and passed to workers)
 	 * @param config - Executor configuration
 	 * @param options - Worker threads executor options
 	 * @param checkpointDir - Checkpoint directory for shard files
@@ -248,8 +255,15 @@ export class WorkerThreadsExecutor {
 	 */
 	async execute(
 		runs: PlannedRun[],
-		_suts: unknown,
-		_cases: unknown[],
+		suts: {
+			registration: { id: string; name: string; version: string; role: string };
+			factory: unknown;
+		}[],
+		cases: {
+			case: { caseId: string };
+			getInput: () => Promise<unknown>;
+			getInputs: () => unknown;
+		}[],
 		config: ExecutorConfig & { onResult?: (result: EvaluationResult) => void },
 		options: WorkerThreadsExecutorOptions = {},
 		checkpointDir = resolve(process.cwd(), "results/execute"),
@@ -275,7 +289,14 @@ export class WorkerThreadsExecutor {
 		this.logger.debug(`Worker entry path: ${workerPath}`);
 
 		// Spawn workers
-		const workerStates = this._spawnWorkers(batches, workerPath, checkpointDir, config);
+		const workerStates = this._spawnWorkers(
+			batches,
+			workerPath,
+			checkpointDir,
+			config,
+			suts,
+			cases,
+		);
 
 		// Wait for all workers to complete
 		await this._waitForWorkers(workerStates);
@@ -302,6 +323,8 @@ export class WorkerThreadsExecutor {
 	 * @param workerPath - Path to worker entry point
 	 * @param checkpointDir - Checkpoint directory
 	 * @param config - Executor configuration
+	 * @param suts - SUT definitions to serialize
+	 * @param cases - Case definitions to serialize
 	 * @returns Array of worker states
 	 */
 	private _spawnWorkers(
@@ -309,8 +332,36 @@ export class WorkerThreadsExecutor {
 		workerPath: string,
 		checkpointDir: string,
 		config: ExecutorConfig,
+		suts: {
+			registration: { id: string; name: string; version: string; role: string };
+			factory: unknown;
+		}[],
+		cases: {
+			case: { caseId: string };
+			getInput: () => Promise<unknown>;
+			getInputs: () => unknown;
+		}[],
 	): WorkerState[] {
 		const workerStates: WorkerState[] = [];
+
+		// Serialize SUTs for WorkerMessage
+		const serializedSuts: SerializedSut[] = suts.map((sut) => ({
+			id: sut.registration.id,
+			module: `./dist/suts/${sut.registration.id}.js`,
+			exportName: "createSut",
+			registration: {
+				name: sut.registration.name,
+				version: sut.registration.version,
+				role: sut.registration.role,
+			},
+		}));
+
+		// Serialize cases for WorkerMessage
+		const serializedCases: SerializedCase[] = cases.map((c) => ({
+			caseId: c.case.caseId,
+			module: `./dist/cases/${c.case.caseId}.js`,
+			exportName: "createCase",
+		}));
 
 		for (const batch of batches) {
 			const checkpointPath = resolve(
@@ -344,7 +395,7 @@ export class WorkerThreadsExecutor {
 				}
 			});
 
-			// Send initial message to worker
+			// Send initial message to worker with serialized SUTs and cases
 			const workerMessage: WorkerMessage = {
 				runs: batch.runs.map((run) => ({
 					runId: run.runId,
@@ -360,6 +411,9 @@ export class WorkerThreadsExecutor {
 					timeoutMs: config.timeoutMs,
 					collectProvenance: config.collectProvenance,
 				},
+				baseDir: this.baseDir,
+				suts: serializedSuts,
+				cases: serializedCases,
 			};
 
 			worker.postMessage(workerMessage);
@@ -464,16 +518,19 @@ export class WorkerThreadsExecutor {
  * For testing or custom behavior, use the WorkerThreadsExecutor class directly.
  *
  * @param runs - Planned runs to execute
- * @param suts - SUT definitions (not used directly, passed to workers)
- * @param cases - Case definitions (not used directly, passed to workers)
+ * @param suts - SUT definitions (serialized and passed to workers)
+ * @param cases - Case definitions (serialized and passed to workers)
  * @param config - Executor configuration
  * @param options - Worker threads executor options
  * @returns Execution results
  */
 export const executeWithWorkerThreads = async (
 	runs: PlannedRun[],
-	suts: unknown,
-	cases: unknown[],
+	suts: {
+		registration: { id: string; name: string; version: string; role: string };
+		factory: unknown;
+	}[],
+	cases: { case: { caseId: string }; getInput: () => Promise<unknown>; getInputs: () => unknown }[],
 	config: ExecutorConfig & { onResult?: (result: EvaluationResult) => void },
 	options: WorkerThreadsExecutorOptions & Partial<ResourceLimits> = {},
 ): Promise<{ results: EvaluationResult[]; errors: { runId: string; error: string }[] }> => {
