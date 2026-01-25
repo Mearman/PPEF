@@ -328,19 +328,6 @@ export class Executor<TInput = unknown, TInputs = unknown, TResult = unknown> {
 				continue;
 			}
 
-			// Report progress
-			if (this.config.onProgress) {
-				this.config.onProgress({
-					total: plannedRuns.length,
-					completed,
-					failed,
-					currentSut: run.sutId,
-					currentCase: run.caseId,
-					currentRepetition: run.repetition,
-					elapsedMs: performance.now() - startTime,
-				});
-			}
-
 			try {
 				const result = await this.executeRun(run, sutDef, caseDef, metricsExtractor);
 				results.push(result);
@@ -354,6 +341,19 @@ export class Executor<TInput = unknown, TInputs = unknown, TResult = unknown> {
 				}
 
 				completed++;
+
+				// Report progress after completion
+				if (this.config.onProgress) {
+					this.config.onProgress({
+						total: plannedRuns.length,
+						completed,
+						failed,
+						currentSut: run.sutId,
+						currentCase: run.caseId,
+						currentRepetition: run.repetition,
+						elapsedMs: performance.now() - startTime,
+					});
+				}
 			} catch (error) {
 				const errorMessage = error instanceof Error ? error.message : String(error);
 				errors.push({ runId: run.runId, error: errorMessage });
