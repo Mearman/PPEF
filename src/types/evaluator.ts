@@ -44,32 +44,33 @@ export interface ValidationResult {
 }
 
 /**
- * Generic evaluator interface.
+ * Abstract evaluator interface for registry storage and collections.
  *
- * @template TConfig - Configuration type for this evaluator
- * @template TInput - Input type for evaluation
- * @template TOutput - Output type for evaluation results
+ * This non-generic interface uses `unknown` to accommodate any evaluator type.
+ * It enables evaluators to be stored in collections without type parameter conflicts.
+ *
+ * For type-safe operations, use the `Evaluator<TConfig, TInput, TOutput>` type instead.
  */
-export interface Evaluator<TConfig extends EvaluatorConfig, TInput, TOutput> {
+export interface IEvaluator {
 	/** Unique type identifier for this evaluator */
 	readonly type: EvaluationType;
 
 	/**
 	 * Validate configuration before evaluation.
 	 *
-	 * @param config - Configuration to validate
+	 * @param config - Configuration to validate (unknown for compatibility)
 	 * @returns Validation result
 	 */
-	validateConfig(config: TConfig): ValidationResult;
+	validateConfig(config: unknown): ValidationResult;
 
 	/**
 	 * Perform evaluation.
 	 *
-	 * @param config - Evaluator configuration
-	 * @param input - Input data for evaluation
+	 * @param config - Evaluator configuration (unknown for compatibility)
+	 * @param input - Input data for evaluation (unknown for compatibility)
 	 * @returns Evaluation output
 	 */
-	evaluate(config: TConfig, input: TInput): EvaluationOutput<TOutput>;
+	evaluate(config: unknown, input: unknown): EvaluationOutput<unknown>;
 
 	/**
 	 * Create a summary of evaluation results.
@@ -77,8 +78,40 @@ export interface Evaluator<TConfig extends EvaluatorConfig, TInput, TOutput> {
 	 * @param output - Evaluation output to summarize
 	 * @returns Summary statistics
 	 */
-	summarize(output: EvaluationOutput<TOutput>): EvaluationSummary;
+	summarize(output: EvaluationOutput<unknown>): EvaluationSummary;
 }
+
+/**
+ * Generic evaluator type for type-safe evaluator implementations.
+ *
+ * This intersection type combines `IEvaluator` with type-specific method signatures.
+ * Classes that implement both interfaces (via structural typing) automatically satisfy
+ * this type - no code duplication needed.
+ *
+ * @template TConfig - Configuration type for this evaluator
+ * @template TInput - Input type for evaluation
+ * @template TOutput - Output type for evaluation results
+ *
+ * @example
+ * ```ts
+ * class MyEvaluator implements Evaluator<MyConfig, MyInput, MyOutput>, IEvaluator {
+ *   readonly type = "custom" as const;
+ *
+ *   // Generic type-safe methods (for Evaluator<>)
+ *   validateConfig(config: MyConfig): ValidationResult { ... }
+ *   evaluate(config: MyConfig, input: MyInput): EvaluationOutput<MyOutput> { ... }
+ *   summarize(output: EvaluationOutput<MyOutput>): EvaluationSummary { ... }
+ *
+ *   // Unknown methods are automatically satisfied by structural typing
+ *   // No need to duplicate - TypeScript treats MyConfig as assignable to unknown
+ * }
+ * ```
+ */
+export type Evaluator<TConfig extends EvaluatorConfig, TInput, TOutput> = IEvaluator & {
+	validateConfig(config: TConfig): ValidationResult;
+	evaluate(config: TConfig, input: TInput): EvaluationOutput<TOutput>;
+	summarize(output: EvaluationOutput<TOutput>): EvaluationSummary;
+};
 
 /**
  * Generic evaluation output wrapper.
