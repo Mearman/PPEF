@@ -167,6 +167,14 @@ export interface CliOptions {
 
 	/** Dry run (plan without executing) */
 	dryRun?: boolean;
+
+	/**
+	 * Run in-process without worker thread isolation.
+	 *
+	 * WARNING: This is unsafe and should only be used for debugging.
+	 * SUT crashes can crash the CLI process.
+	 */
+	unsafeInProcess?: boolean;
 }
 
 /**

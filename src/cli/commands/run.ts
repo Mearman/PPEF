@@ -5,9 +5,11 @@
  */
 
 import type { Command } from "commander";
+import { resolve } from "node:path";
 
 import { aggregateResults, createAggregationOutput } from "../../aggregation/index.js";
 import { Executor } from "../../executor/index.js";
+import type { CheckpointData } from "../../executor/checkpoint-manager.js";
 import type {
 	IAggregator,
 	ICommandLogger,
@@ -20,6 +22,90 @@ import type { CliOptions } from "../types.js";
 import { loadAndValidateConfig } from "../config-loader.js";
 import { loadCaseDefinition, loadMetricsExtractor, loadSutFactory } from "../module-loader.js";
 import { generateOutputFilename, writeAggregates, writeResults } from "../output-writer.js";
+
+/**
+ * Merge checkpoint shards from worker threads.
+ *
+ * After worker threads complete execution, each worker has its own checkpoint shard.
+ * This function merges all shards into a single checkpoint file.
+ *
+ * @param baseDir - Base directory for checkpoints
+ * @param logger - Command logger
+ */
+async function mergeCheckpointShards(baseDir: string, logger: ICommandLogger): Promise<void> {
+	const { readdir, unlink } = await import("node:fs/promises");
+	const { FileStorage } = await import("../../executor/checkpoint-storage.js");
+
+	const checkpointDir = resolve(baseDir, "results/execute");
+
+	try {
+		const files = await readdir(checkpointDir);
+		const shards = files.filter((f) => f.startsWith("checkpoint-worker-") && f.endsWith(".json"));
+
+		if (shards.length === 0) {
+			// No shards found - nothing to merge
+			return;
+		}
+
+		logger.info(`Merging ${shards.length} checkpoint shards...`);
+
+		// Load and merge all shards
+		const mergedData: CheckpointData = {
+			configHash: "merged",
+			createdAt: new Date().toISOString(),
+			updatedAt: new Date().toISOString(),
+			completedRunIds: [],
+			results: {},
+			totalPlanned: 0,
+		};
+
+		for (const shard of shards) {
+			const shardPath = resolve(checkpointDir, shard);
+			const storage = new FileStorage(shardPath);
+			const data = await storage.load();
+
+			if (data?.completedRunIds) {
+				// Merge run IDs into the array
+				for (const runId of data.completedRunIds) {
+					if (!mergedData.completedRunIds.includes(runId)) {
+						mergedData.completedRunIds.push(runId);
+					}
+				}
+			}
+
+			// Merge results if present
+			if (data?.results) {
+				Object.assign(mergedData.results, data.results);
+			}
+
+			// Update total planned from first shard
+			if (data?.totalPlanned && mergedData.totalPlanned === 0) {
+				mergedData.totalPlanned = data.totalPlanned;
+			}
+		}
+
+		// Write merged checkpoint
+		const mainStorage = new FileStorage(resolve(checkpointDir, "checkpoint.json"));
+		await mainStorage.save(mergedData);
+
+		logger.info("Checkpoint shards merged successfully");
+
+		// Clean up shard files
+		for (const shard of shards) {
+			const shardPath = resolve(checkpointDir, shard);
+			await unlink(shardPath).catch(() => {
+				// Ignore errors during cleanup
+			});
+		}
+
+		logger.debug(`Cleaned up ${shards.length} shard files`);
+	} catch (error) {
+		// Checkpoint directory doesn't exist or other error - log and continue
+		logger.debug(
+			`Checkpoint merge skipped: ${error instanceof Error ? error.message : String(error)}`,
+		);
+	}
+}
 
 /**
  * Execute run command with injected dependencies.
@@ -71,6 +157,12 @@ export async function executeRun(
 		if (options.jobs !== undefined) {
 			(executorConfig as Record<string, unknown>).concurrency = options.jobs;
 			logger.debug(`Concurrency overridden to ${options.jobs}`);
+		}
+
+		// Handle unsafe in-process flag
+		if (options.unsafeInProcess) {
+			(executorConfig as Record<string, unknown>).forceInProcess = true;
+			logger.warn("Running in-process without worker thread isolation (SUT crashes can crash CLI)");
 		}
 
 		// Load SUTs
@@ -149,6 +241,11 @@ export async function executeRun(
 
 		logger.setProgress(false);
 		logger.info("");
+
+		// Merge checkpoint shards from workers if not in unsafe in-process mode
+		if (!options.unsafeInProcess) {
+			await mergeCheckpointShards(baseDir, logger);
+		}
 
 		// Report results
 		logger.subheader("Execution Summary");
@@ -244,6 +341,10 @@ export function registerRunCommand(program: Command): void {
 		.option("-v, --verbose", "Verbose logging")
 		.option("-q, --quiet", "Suppress output")
 		.option("--dry-run", "Plan without running")
+		.option(
+			"--unsafe-in-process",
+			"Run in-process without worker thread isolation (SUT crashes can crash CLI)",
+		)
 		.action(async (configFile: string, options: CliOptions) => {
 			const { createLogger } = await import("../logger.js");
 
