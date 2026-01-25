@@ -12,6 +12,35 @@ import type { CaseDefinition, SutDefinition } from "../types/index.js";
 import type { CaseDefinitionExport, MetricsExtractorExport, SutFactoryExport } from "./types.js";
 
 /**
+ * Binary SUT configuration for module loader.
+ */
+interface BinaryConfig {
+	/** Type discriminator */
+	type: "binary";
+
+	/** Command to execute */
+	command: string;
+
+	/** Arguments to pass to command */
+	args?: string[];
+
+	/** How to serialize inputs to stdin */
+	inputFormat?: "json" | "raw" | "lines";
+
+	/** How to deserialize stdout */
+	outputFormat?: "json" | "raw" | "lines";
+
+	/** Timeout per run in milliseconds */
+	timeout?: number;
+
+	/** Exit code that indicates success */
+	successExitCode?: number;
+
+	/** Working directory */
+	cwd?: string;
+}
+
+/**
  * Load a module from a file path.
  *
  * @param modulePath - Path to module file (relative to base directory)
@@ -61,7 +90,32 @@ export async function loadSutFactory(
 		description?: string;
 	},
 	config?: Record<string, unknown>,
+	binaryConfig?: BinaryConfig,
 ): Promise<SutDefinition> {
+	// Handle binary SUTs
+	if (binaryConfig?.type === "binary") {
+		const { createBinarySut } = await import("../executor/binary-sut.js");
+		const factory = createBinarySut({
+			id: registration.id,
+			command: binaryConfig.command,
+			args: binaryConfig.args,
+			inputFormat: binaryConfig.inputFormat ?? "json",
+			outputFormat: binaryConfig.outputFormat ?? "json",
+			timeout: binaryConfig.timeout,
+			successExitCode: binaryConfig.successExitCode,
+			cwd: binaryConfig.cwd ?? resolve(baseDir),
+		});
+
+		return {
+			registration,
+			factory: factory as (config?: Record<string, unknown>) => {
+				id: string;
+				config: Readonly<Record<string, unknown>>;
+				run: (inputs: unknown) => Promise<unknown>;
+			},
+		};
+	}
+
 	const module = await loadModule(modulePath, baseDir);
 	const factoryExport = module[exportName] as SutFactoryExport | undefined;
 
