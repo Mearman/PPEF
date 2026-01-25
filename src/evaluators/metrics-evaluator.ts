@@ -228,7 +228,8 @@ export class MetricsEvaluator
 		}
 
 		// Evaluate based on criterion type
-		return this.evaluateByType(criterion, observed, relevantAggregates);
+		// Note: Pass original aggregates for baseline evaluation (needs all SUTs)
+		return this.evaluateByType(criterion, observed, aggregates);
 	}
 
 	/**
@@ -250,7 +251,7 @@ export class MetricsEvaluator
 	 *
 	 * @param criterion - Criterion to evaluate
 	 * @param observed - Observed values
-	 * @param aggregates - Filtered aggregates (for baseline comparison)
+	 * @param aggregates - All aggregates (needed for baseline to find baseline SUT)
 	 * @returns Criterion result
 	 */
 	private evaluateByType(
