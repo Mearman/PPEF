@@ -151,6 +151,9 @@ export function registerAggregateCommand(program: Command): void {
 					fileSystem: {
 						readFile: (path: string, encoding: string) =>
 							readFile(path, encoding as BufferEncoding),
+						writeFile: async () => {
+							// Do nothing for CLI aggregate command
+						},
 					},
 					aggregator: { aggregateResults, createAggregationOutput },
 					outputWriter: { writeAggregates } as Partial<IOutputWriter>,
