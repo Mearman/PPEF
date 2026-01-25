@@ -53,6 +53,16 @@ export interface ExecutorConfig {
 
 	/** Abort execution at critical memory level (default: false) */
 	abortOnMemoryCritical?: boolean;
+
+	/**
+	 * Force in-process execution without worker thread isolation.
+	 *
+	 * WARNING: Setting this to true means SUT crashes can crash the main process.
+	 * This is unsafe and should only be used for debugging or testing purposes.
+	 *
+	 * Default: false (worker threads are always used for main thread isolation)
+	 */
+	forceInProcess?: boolean;
 }
 
 /**
@@ -254,6 +264,11 @@ export class Executor<TInput = unknown, TInputs = unknown, TResult = unknown> {
 	/**
 	 * Execute all planned runs.
 	 *
+	 * By default, always uses worker threads to isolate the main thread from SUT crashes.
+	 * Even concurrency=1 runs in a worker (sequential, but isolated).
+	 *
+	 * Use forceInProcess=true to run in-process without worker isolation (unsafe: SUT crashes can crash main process).
+	 *
 	 * @param suts - SUTs to execute
 	 * @param cases - Cases to run against
 	 * @param metricsExtractor - Function to extract metrics from result
@@ -268,33 +283,103 @@ export class Executor<TInput = unknown, TInputs = unknown, TResult = unknown> {
 	): Promise<ExecutionSummary> {
 		const startTime = performance.now();
 
-		const effectivePlannedRuns = plannedRuns ?? this.plan(suts, cases);
-		const sutMap = new Map(suts.map((s) => [s.registration.id, s]));
-		const caseMap = new Map(cases.map((c) => [c.case.caseId, c]));
+		// Check forceInProcess flag (unsafe: SUT crashes can crash main process)
+		if (this.config.forceInProcess) {
+			const effectivePlannedRuns = plannedRuns ?? this.plan(suts, cases);
+			const sutMap = new Map(suts.map((s) => [s.registration.id, s]));
+			const caseMap = new Map(cases.map((c) => [c.case.caseId, c]));
+			const concurrency = this.config.concurrency ?? 1;
 
-		// Use concurrency limit if specified, otherwise sequential
-		const concurrency = this.config.concurrency ?? 1;
+			if (concurrency <= 1) {
+				// Sequential execution (original behavior, unsafe)
+				return this.executeSequential(
+					effectivePlannedRuns,
+					sutMap,
+					caseMap,
+					metricsExtractor,
+					startTime,
+				);
+			}
 
-		if (concurrency <= 1) {
-			// Sequential execution (original behavior)
-			return this.executeSequential(
+			// Parallel execution with concurrency limit (unsafe)
+			return this.executeParallel(
 				effectivePlannedRuns,
 				sutMap,
 				caseMap,
 				metricsExtractor,
 				startTime,
+				concurrency,
 			);
 		}
 
-		// Parallel execution with concurrency limit
-		return this.executeParallel(
-			effectivePlannedRuns,
-			sutMap,
-			caseMap,
-			metricsExtractor,
-			startTime,
-			concurrency,
+		// ALWAYS use worker threads to isolate main thread from crashes
+		// Even concurrency=1 runs in a worker (sequential, but isolated)
+		return this.executeWithWorkerThreads(suts, cases, metricsExtractor, plannedRuns, startTime);
+	}
+
+	/**
+	 * Execute using worker threads for main thread isolation.
+	 *
+	 * This method is always used by default (unless forceInProcess is true).
+	 * Workers run in separate OS threads, preventing SUT crashes from affecting the main process.
+	 *
+	 * @param suts - SUTs to execute
+	 * @param cases - Cases to run against
+	 * @param metricsExtractor - Function to extract metrics from result
+	 * @param plannedRuns - Optional pre-filtered planned runs
+	 * @param startTime - Start time for elapsed time calculation
+	 * @returns Execution summary with all results
+	 */
+	private async executeWithWorkerThreads(
+		suts: SutDefinition<TInputs, TResult>[],
+		cases: CaseDefinition<TInput, TInputs>[],
+		metricsExtractor: (result: TResult) => Record<string, number>,
+		plannedRuns: PlannedRun[] | undefined,
+		startTime: number,
+	): Promise<ExecutionSummary> {
+		// Dynamically import WorkerThreadsExecutor to avoid circular dependency
+		const { WorkerThreadsExecutor } = await import("./worker-threads-executor.js");
+		const { calculateResources } = await import("./resource-calculator.js");
+
+		// Auto-calculate worker count from 75% rule
+		const resources = await calculateResources(0.75);
+
+		// Minimum 1 worker, max from 75% rule or explicit config
+		const workerCount = Math.max(
+			1,
+			Math.min(this.config.concurrency ?? resources.maxWorkers, resources.maxWorkers),
 		);
+
+		const effectivePlannedRuns = plannedRuns ?? this.plan(suts, cases);
+
+		// Create worker threads executor
+		const workerExecutor = new WorkerThreadsExecutor({
+			workers: workerCount,
+			maxMemoryMb: resources.maxMemoryMb,
+			maxConcurrentIo: resources.maxConcurrentIo,
+		});
+
+		// Execute using worker threads
+		const { results, errors } = await workerExecutor.execute(
+			effectivePlannedRuns,
+			suts,
+			cases,
+			this.config,
+			{},
+		);
+
+		// Calculate summary
+		const successfulRuns = results.length;
+		const failedRuns = errors.length;
+
+		return {
+			totalRuns: effectivePlannedRuns.length,
+			successfulRuns,
+			failedRuns,
+			elapsedMs: performance.now() - startTime,
+			results,
+			errors,
+		};
 	}
 
 	/**
