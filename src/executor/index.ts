@@ -70,3 +70,9 @@ export {
 	type IParentPort,
 	type IModuleLoader,
 } from "./worker-executor.js";
+export {
+	BinarySut,
+	createBinarySut,
+	type BinarySutConfig,
+	type CreateBinarySutOptions,
+} from "./binary-sut.js";
