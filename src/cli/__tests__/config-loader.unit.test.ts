@@ -4,7 +4,7 @@
  * Tests configuration loading, validation, and error handling.
  */
 
-import { describe, it } from "node:test";
+import { describe, it, before, after } from "node:test";
 import { strict as assert } from "node:assert";
 import { mkdir, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
@@ -16,6 +16,24 @@ import { loadConfig, validateConfig, loadAndValidateConfig } from "../config-loa
 describe("config-loader", () => {
 	let tempDir: string;
 
+	// Setup before all tests
+	before(async () => {
+		const dir = join(tmpdir(), `config-loader-test-${Date.now()}`);
+		await mkdir(dir, { recursive: true });
+		tempDir = dir;
+	});
+
+	// Cleanup after all tests
+	after(async () => {
+		if (tempDir) {
+			try {
+				await rm(tempDir, { recursive: true, force: true });
+			} catch {
+				// Ignore
+			}
+		}
+	});
+
 	async function createConfigFile(
 		config: ExperimentConfig,
 		filename = "config.json",
@@ -24,30 +42,6 @@ describe("config-loader", () => {
 		await writeFile(filePath, JSON.stringify(config, null, 2));
 		return filePath;
 	}
-
-	// Set up temp directory for test files
-	async function setupTempDir(): Promise<string> {
-		const dir = join(tmpdir(), `config-loader-test-${Date.now()}`);
-		await mkdir(dir, { recursive: true });
-		return dir;
-	}
-
-	// Setup before tests
-	async function setup(): Promise<void> {
-		tempDir = await setupTempDir();
-	}
-
-	// Cleanup after tests
-	async function teardown(): Promise<void> {
-		try {
-			await rm(tempDir, { recursive: true, force: true });
-		} catch {
-			// Ignore
-		}
-	}
-
-	// Run setup before describe
-	setup();
 
 	describe("loadConfig", () => {
 		it("should load and parse a valid config file", async () => {
@@ -721,7 +715,4 @@ describe("config-loader", () => {
 			}
 		});
 	});
-
-	// Cleanup after all tests
-	teardown();
 });
