@@ -153,7 +153,7 @@ import { MetricsEvaluator } from "./metrics-evaluator.js";
  * This ensures that the standard evaluators (claims, robustness, metrics)
  * are always available without requiring explicit registration.
  */
-function registerBuiltInEvaluators(): void {
+export function registerBuiltInEvaluators(): void {
 	EvaluatorRegistry.register(new ClaimsEvaluator());
 	EvaluatorRegistry.register(new RobustnessEvaluator());
 	EvaluatorRegistry.register(new MetricsEvaluator());

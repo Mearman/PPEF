@@ -297,13 +297,13 @@ export async function executeEvaluate(
 			if (options.output) {
 				outputFilename = options.output;
 			}
-			await writeFile(outputFilename, outputContent, "utf-8");
+			await fileSystem.writeFile(outputFilename, outputContent, "utf-8");
 		} else {
 			// JSON output
 			outputContent =
 				format === "json-pretty" ? JSON.stringify(output, null, 2) : JSON.stringify(output);
 			outputFilename = outputPath.endsWith(".json") ? outputPath : `${outputPath}.json`;
-			await writeFile(outputFilename, outputContent, "utf-8");
+			await fileSystem.writeFile(outputFilename, outputContent, "utf-8");
 		}
 
 		logger.info(`Output written to: ${outputFilename}`);
@@ -360,6 +360,8 @@ export function registerEvaluateCommand(program: Command): void {
 					fileSystem: {
 						readFile: (path: string, encoding: string) =>
 							readFile(path, encoding as BufferEncoding),
+						writeFile: (path: string, data: string, encoding: string) =>
+							writeFile(path, data, encoding as BufferEncoding),
 					},
 					processExit: (code: number) => process.exit(code),
 				},

@@ -7,7 +7,7 @@
 import { describe, it, afterEach } from "node:test";
 import { strict as assert } from "node:assert";
 
-import { EvaluatorRegistry } from "../../evaluators/registry.js";
+import { EvaluatorRegistry, registerBuiltInEvaluators } from "../../evaluators/registry.js";
 import type {
 	IEvaluator,
 	ValidationResult,
@@ -43,6 +43,7 @@ class MockCustomEvaluator implements IEvaluator {
 describe("EvaluatorRegistry", () => {
 	afterEach(() => {
 		EvaluatorRegistry.clear();
+		registerBuiltInEvaluators();
 	});
 
 	describe("register", () => {

@@ -130,6 +130,7 @@ export interface IExecutor {
  */
 export interface IFileSystem {
 	readFile(path: string, encoding: string): Promise<string>;
+	writeFile(path: string, data: string, encoding: string): Promise<void>;
 }
 
 /**
