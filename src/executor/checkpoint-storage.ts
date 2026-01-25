@@ -483,7 +483,7 @@ export const createCheckpointStorage = (
 	pathOrNamespace: string,
 	repoRoot?: string,
 ): CheckpointStorage => {
-	const effectiveMode = mode === "auto" ? detectPreferredMode() : mode;
+	const effectiveMode = mode === "auto" ? detectPreferredMode(repoRoot) : mode;
 
 	if (effectiveMode === "git") {
 		return new GitStorage(pathOrNamespace, repoRoot);
@@ -495,15 +495,17 @@ export const createCheckpointStorage = (
 /**
  * Detect preferred checkpoint mode based on environment.
  * Returns "git" if in a git repo with commits, otherwise "file".
+ * @param repoRoot - Directory to check for git repository (defaults to current directory)
  */
-const detectPreferredMode = (): CheckpointMode => {
+const detectPreferredMode = (repoRoot?: string): CheckpointMode => {
+	const cwd = repoRoot ?? process.cwd();
 	try {
 		// Check if we're in a git repo with commits
-		execSync("git rev-parse --git-dir > /dev/null 2>&1", { stdio: "pipe" });
+		execSync("git rev-parse --git-dir > /dev/null 2>&1", { stdio: "pipe", cwd });
 
 		// Check if there are any commits
 		try {
-			execSync("git rev-parse HEAD > /dev/null 2>&1", { stdio: "pipe" });
+			execSync("git rev-parse HEAD > /dev/null 2>&1", { stdio: "pipe", cwd });
 			return "git";
 		} catch {
 			// Git repo but no commits yet
