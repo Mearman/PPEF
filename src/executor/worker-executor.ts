@@ -66,11 +66,40 @@ export interface SerializedCase {
 }
 
 /**
+ * Registry manifest for passing pre-registered SUTs/cases via WorkerMessage.
+ * Allows worker threads to reconstruct registries without dynamic module loading.
+ *
+ * This enables registry-based SUTs (like GraphBox's wrapper classes) to work
+ * with worker thread isolation without requiring standalone createSut() files.
+ */
+export interface RegistryManifest {
+	/** Pre-registered SUT metadata */
+	suts: Array<{
+		id: string;
+		name: string;
+		version: string;
+		role: string;
+		config: Record<string, unknown>;
+		tags: string[];
+	}>;
+
+	/** Shared code bundle (registry functions) */
+	sharedCode: string;
+
+	/** Map of SUT IDs to their module paths */
+	sutModules: Record<string, string>;
+
+	/** Export name for createSut function */
+	exportName: string;
+}
+
+/**
  * Type definition for message sent to worker.
  *
- * Supports two modes:
+ * Supports three modes:
  * - Legacy: Only `runs` and `config` provided (uses module loader)
  * - Serialized: `suts` and `cases` arrays provided (direct instantiation)
+ * - Registry: `registryManifest` provided (reconstructs registry from manifest)
  */
 export interface WorkerMessage {
 	runs: RunConfig[];
@@ -84,6 +113,9 @@ export interface WorkerMessage {
 
 	/** Serialized case definitions (optional, for serialized mode) */
 	cases?: SerializedCase[];
+
+	/** Registry manifest (optional, for registry mode) */
+	registryManifest?: RegistryManifest;
 }
 
 /**
@@ -250,11 +282,17 @@ export class WorkerExecutor {
 	/**
 	 * Execute a batch of runs.
 	 *
-	 * Two execution modes:
+	 * Three execution modes:
 	 * 1. Legacy mode: Uses module loader to dynamically load SUTs/cases
 	 * 2. Serialized mode: SUTs/cases passed via WorkerMessage (for worker threads)
+	 * 3. Registry mode: Reconstructs registry from manifest (for registry-based SUTs)
 	 */
 	public async executeBatch(message: WorkerMessage): Promise<WorkerResponse> {
+		// Check for registry manifest mode
+		if (message.registryManifest && message.baseDir) {
+			return this.executeBatchRegistry(message);
+		}
+
 		// Check if serialized mode (SUTs/cases provided in message)
 		if (message.suts && message.cases && message.baseDir) {
 			return this.executeBatchSerialized(message);
@@ -431,6 +469,116 @@ export class WorkerExecutor {
 		});
 
 		// Execute the runs (pass no-op callback - workers don't save checkpoints)
+		const results = await executor.execute(suts, cases, () => ({}));
+
+		return {
+			results: results.results,
+			errors: results.errors,
+		};
+	}
+
+	/**
+	 * Execute using registry manifest mode.
+	 * Reconstructs SUT registry from manifest and executes runs.
+	 *
+	 * This mode enables registry-based SUTs (like GraphBox wrapper classes)
+	 * to work with worker thread isolation without requiring standalone files.
+	 */
+	private async executeBatchRegistry(message: WorkerMessage): Promise<WorkerResponse> {
+		if (!message.baseDir || !message.registryManifest) {
+			throw new Error("Registry mode requires baseDir and registryManifest in WorkerMessage");
+		}
+
+		const { registryManifest } = message;
+
+		// Load executor module
+		const executorModule = await this.moduleLoader.loadExecutor();
+
+		// Reconstruct SUTs from registry manifest
+		const suts: unknown[] = [];
+		const sutMap = new Map<string, unknown>();
+
+		for (const sutMeta of registryManifest.suts) {
+			try {
+				// Resolve module path from sutModules map
+				const modulePath = `${this.projectRoot}/${registryManifest.sutModules[sutMeta.id]}`;
+
+				// Dynamic import the SUT module
+				const module = await dynamicImport(modulePath);
+				const factory: unknown = module[registryManifest.exportName];
+
+				if (typeof factory !== "function") {
+					throw new Error(`Export ${registryManifest.exportName} in ${modulePath} is not a function`);
+				}
+
+				// Build SutDefinition object with registry metadata
+				const sutDefinition = {
+					factory,
+					registration: {
+						...sutMeta,
+					},
+				};
+
+				suts.push(sutDefinition);
+				sutMap.set(sutMeta.id, sutDefinition);
+			} catch (error) {
+				throw new Error(
+					`Failed to load SUT "${sutMeta.id}" from registry: ${error instanceof Error ? error.message : String(error)}`,
+				);
+			}
+		}
+
+		// For registry mode, cases must still be provided separately
+		// This is a design limitation - full registry support would require case manifests too
+		if (!message.cases || message.cases.length === 0) {
+			throw new Error("Registry mode requires cases array in WorkerMessage");
+		}
+
+		// Load cases using the same logic as serialized mode
+		const cases: unknown[] = [];
+		const caseMap = new Map<string, unknown>();
+
+		for (const serializedCase of message.cases) {
+			const modulePath = `${this.projectRoot}/${serializedCase.module}`;
+
+			try {
+				const module = await dynamicImport(modulePath);
+				const caseDefinitionFn: unknown = module[serializedCase.exportName];
+
+				if (typeof caseDefinitionFn !== "function") {
+					throw new Error(`Export ${serializedCase.exportName} in ${modulePath} is not a function`);
+				}
+
+				const caseDefinition = (caseDefinitionFn as () => Record<string, unknown>)();
+
+				if (
+					typeof caseDefinition.getInput !== "function" ||
+					typeof caseDefinition.getInputs !== "function"
+				) {
+					throw new Error(
+						`Export ${serializedCase.exportName} in ${modulePath} did not return a valid CaseDefinition`,
+					);
+				}
+
+				cases.push(caseDefinition);
+				caseMap.set(serializedCase.caseId, caseDefinition);
+			} catch (error) {
+				throw new Error(
+					`Failed to load case "${serializedCase.caseId}" from ${modulePath}: ${error instanceof Error ? error.message : String(error)}`,
+				);
+			}
+		}
+
+		// Create executor with config
+		const executor = new executorModule.Executor({
+			repetitions: message.config.repetitions,
+			seedBase: message.config.seedBase,
+			continueOnError: message.config.continueOnError,
+			timeoutMs: message.config.timeoutMs,
+			collectProvenance: message.config.collectProvenance,
+		});
+
+		// Execute the runs
 		const results = await executor.execute(suts, cases, () => ({}));
 
 		return {
