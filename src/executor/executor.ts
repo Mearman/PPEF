@@ -283,15 +283,26 @@ export class Executor<TInput = unknown, TInputs = unknown, TResult = unknown> {
 	): Promise<ExecutionSummary> {
 		const startTime = performance.now();
 
+		// DEBUG: Trace execution path
+		console.log(
+			`[PPEF Executor] execute called with forceInProcess=${this.config.forceInProcess}, plannedRuns.length=${plannedRuns?.length ?? "undefined"}`,
+		);
+
 		// Check forceInProcess flag (unsafe: SUT crashes can crash main process)
 		if (this.config.forceInProcess) {
+			console.log(`[PPEF Executor] Using in-process execution`);
 			const effectivePlannedRuns = plannedRuns ?? this.plan(suts, cases);
+			console.log(
+				`[PPEF Executor] effectivePlannedRuns.length=${effectivePlannedRuns.length}, suts.length=${suts.length}, cases.length=${cases.length}`,
+			);
 			const sutMap = new Map(suts.map((s) => [s.registration.id, s]));
 			const caseMap = new Map(cases.map((c) => [c.case.caseId, c]));
 			const concurrency = this.config.concurrency ?? 1;
+			console.log(`[PPEF Executor] concurrency=${concurrency}`);
 
 			if (concurrency <= 1) {
 				// Sequential execution (original behavior, unsafe)
+				console.log(`[PPEF Executor] Calling executeSequential`);
 				return this.executeSequential(
 					effectivePlannedRuns,
 					sutMap,
@@ -302,6 +313,7 @@ export class Executor<TInput = unknown, TInputs = unknown, TResult = unknown> {
 			}
 
 			// Parallel execution with concurrency limit (unsafe)
+			console.log(`[PPEF Executor] Calling executeParallel with concurrency=${concurrency}`);
 			return this.executeParallel(
 				effectivePlannedRuns,
 				sutMap,
@@ -478,6 +490,9 @@ export class Executor<TInput = unknown, TInputs = unknown, TResult = unknown> {
 		startTime: number,
 		concurrency: number,
 	): Promise<ExecutionSummary> {
+		console.log(
+			`[executeParallel] Starting with plannedRuns.length=${plannedRuns.length}, concurrency=${concurrency}`,
+		);
 		const results: EvaluationResult[] = [];
 		const errors: { runId: string; error: string }[] = [];
 
@@ -546,8 +561,9 @@ export class Executor<TInput = unknown, TInputs = unknown, TResult = unknown> {
 				}
 				releaseLock();
 			} catch (error) {
-				await acquireLock();
 				const errorMessage = error instanceof Error ? error.message : String(error);
+				console.log(`[processRun] Run ${run.runId} failed: ${errorMessage}`);
+				await acquireLock();
 				errors.push({ runId: run.runId, error: errorMessage });
 				failed++;
 				releaseLock();
@@ -559,10 +575,20 @@ export class Executor<TInput = unknown, TInputs = unknown, TResult = unknown> {
 		};
 
 		// Worker pool: process runs in batches
+		console.log(`[executeParallel] Starting worker pool loop`);
+		let batchCount = 0;
 		for (let index = 0; index < plannedRuns.length; index += concurrency) {
+			batchCount++;
 			const batch = plannedRuns.slice(index, index + concurrency);
+			console.log(
+				`[executeParallel] Processing batch ${batchCount}: index=${index}, batch.length=${batch.length}`,
+			);
 			await Promise.all(batch.map(processRun));
+			console.log(
+				`[executeParallel] Completed batch ${batchCount}: completed=${completed}, failed=${failed}`,
+			);
 		}
+		console.log(`[executeParallel] Worker pool loop completed: processed ${batchCount} batches`);
 
 		return {
 			totalRuns: plannedRuns.length,
