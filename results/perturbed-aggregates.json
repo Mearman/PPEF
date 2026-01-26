@@ -1,0 +1,172 @@
+{
+  "version": "1.0.0",
+  "timestamp": "2026-01-25T22:47:09.979Z",
+  "aggregates": [
+    {
+      "sut": "new-algorithm",
+      "sutRole": "primary",
+      "caseClass": "scale-free",
+      "group": {
+        "runCount": 6,
+        "caseCount": 1
+      },
+      "correctness": {
+        "validRate": 1,
+        "producedOutputRate": 1,
+        "matchesExpectedRate": 1
+      },
+      "metrics": {
+        "executionTime": {
+          "n": 6,
+          "mean": 870,
+          "median": 867.5,
+          "min": 850,
+          "max": 895,
+          "std": 15.811388300841896,
+          "confidence95": [
+            853.4042663615012,
+            886.5957336384988
+          ],
+          "sum": 5220,
+          "p25": 860,
+          "p75": 880
+        },
+        "accuracy": {
+          "n": 6,
+          "mean": 0.8516666666666667,
+          "median": 0.855,
+          "min": 0.81,
+          "max": 0.88,
+          "std": 0.024832774042918882,
+          "confidence95": [
+            0.8256020292243388,
+            0.8777313041089946
+          ],
+          "sum": 5.11,
+          "p25": 0.84,
+          "p75": 0.87
+        },
+        "f1Score": {
+          "n": 6,
+          "mean": 0.8316666666666666,
+          "median": 0.835,
+          "min": 0.79,
+          "max": 0.86,
+          "std": 0.024832774042918882,
+          "confidence95": [
+            0.8056020292243387,
+            0.8577313041089945
+          ],
+          "sum": 4.989999999999999,
+          "p25": 0.82,
+          "p75": 0.85
+        }
+      },
+      "coverage": {
+        "caseCoverage": 1,
+        "metricCoverage": {
+          "executionTime": 1,
+          "accuracy": 1,
+          "f1Score": 1
+        }
+      },
+      "comparisons": {
+        "baseline-algorithm": {
+          "deltas": {
+            "executionTime": -356.25,
+            "accuracy": 0.11416666666666675,
+            "f1Score": 0.11416666666666653
+          },
+          "ratios": {
+            "executionTime": 0.709480122324159,
+            "accuracy": 1.1548022598870058,
+            "f1Score": 1.1591173054587687
+          },
+          "betterRate": 0,
+          "uStatistic": 0,
+          "pValue": 0.31731052766472745
+        }
+      }
+    },
+    {
+      "sut": "baseline-algorithm",
+      "sutRole": "baseline",
+      "caseClass": "scale-free",
+      "group": {
+        "runCount": 4,
+        "caseCount": 1
+      },
+      "correctness": {
+        "validRate": 1,
+        "producedOutputRate": 1,
+        "matchesExpectedRate": 1
+      },
+      "metrics": {
+        "executionTime": {
+          "n": 4,
+          "mean": 1226.25,
+          "median": 1227.5,
+          "min": 1200,
+          "max": 1250,
+          "std": 20.56493779875511,
+          "confidence95": [
+            1193.5311839621806,
+            1258.9688160378194
+          ],
+          "sum": 4905,
+          "p25": 1225,
+          "p75": 1250
+        },
+        "accuracy": {
+          "n": 4,
+          "mean": 0.7374999999999999,
+          "median": 0.735,
+          "min": 0.7,
+          "max": 0.78,
+          "std": 0.03304037933599838,
+          "confidence95": [
+            0.6849327564764265,
+            0.7900672435235734
+          ],
+          "sum": 2.9499999999999997,
+          "p25": 0.73,
+          "p75": 0.78
+        },
+        "f1Score": {
+          "n": 4,
+          "mean": 0.7175,
+          "median": 0.715,
+          "min": 0.68,
+          "max": 0.76,
+          "std": 0.033040379335998335,
+          "confidence95": [
+            0.6649327564764267,
+            0.7700672435235734
+          ],
+          "sum": 2.87,
+          "p25": 0.71,
+          "p75": 0.76
+        }
+      },
+      "coverage": {
+        "caseCoverage": 1,
+        "metricCoverage": {
+          "executionTime": 1,
+          "accuracy": 1,
+          "f1Score": 1
+        }
+      }
+    }
+  ],
+  "metadata": {
+    "totalRuns": 10,
+    "totalCases": 1,
+    "sutsIncluded": [
+      "new-algorithm",
+      "baseline-algorithm"
+    ],
+    "caseClassesIncluded": [
+      "scale-free"
+    ]
+  }
+}

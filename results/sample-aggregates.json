@@ -1,0 +1,160 @@
+{
+  "aggregates": [
+    {
+      "sut": "new-algorithm",
+      "sutRole": "primary",
+      "caseClass": "scale-free",
+      "group": {
+        "runCount": 10,
+        "caseCount": 5
+      },
+      "correctness": {
+        "validRate": 1,
+        "producedOutputRate": 1,
+        "matchesExpectedRate": 1
+      },
+      "metrics": {
+        "executionTime": {
+          "n": 10,
+          "mean": 850,
+          "median": 845,
+          "min": 800,
+          "max": 900,
+          "std": 30.5,
+          "sum": 8500
+        },
+        "memoryUsage": {
+          "n": 10,
+          "mean": 95000000,
+          "median": 94500000,
+          "min": 90000000,
+          "max": 100000000,
+          "std": 3500000,
+          "sum": 950000000
+        },
+        "accuracy": {
+          "n": 10,
+          "mean": 0.88,
+          "median": 0.875,
+          "min": 0.85,
+          "max": 0.92,
+          "std": 0.022,
+          "sum": 8.8
+        },
+        "f1Score": {
+          "n": 10,
+          "mean": 0.86,
+          "median": 0.855,
+          "min": 0.83,
+          "max": 0.89,
+          "std": 0.019,
+          "sum": 8.6
+        }
+      }
+    },
+    {
+      "sut": "baseline-algorithm",
+      "sutRole": "baseline",
+      "caseClass": "scale-free",
+      "group": {
+        "runCount": 10,
+        "caseCount": 5
+      },
+      "correctness": {
+        "validRate": 1,
+        "producedOutputRate": 1,
+        "matchesExpectedRate": 1
+      },
+      "metrics": {
+        "executionTime": {
+          "n": 10,
+          "mean": 1200,
+          "median": 1195,
+          "min": 1150,
+          "max": 1250,
+          "std": 32.1,
+          "sum": 12000
+        },
+        "memoryUsage": {
+          "n": 10,
+          "mean": 110000000,
+          "median": 109500000,
+          "min": 105000000,
+          "max": 115000000,
+          "std": 3200000,
+          "sum": 1100000000
+        },
+        "accuracy": {
+          "n": 10,
+          "mean": 0.78,
+          "median": 0.775,
+          "min": 0.75,
+          "max": 0.82,
+          "std": 0.024,
+          "sum": 7.8
+        },
+        "f1Score": {
+          "n": 10,
+          "mean": 0.76,
+          "median": 0.755,
+          "min": 0.73,
+          "max": 0.79,
+          "std": 0.020,
+          "sum": 7.6
+        }
+      }
+    },
+    {
+      "sut": "alternative-algorithm",
+      "sutRole": "baseline",
+      "caseClass": "scale-free",
+      "group": {
+        "runCount": 10,
+        "caseCount": 5
+      },
+      "correctness": {
+        "validRate": 1,
+        "producedOutputRate": 1,
+        "matchesExpectedRate": 1
+      },
+      "metrics": {
+        "executionTime": {
+          "n": 10,
+          "mean": 950,
+          "median": 945,
+          "min": 900,
+          "max": 1000,
+          "std": 31.2,
+          "sum": 9500
+        },
+        "memoryUsage": {
+          "n": 10,
+          "mean": 98000000,
+          "median": 97500000,
+          "min": 93000000,
+          "max": 103000000,
+          "std": 3400000,
+          "sum": 980000000
+        },
+        "accuracy": {
+          "n": 10,
+          "mean": 0.82,
+          "median": 0.815,
+          "min": 0.79,
+          "max": 0.86,
+          "std": 0.023,
+          "sum": 8.2
+        },
+        "f1Score": {
+          "n": 10,
+          "mean": 0.81,
+          "median": 0.805,
+          "min": 0.78,
+          "max": 0.84,
+          "std": 0.021,
+          "sum": 8.1
+        }
+      }
+    }
+  ]
+}

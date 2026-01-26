@@ -1,0 +1,366 @@
+{
+  "results": [
+    {
+      "run": {
+        "runId": "new-alg-base-001",
+        "sut": "new-algorithm",
+        "sutRole": "primary",
+        "caseId": "case-001",
+        "caseClass": "scale-free"
+      },
+      "correctness": {
+        "expectedExists": true,
+        "producedOutput": true,
+        "valid": true,
+        "matchesExpected": true
+      },
+      "outputs": {
+        "summary": {}
+      },
+      "metrics": {
+        "numeric": {
+          "executionTime": 850,
+          "accuracy": 0.88,
+          "f1Score": 0.86
+        }
+      },
+      "provenance": {
+        "runtime": {
+          "platform": "darwin",
+          "arch": "arm64",
+          "nodeVersion": "20.0.0"
+        },
+        "timestamp": "2025-01-25T10:00:00.000Z"
+      }
+    },
+    {
+      "run": {
+        "runId": "new-alg-noise-001",
+        "sut": "new-algorithm",
+        "sutRole": "primary",
+        "caseId": "case-001",
+        "caseClass": "scale-free",
+        "config": {
+          "perturbation": "noise",
+          "perturbationIntensity": 0.1
+        }
+      },
+      "correctness": {
+        "expectedExists": true,
+        "producedOutput": true,
+        "valid": true,
+        "matchesExpected": true
+      },
+      "outputs": {
+        "summary": {}
+      },
+      "metrics": {
+        "numeric": {
+          "executionTime": 865,
+          "accuracy": 0.86,
+          "f1Score": 0.84
+        }
+      },
+      "provenance": {
+        "runtime": {
+          "platform": "darwin",
+          "arch": "arm64",
+          "nodeVersion": "20.0.0"
+        },
+        "timestamp": "2025-01-25T10:00:01.000Z"
+      }
+    },
+    {
+      "run": {
+        "runId": "new-alg-noise-002",
+        "sut": "new-algorithm",
+        "sutRole": "primary",
+        "caseId": "case-001",
+        "caseClass": "scale-free",
+        "config": {
+          "perturbation": "noise",
+          "perturbationIntensity": 0.2
+        }
+      },
+      "correctness": {
+        "expectedExists": true,
+        "producedOutput": true,
+        "valid": true,
+        "matchesExpected": true
+      },
+      "outputs": {
+        "summary": {}
+      },
+      "metrics": {
+        "numeric": {
+          "executionTime": 880,
+          "accuracy": 0.84,
+          "f1Score": 0.82
+        }
+      },
+      "provenance": {
+        "runtime": {
+          "platform": "darwin",
+          "arch": "arm64",
+          "nodeVersion": "20.0.0"
+        },
+        "timestamp": "2025-01-25T10:00:02.000Z"
+      }
+    },
+    {
+      "run": {
+        "runId": "new-alg-noise-003",
+        "sut": "new-algorithm",
+        "sutRole": "primary",
+        "caseId": "case-001",
+        "caseClass": "scale-free",
+        "config": {
+          "perturbation": "noise",
+          "perturbationIntensity": 0.3
+        }
+      },
+      "correctness": {
+        "expectedExists": true,
+        "producedOutput": true,
+        "valid": true,
+        "matchesExpected": true
+      },
+      "outputs": {
+        "summary": {}
+      },
+      "metrics": {
+        "numeric": {
+          "executionTime": 895,
+          "accuracy": 0.81,
+          "f1Score": 0.79
+        }
+      },
+      "provenance": {
+        "runtime": {
+          "platform": "darwin",
+          "arch": "arm64",
+          "nodeVersion": "20.0.0"
+        },
+        "timestamp": "2025-01-25T10:00:03.000Z"
+      }
+    },
+    {
+      "run": {
+        "runId": "new-alg-edge-removal-001",
+        "sut": "new-algorithm",
+        "sutRole": "primary",
+        "caseId": "case-001",
+        "caseClass": "scale-free",
+        "config": {
+          "perturbation": "edge-removal",
+          "perturbationIntensity": 0.1
+        }
+      },
+      "correctness": {
+        "expectedExists": true,
+        "producedOutput": true,
+        "valid": true,
+        "matchesExpected": true
+      },
+      "outputs": {
+        "summary": {}
+      },
+      "metrics": {
+        "numeric": {
+          "executionTime": 870,
+          "accuracy": 0.85,
+          "f1Score": 0.83
+        }
+      },
+      "provenance": {
+        "runtime": {
+          "platform": "darwin",
+          "arch": "arm64",
+          "nodeVersion": "20.0.0"
+        },
+        "timestamp": "2025-01-25T10:00:04.000Z"
+      }
+    },
+    {
+      "run": {
+        "runId": "new-alg-seed-shift-001",
+        "sut": "new-algorithm",
+        "sutRole": "primary",
+        "caseId": "case-001",
+        "caseClass": "scale-free",
+        "config": {
+          "perturbation": "seed-shift",
+          "perturbationIntensity": 0.1
+        }
+      },
+      "correctness": {
+        "expectedExists": true,
+        "producedOutput": true,
+        "valid": true,
+        "matchesExpected": true
+      },
+      "outputs": {
+        "summary": {}
+      },
+      "metrics": {
+        "numeric": {
+          "executionTime": 860,
+          "accuracy": 0.87,
+          "f1Score": 0.85
+        }
+      },
+      "provenance": {
+        "runtime": {
+          "platform": "darwin",
+          "arch": "arm64",
+          "nodeVersion": "20.0.0"
+        },
+        "timestamp": "2025-01-25T10:00:05.000Z"
+      }
+    },
+    {
+      "run": {
+        "runId": "baseline-base-001",
+        "sut": "baseline-algorithm",
+        "sutRole": "baseline",
+        "caseId": "case-001",
+        "caseClass": "scale-free"
+      },
+      "correctness": {
+        "expectedExists": true,
+        "producedOutput": true,
+        "valid": true,
+        "matchesExpected": true
+      },
+      "outputs": {
+        "summary": {}
+      },
+      "metrics": {
+        "numeric": {
+          "executionTime": 1200,
+          "accuracy": 0.78,
+          "f1Score": 0.76
+        }
+      },
+      "provenance": {
+        "runtime": {
+          "platform": "darwin",
+          "arch": "arm64",
+          "nodeVersion": "20.0.0"
+        },
+        "timestamp": "2025-01-25T10:00:06.000Z"
+      }
+    },
+    {
+      "run": {
+        "runId": "baseline-noise-001",
+        "sut": "baseline-algorithm",
+        "sutRole": "baseline",
+        "caseId": "case-001",
+        "caseClass": "scale-free",
+        "config": {
+          "perturbation": "noise",
+          "perturbationIntensity": 0.1
+        }
+      },
+      "correctness": {
+        "expectedExists": true,
+        "producedOutput": true,
+        "valid": true,
+        "matchesExpected": true
+      },
+      "outputs": {
+        "summary": {}
+      },
+      "metrics": {
+        "numeric": {
+          "executionTime": 1225,
+          "accuracy": 0.74,
+          "f1Score": 0.72
+        }
+      },
+      "provenance": {
+        "runtime": {
+          "platform": "darwin",
+          "arch": "arm64",
+          "nodeVersion": "20.0.0"
+        },
+        "timestamp": "2025-01-25T10:00:07.000Z"
+      }
+    },
+    {
+      "run": {
+        "runId": "baseline-noise-002",
+        "sut": "baseline-algorithm",
+        "sutRole": "baseline",
+        "caseId": "case-001",
+        "caseClass": "scale-free",
+        "config": {
+          "perturbation": "noise",
+          "perturbationIntensity": 0.2
+        }
+      },
+      "correctness": {
+        "expectedExists": true,
+        "producedOutput": true,
+        "valid": true,
+        "matchesExpected": true
+      },
+      "outputs": {
+        "summary": {}
+      },
+      "metrics": {
+        "numeric": {
+          "executionTime": 1250,
+          "accuracy": 0.70,
+          "f1Score": 0.68
+        }
+      },
+      "provenance": {
+        "runtime": {
+          "platform": "darwin",
+          "arch": "arm64",
+          "nodeVersion": "20.0.0"
+        },
+        "timestamp": "2025-01-25T10:00:08.000Z"
+      }
+    },
+    {
+      "run": {
+        "runId": "baseline-edge-removal-001",
+        "sut": "baseline-algorithm",
+        "sutRole": "baseline",
+        "caseId": "case-001",
+        "caseClass": "scale-free",
+        "config": {
+          "perturbation": "edge-removal",
+          "perturbationIntensity": 0.1
+        }
+      },
+      "correctness": {
+        "expectedExists": true,
+        "producedOutput": true,
+        "valid": true,
+        "matchesExpected": true
+      },
+      "outputs": {
+        "summary": {}
+      },
+      "metrics": {
+        "numeric": {
+          "executionTime": 1230,
+          "accuracy": 0.73,
+          "f1Score": 0.71
+        }
+      },
+      "provenance": {
+        "runtime": {
+          "platform": "darwin",
+          "arch": "arm64",
+          "nodeVersion": "20.0.0"
+        },
+        "timestamp": "2025-01-25T10:00:09.000Z"
+      }
+    }
+  ]
+}
