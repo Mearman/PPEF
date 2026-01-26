@@ -23,7 +23,8 @@ import {
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-const projectRoot = resolve(__dirname, "../../../");
+// From dist/executor/, go up 2 levels to reach the package root
+const projectRoot = resolve(__dirname, "../../");
 
 /**
  * Real module loader implementation for production use.
