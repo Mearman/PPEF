@@ -28,6 +28,7 @@ import { fileURLToPath } from "node:url";
 import type { EvaluationResult } from "../types/result.js";
 import type { ExecutorConfig, PlannedRun } from "./executor.js";
 import type {
+	RegistryManifest,
 	SerializedSut,
 	SerializedCase,
 	WorkerMessage,
@@ -165,6 +166,9 @@ export interface WorkerThreadsExecutorOptions {
 
 	/** Base directory for resolving module paths (default: process.cwd()) */
 	baseDir?: string;
+
+	/** Use registry manifest mode for SUTs (enables registry-based SUTs with worker isolation) */
+	useRegistryManifest?: boolean;
 }
 
 /**
@@ -204,12 +208,14 @@ export class WorkerThreadsExecutor {
 	private readonly workerFactory: IWorkerFactory;
 	private readonly workerEntryPath: IWorkerEntryPath;
 	private readonly baseDir: string;
+	private readonly useRegistryManifest: boolean;
 
 	constructor(options: WorkerThreadsExecutorOptions = {}) {
 		this.logger = options.logger ?? new ConsoleLogger();
 		this.workerFactory = options.workerFactory ?? new WorkerFactory();
 		this.workerEntryPath = options.workerEntryPath ?? new WorkerEntryPath();
 		this.baseDir = options.baseDir ?? process.cwd();
+		this.useRegistryManifest = options.useRegistryManifest ?? false;
 	}
 
 	/**
@@ -415,6 +421,26 @@ export class WorkerThreadsExecutor {
 				suts: serializedSuts,
 				cases: serializedCases,
 			};
+
+			// Add registry manifest if useRegistryManifest is enabled
+			if (this.useRegistryManifest) {
+				const registryManifest: RegistryManifest = {
+					suts: suts.map((sut) => ({
+						id: sut.registration.id,
+						name: sut.registration.name,
+						version: sut.registration.version,
+						role: sut.registration.role,
+						config: {} as Record<string, unknown>,
+						tags: [] as string[],
+					})),
+					sharedCode: "", // Registry code not bundled in this implementation
+					sutModules: Object.fromEntries(
+						suts.map((sut) => [sut.registration.id, `./dist/suts/${sut.registration.id}.js`]),
+					),
+					exportName: "createSut",
+				};
+				workerMessage.registryManifest = registryManifest;
+			}
 
 			worker.postMessage(workerMessage);
 
