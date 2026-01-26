@@ -1,0 +1,15 @@
+\begin{table}[htbp]
+  \centering
+  \caption{Metrics evaluation summary. 1/4 criteria passed (0\%).}
+  \label{tab:metrics-summary}
+  \begin{tabular}{lllll}
+    \toprule
+    Criterion & Type & Status & Expected & Observed \\
+    \midrule
+    exec-time-threshold & threshold & $\times$ & 1000.00 & new-algorithm=850.00, baseline-algorithm=1200.00, alternative-algorithm=950.00 \\
+    memory-threshold & threshold & $\times$ & 104857600.00 & new-algorithm=95000000.00, baseline-algorithm=110000000.00, alternative-algorithm=98000000.00 \\
+    accuracy-baseline & baseline & $\checkmark$ & 0.78 & new-algorithm=0.88 \\
+    f1-target-range & target-range & $\times$ & [0.80, 1.00] & new-algorithm=0.86, baseline-algorithm=0.76, alternative-algorithm=0.81 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
