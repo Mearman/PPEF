@@ -623,7 +623,19 @@ export class Executor<TInput = unknown, TInputs = unknown, TResult = unknown> {
 		}
 
 		// Get algorithm inputs for this case
-		const inputs = caseDef.getInputs();
+		let inputs = caseDef.getInputs();
+
+		// Handle case where inputs.expander is null but input is loaded separately
+		// This happens for expansion SUTs that expect expander in inputs but PPEF loads it as input
+		if (
+			typeof inputs === "object" &&
+			inputs !== null &&
+			"expander" in inputs &&
+			(inputs as Record<string, unknown>).expander === null &&
+			input !== undefined
+		) {
+			inputs = { ...inputs, expander: input } as TInputs;
+		}
 
 		// Create SUT instance (factory now takes only config)
 		const sut = sutDef.factory(run.config);
@@ -631,7 +643,7 @@ export class Executor<TInput = unknown, TInputs = unknown, TResult = unknown> {
 		// Execute with timeout if configured
 		const sutResult = await (this.config.timeoutMs > 0
 			? Promise.race([
-					sut.run({ ...inputs, input }),
+					sut.run({ ...inputs, input } as TInputs),
 					new Promise<never>((_, reject) =>
 						setTimeout(() => {
 							reject(new Error(`Timeout after ${this.config.timeoutMs}ms`));
