@@ -12,6 +12,7 @@ import type {
 	ClaimsEvaluatorData,
 	RobustnessEvaluatorData,
 	MetricsEvaluatorData,
+	ExploratoryEvaluatorData,
 } from "../types/evaluator.js";
 import type {
 	ClaimStatusDisplay,
@@ -118,6 +119,10 @@ export class LaTeXRenderer implements Renderer {
 				);
 			case "metrics":
 				return this.renderMetricsEvaluation(evaluation as EvaluationOutput<MetricsEvaluatorData>);
+			case "exploratory":
+				return this.renderExploratoryEvaluation(
+					evaluation as EvaluationOutput<ExploratoryEvaluatorData>,
+				);
 			case "custom":
 			default:
 				return this.renderCustomEvaluation(evaluation);
@@ -260,6 +265,220 @@ ${rows.join("\n")}
 			content,
 			format: "latex",
 		};
+	}
+
+	/**
+	 * Render exploratory evaluation output.
+	 *
+	 * @param evaluation - Exploratory evaluation output
+	 * @returns Rendered output
+	 */
+	private renderExploratoryEvaluation(
+		evaluation: EvaluationOutput<ExploratoryEvaluatorData>,
+	): RenderOutput {
+		const { rankings, pairwiseComparisons, caseClassEffects, metricCorrelations } = evaluation.data;
+
+		const sections: string[] = [];
+
+		// Section 1: SUT Rankings per Metric
+		sections.push(this.renderSutRankings(rankings));
+
+		// Section 2: Significant Pairwise Comparisons
+		const significantComparisons = pairwiseComparisons.filter((c) => c.significant);
+		if (significantComparisons.length > 0) {
+			sections.push(this.renderPairwiseComparisons(significantComparisons));
+		}
+
+		// Section 3: Case-Class Effects
+		if (caseClassEffects && caseClassEffects.length > 0) {
+			const significantEffects = caseClassEffects.filter((e) => e.significant);
+			if (significantEffects.length > 0) {
+				sections.push(this.renderCaseClassEffects(significantEffects));
+			}
+		}
+
+		// Section 4: Metric Correlations
+		if (metricCorrelations && metricCorrelations.length > 0) {
+			sections.push(this.renderMetricCorrelations(metricCorrelations));
+		}
+
+		// Combine all sections
+		const content = sections.join("\n\n");
+
+		return {
+			id: "exploratory-analysis",
+			filename: "exploratory-analysis.tex",
+			content,
+			format: "latex",
+		};
+	}
+
+	/**
+	 * Render SUT rankings table.
+	 */
+	private renderSutRankings(
+		rankings: Record<
+			string,
+			{ sut: string; mean: number; median: number; std?: number; rank: number; n: number }[]
+		>,
+	): string {
+		const tables: string[] = [];
+
+		for (const [metric, sutRankings] of Object.entries(rankings)) {
+			if (sutRankings.length === 0) continue;
+
+			const rows: string[] = [];
+			for (const ranking of sutRankings) {
+				const mean = this.formatNumber(ranking.mean, 3);
+				const median = this.formatNumber(ranking.median, 3);
+				const std = ranking.std !== undefined ? this.formatNumber(ranking.std, 3) : "--";
+
+				rows.push(
+					`    ${ranking.rank} & ${escapeLatex(ranking.sut)} & ${mean} & ${median} & ${std} & ${ranking.n} \\\\`,
+				);
+			}
+
+			const caption = `SUT rankings for metric: ${escapeLatex(metric)}`;
+
+			tables.push(String.raw`\begin{table}[htbp]
+  \centering
+  \caption{${caption}}
+  \label{tab:ranking-${metric.replace(/[^a-z0-9]/gi, "-")}}
+  \begin{tabular}{rlrrrr}
+    \toprule
+    Rank & SUT & Mean & Median & Std & N \\
+    \midrule
+${rows.join("\n")}
+    \bottomrule
+  \end{tabular}
+\end{table}`);
+		}
+
+		return tables.join("\n\n");
+	}
+
+	/**
+	 * Render pairwise comparisons table.
+	 */
+	private renderPairwiseComparisons(
+		comparisons: {
+			sutA: string;
+			sutB: string;
+			metric: string;
+			delta: number;
+			pValue?: number;
+			effectSize?: number;
+		}[],
+	): string {
+		const rows: string[] = [];
+
+		for (const comp of comparisons) {
+			const delta = this.formatNumber(comp.delta, 3);
+			const pValue = comp.pValue !== undefined ? this.formatNumber(comp.pValue, 4) : "--";
+			const effectSize =
+				comp.effectSize !== undefined ? this.formatNumber(comp.effectSize, 3) : "--";
+
+			rows.push(
+				`    ${escapeLatex(comp.sutA)} & ${escapeLatex(comp.sutB)} & ${escapeLatex(comp.metric)} & ${delta} & ${pValue} & ${effectSize} \\\\`,
+			);
+		}
+
+		const caption = `Significant pairwise differences (${comparisons.length} found)`;
+
+		return String.raw`\begin{table}[htbp]
+  \centering
+  \caption{${caption}}
+  \label{tab:pairwise-comparisons}
+  \begin{tabular}{llllll}
+    \toprule
+    SUT A & SUT B & Metric & Delta & p-value & Effect Size \\
+    \midrule
+${rows.join("\n")}
+    \bottomrule
+  \end{tabular}
+\end{table}`;
+	}
+
+	/**
+	 * Render case-class effects table.
+	 */
+	private renderCaseClassEffects(
+		effects: {
+			caseClass: string;
+			sut: string;
+			metric: string;
+			deviationFromMean: number;
+			percentageDeviation?: number;
+		}[],
+	): string {
+		const rows: string[] = [];
+
+		for (const effect of effects) {
+			const deviation = this.formatNumber(effect.deviationFromMean, 3);
+			const percentage =
+				effect.percentageDeviation !== undefined
+					? this.formatNumber(effect.percentageDeviation, 1)
+					: "--";
+
+			rows.push(
+				`    ${escapeLatex(effect.caseClass)} & ${escapeLatex(effect.sut)} & ${escapeLatex(effect.metric)} & ${deviation} & ${percentage}\\% \\\\`,
+			);
+		}
+
+		const caption = `Significant case-class effects (${effects.length} found)`;
+
+		return String.raw`\begin{table}[htbp]
+  \centering
+  \caption{${caption}}
+  \label{tab:case-class-effects}
+  \begin{tabular}{lllrr}
+    \toprule
+    Case Class & SUT & Metric & Deviation & \% Deviation \\
+    \midrule
+${rows.join("\n")}
+    \bottomrule
+  \end{tabular}
+\end{table}`;
+	}
+
+	/**
+	 * Render metric correlations table.
+	 */
+	private renderMetricCorrelations(
+		correlations: {
+			metricA: string;
+			metricB: string;
+			pearsonR: number;
+			spearmanRho?: number;
+			interpretation: string;
+		}[],
+	): string {
+		const rows: string[] = [];
+
+		for (const corr of correlations) {
+			const pearson = this.formatNumber(corr.pearsonR, 3);
+			const spearman =
+				corr.spearmanRho !== undefined ? this.formatNumber(corr.spearmanRho, 3) : "--";
+
+			rows.push(
+				`    ${escapeLatex(corr.metricA)} & ${escapeLatex(corr.metricB)} & ${pearson} & ${spearman} & ${escapeLatex(corr.interpretation)} \\\\`,
+			);
+		}
+
+		const caption = `Metric correlations`;
+
+		return String.raw`\begin{table}[htbp]
+  \centering
+  \caption{${caption}}
+  \label{tab:metric-correlations}
+  \begin{tabular}{lllll}
+    \toprule
+    Metric A & Metric B & Pearson r & Spearman $\rho$ & Interpretation \\
+    \midrule
+${rows.join("\n")}
+    \bottomrule
+  \end{tabular}
+\end{table}`;
 	}
 
 	/**

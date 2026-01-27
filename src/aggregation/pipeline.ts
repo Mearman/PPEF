@@ -127,8 +127,8 @@ const aggregateGroup = (
 
 	for (const metricName of allMetricNames) {
 		const values = results
-			.map((r) => r.metrics.numeric[metricName])
-			.filter((v) => typeof v === "number" && !Number.isNaN(v));
+			.map((r) => getMetricValue(r, metricName))
+			.filter((v): v is number => v !== undefined && !Number.isNaN(v));
 
 		if (values.length > 0) {
 			metricStats[metricName] = computeSummaryStats(values);
@@ -138,7 +138,7 @@ const aggregateGroup = (
 	// Coverage
 	const metricCoverage: Record<string, number> = {};
 	for (const metricName of allMetricNames) {
-		const count = results.filter((r) => metricName in r.metrics.numeric).length;
+		const count = results.filter((r) => hasMetric(r, metricName)).length;
 		metricCoverage[metricName] = count / results.length;
 	}
 
@@ -166,16 +166,55 @@ const aggregateGroup = (
 
 /**
  * Get all unique metric names from results.
+ * Checks both metrics.numeric and top-level metrics (e.g., salience-coverage).
  * @param results
  */
 const getAllMetricNames = (results: EvaluationResult[]): string[] => {
 	const names = new Set<string>();
 	for (const result of results) {
+		// Add numeric metrics
 		for (const name of Object.keys(result.metrics.numeric)) {
 			names.add(name);
 		}
+		// Add top-level metrics (e.g., salience-coverage, salience-recall, etc.)
+		for (const name of Object.keys(result.metrics)) {
+			if (name !== "numeric" && typeof result.metrics[name] === "number") {
+				names.add(name);
+			}
+		}
 	}
 	return [...names];
+};
+
+/**
+ * Get a metric value from a result.
+ * Checks top-level metrics first, then falls back to metrics.numeric.
+ * @param result
+ * @param metricName
+ */
+const getMetricValue = (result: EvaluationResult, metricName: string): number | undefined => {
+	// Check top-level metric first (e.g., salience-coverage)
+	const topLevelValue = result.metrics[metricName];
+	if (typeof topLevelValue === "number") {
+		return topLevelValue;
+	}
+	// Fall back to numeric metrics
+	return result.metrics.numeric[metricName];
+};
+
+/**
+ * Check if a result has a specific metric.
+ * Checks both top-level metrics and metrics.numeric.
+ * @param result
+ * @param metricName
+ */
+const hasMetric = (result: EvaluationResult, metricName: string): boolean => {
+	// Check top-level metric first (e.g., salience-coverage)
+	if (metricName in result.metrics && typeof result.metrics[metricName] === "number") {
+		return true;
+	}
+	// Check numeric metrics
+	return metricName in result.metrics.numeric;
 };
 
 /**

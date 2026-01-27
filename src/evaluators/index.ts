@@ -9,6 +9,7 @@
 export { ClaimsEvaluator } from "./claims-evaluator.js";
 export { RobustnessEvaluator } from "./robustness-evaluator.js";
 export { MetricsEvaluator } from "./metrics-evaluator.js";
+export { ExploratoryEvaluator } from "./exploratory-evaluator.js";
 
 // Registry
 export { EvaluatorRegistry } from "./registry.js";

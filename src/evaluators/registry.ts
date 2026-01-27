@@ -146,17 +146,19 @@ export const EvaluatorRegistry = {
 import { ClaimsEvaluator } from "./claims-evaluator.js";
 import { RobustnessEvaluator } from "./robustness-evaluator.js";
 import { MetricsEvaluator } from "./metrics-evaluator.js";
+import { ExploratoryEvaluator } from "./exploratory-evaluator.js";
 
 /**
  * Auto-register built-in evaluators on module load.
  *
- * This ensures that the standard evaluators (claims, robustness, metrics)
+ * This ensures that the standard evaluators (claims, robustness, metrics, exploratory)
  * are always available without requiring explicit registration.
  */
 export function registerBuiltInEvaluators(): void {
 	EvaluatorRegistry.register(new ClaimsEvaluator());
 	EvaluatorRegistry.register(new RobustnessEvaluator());
 	EvaluatorRegistry.register(new MetricsEvaluator());
+	EvaluatorRegistry.register(new ExploratoryEvaluator());
 }
 
 // Register built-in evaluators when this module is loaded

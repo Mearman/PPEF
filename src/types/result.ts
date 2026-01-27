@@ -121,6 +121,9 @@ export interface ResultMetrics {
 
 	/** Additional metrics (overflow) */
 	extra?: Record<string, number>;
+
+	/** Allow arbitrary number properties for scenario-specific metrics */
+	[key: string]: number | Record<string, number> | undefined;
 }
 
 /**
