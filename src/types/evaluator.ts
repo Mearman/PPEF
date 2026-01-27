@@ -13,7 +13,7 @@ import type { EvaluationResult } from "./result.js";
  * Built-in evaluation types.
  * Custom types can be registered at runtime.
  */
-export type EvaluationType = "claims" | "robustness" | "metrics" | "custom";
+export type EvaluationType = "claims" | "robustness" | "metrics" | "exploratory" | "custom";
 
 /**
  * Base configuration for any evaluator.
@@ -403,3 +403,182 @@ export interface CustomEvaluatorConfig extends EvaluatorConfig {
  * Users can define their own output structure.
  */
 export type CustomEvaluatorData = Record<string, unknown>;
+
+// ============================================================================
+// Exploratory Evaluator Types
+// ============================================================================
+
+/**
+ * Metric direction for ranking interpretation.
+ */
+export type MetricDirection = "higher-better" | "lower-better";
+
+/**
+ * Ranking of a SUT for a specific metric.
+ */
+export interface SutMetricRanking {
+	/** SUT identifier */
+	sut: string;
+
+	/** Mean value for this metric */
+	mean: number;
+
+	/** Median value for this metric */
+	median: number;
+
+	/** Standard deviation */
+	std?: number;
+
+	/** Rank (1 = best based on metric direction) */
+	rank: number;
+
+	/** Number of observations */
+	n: number;
+}
+
+/**
+ * Pairwise comparison between two SUTs.
+ */
+export interface PairwiseComparison {
+	/** First SUT identifier */
+	sutA: string;
+
+	/** Second SUT identifier */
+	sutB: string;
+
+	/** Metric being compared */
+	metric: string;
+
+	/** Difference (sutA - sutB) */
+	delta: number;
+
+	/** Ratio (sutA / sutB) */
+	ratio: number;
+
+	/** p-value from statistical test */
+	pValue?: number;
+
+	/** Effect size (Cohen's d or similar) */
+	effectSize?: number;
+
+	/** Whether the difference is statistically significant */
+	significant: boolean;
+}
+
+/**
+ * Effect of a case class on SUT performance.
+ */
+export interface CaseClassEffect {
+	/** Case class identifier */
+	caseClass: string;
+
+	/** SUT identifier */
+	sut: string;
+
+	/** Metric being analyzed */
+	metric: string;
+
+	/** Deviation from the SUT's overall mean for this metric */
+	deviationFromMean: number;
+
+	/** Percentage deviation from mean */
+	percentageDeviation?: number;
+
+	/** Whether the effect is statistically significant */
+	significant: boolean;
+}
+
+/**
+ * Correlation between two metrics.
+ */
+export interface MetricCorrelation {
+	/** First metric */
+	metricA: string;
+
+	/** Second metric */
+	metricB: string;
+
+	/** Pearson correlation coefficient */
+	pearsonR: number;
+
+	/** Spearman rank correlation coefficient */
+	spearmanRho?: number;
+
+	/** Human-readable interpretation */
+	interpretation: string;
+}
+
+/**
+ * Configuration for the exploratory evaluator.
+ */
+export interface ExploratoryEvaluatorConfig extends EvaluatorConfig {
+	/** Metrics to analyze (if not specified, all available metrics are used) */
+	metrics?: string[];
+
+	/** SUTs to include (if not specified, all available SUTs are used) */
+	suts?: string[];
+
+	/** Metric directions for ranking interpretation */
+	metricDirections?: Record<string, MetricDirection>;
+
+	/** Significance level for statistical tests (default: 0.05) */
+	significanceLevel?: number;
+
+	/** Minimum effect size to consider meaningful */
+	minEffectSize?: number;
+
+	/** Whether to compute metric correlations */
+	computeCorrelations?: boolean;
+
+	/** Whether to analyze case-class effects */
+	analyzeCaseClassEffects?: boolean;
+}
+
+/**
+ * Summary of exploratory evaluation results.
+ */
+export interface ExploratoryEvaluationSummary {
+	/** Schema version */
+	version: string;
+
+	/** Generation timestamp */
+	timestamp: string;
+
+	/** SUT rankings per metric */
+	rankings: Record<string, SutMetricRanking[]>;
+
+	/** Pairwise comparisons between SUTs */
+	pairwiseComparisons: PairwiseComparison[];
+
+	/** Case-class effects (if analyzed) */
+	caseClassEffects?: CaseClassEffect[];
+
+	/** Metric correlations (if computed) */
+	metricCorrelations?: MetricCorrelation[];
+
+	/** Summary statistics */
+	summary: {
+		/** Number of SUTs analyzed */
+		sutsAnalyzed: number;
+
+		/** Number of metrics analyzed */
+		metricsAnalyzed: number;
+
+		/** Number of pairwise comparisons */
+		pairwiseComparisonsCount: number;
+
+		/** Number of significant differences found */
+		significantDifferences: number;
+
+		/** Number of case classes analyzed */
+		caseClassesAnalyzed?: number;
+
+		/** Best SUT per metric */
+		bestSutPerMetric: Record<string, string>;
+	};
+}
+
+/**
+ * Data type for exploratory evaluator output.
+ */
+export type ExploratoryEvaluatorData = ExploratoryEvaluationSummary;
