@@ -2,16 +2,18 @@
 
 A claim-driven, deterministic evaluation framework for experiments. PPEF provides a structured approach to testing and validating software components through reusable test cases, statistical aggregation, and claim-based evaluation.
 
+Published npm package with dual ESM/CJS output. Single runtime dependency: `commander`.
+
 ## Features
 
-- **Core**: Type-safe foundation with zero external dependencies
-- **Store**: Centralized registry for Systems Under Test (SUTs)
-- **Case**: Reusable test case infrastructure with setup/teardown
-- **Execute**: Deterministic test execution with snapshot capture
-- **Aggregate**: Statistical aggregation across test runs (mean, median, mode, min, max, stdDev)
-- **Evaluate**: Claim-driven validation with custom predicates
-- **Render**: Report generation in multiple formats (console, Markdown, JSON)
-- **Monitor**: Built-in memory and CPU monitoring for resource tracking
+- **Type-safe**: Strict TypeScript with generic SUT, Case, and Evaluator abstractions
+- **Registry**: Centralized registries for Systems Under Test (SUTs) and evaluation cases with role/tag filtering
+- **Execution**: Deterministic execution with worker threads, checkpointing, memory monitoring, and binary SUT support
+- **Statistical**: Mann-Whitney U test, Cohen's d, confidence intervals
+- **Aggregation**: Summary stats, pairwise comparisons, and rankings across runs
+- **Evaluation**: Four built-in evaluators — claims, robustness, metrics, and exploratory
+- **Rendering**: LaTeX table generation for thesis integration
+- **CLI**: Five commands for running, validating, planning, aggregating, and evaluating experiments
 
 ## Installation
 
@@ -20,153 +22,102 @@ A claim-driven, deterministic evaluation framework for experiments. PPEF provide
 pnpm add ppef
 
 # Or use locally for development
-git clone <repository-url>
+git clone https://github.com/Mearman/ppef.git
 cd ppef
 pnpm install
 pnpm build
 ```
 
-## Quick Start
+## Development
 
-```typescript
-import { Store, Case, Execute, Aggregate, Evaluate, Render } from 'ppef';
-
-// 1. Register your System Under Test (SUT)
-Store.register('sort-algo', {
-  name: 'QuickSort',
-  execute: (input: number[]) => input.sort((a, b) => a - b)
-});
-
-// 2. Define test cases
-const ascendingCase = new Case({
-  name: 'ascending-order',
-  setup: () => [1, 2, 3, 4, 5],
-  teardown: (result) => console.log('Result:', result)
-});
-
-const descendingCase = new Case({
-  name: 'descending-order',
-  setup: () => [5, 4, 3, 2, 1],
-  teardown: (result) => console.log('Result:', result)
-});
-
-// 3. Execute tests
-const results = Execute.run('sort-algo', [ascendingCase, descendingCase]);
-
-// 4. Aggregate metrics across multiple runs
-const aggregated = Aggregate.mean(results);
-
-// 5. Evaluate claims
-const claims = Evaluate.claims(aggregated, {
-  'always-sorted': (result) => {
-    const arr = result.output;
-    for (let i = 0; i < arr.length - 1; i++) {
-      if (arr[i] > arr[i + 1]) return false;
-    }
-    return true;
-  }
-});
-
-// 6. Render reports
-Render.console(claims);
-Render.markdown(claims, './results.md');
-Render.json(claims, './results.json');
+```bash
+pnpm install              # Install dependencies
+pnpm build                # TypeScript compile + CJS wrapper generation
+pnpm typecheck            # Type-check only (tsc --noEmit)
+pnpm lint                 # ESLint + Prettier with auto-fix
+pnpm test                 # Run all tests with coverage (c8 + tsx + Node native test runner)
 ```
 
-## Modules
-
-### Core
-Type-safe foundation providing primitive types and interfaces. Zero external dependencies - pure TypeScript utilities for the entire framework.
-
-### Store
-Centralized registry for managing Systems Under Test (SUTs). Register implementations with unique identifiers and retrieve them for execution.
-
-```typescript
-Store.register('my-sut', {
-  name: 'My Implementation',
-  version: '1.0.0',
-  execute: (input) => { /* implementation */ }
-});
-
-const sut = Store.get('my-sut');
+Run a single test file:
+```bash
+npx tsx --test src/path/to/file.test.ts
 ```
 
-### Case
-Reusable test case infrastructure with lifecycle management. Each case includes setup, execution, and teardown phases with automatic resource cleanup.
-
-```typescript
-const testCase = new Case({
-  name: 'test-case-1',
-  setup: () => ({ data: [1, 2, 3] }),
-  teardown: (result) => console.log('Cleanup:', result)
-});
+CLI (after build):
+```bash
+ppef run          # Execute experiments
+ppef validate     # Validate configuration
+ppef plan         # Dry-run execution plan
+ppef aggregate    # Post-process results
+ppef evaluate     # Run evaluators on results
 ```
 
-### Execute
-Deterministic test execution engine. Runs SUTs against test cases and captures snapshots of inputs, outputs, and execution metadata.
+## Architecture
 
-```typescript
-const results = Execute.run('my-sut', [testCase]);
-const snapshot = Execute.capture('my-sut', testCase);
+### Data Flow Pipeline
+
+```
+SUTs + Cases (Registries)
+    → Executor (runs SUTs against cases, deterministic runIds)
+    → EvaluationResult (canonical schema)
+    → ResultCollector (validates + filters)
+    → Aggregation Pipeline (summary stats, comparisons, rankings)
+    → Evaluators (claims, robustness, metrics, exploratory)
+    → Renderers (LaTeX tables for thesis)
 ```
 
-### Aggregate
-Statistical aggregation utilities for analyzing test results across multiple runs. Compute mean, median, mode, min, max, and standard deviation.
+### Module Map (`src/`)
+
+| Module | Purpose |
+|--------|---------|
+| `types/` | All canonical type definitions (result, sut, case, claims, evaluator, aggregate, perturbation) |
+| `registry/` | `SUTRegistry` and `CaseRegistry` — generic registries with role/tag filtering |
+| `executor/` | Orchestrator with worker threads, checkpointing, memory monitoring, binary SUT support |
+| `collector/` | Result aggregation and JSON schema validation |
+| `statistical/` | Mann-Whitney U test, Cohen's d, confidence intervals |
+| `aggregation/` | `computeSummaryStats()`, `computeComparison()`, `computeRankings()`, pipeline |
+| `evaluators/` | Four built-in evaluators + extensible registry (see below) |
+| `claims/` | Claim type definitions |
+| `robustness/` | Perturbation configs and robustness metric types |
+| `renderers/` | LaTeX table renderer |
+| `cli/` | Five commands with config loading, module loading, output writing |
+
+### Key Abstractions
+
+**SUT** (`SUT<TInputs, TResult>`): Generic System Under Test. Has `id`, `config`, and `run(inputs)`. Roles: `primary`, `baseline`, `oracle`.
+
+**CaseDefinition** (`CaseDefinition<TInput, TInputs>`): Two-phase resource factory — `getInput()` loads a resource once, `getInputs()` returns algorithm-specific inputs.
+
+**Evaluator** (`Evaluator<TConfig, TInput, TOutput>`): Extensible evaluation with `validateConfig()`, `evaluate()`, `summarize()`. Four built-in types:
+- **ClaimsEvaluator** — tests explicit hypotheses with statistical significance
+- **RobustnessEvaluator** — sensitivity analysis under perturbations
+- **MetricsEvaluator** — multi-criterion threshold/baseline/target-range evaluation
+- **ExploratoryEvaluator** — hypothesis-free analysis (rankings, pairwise comparisons, correlations, case-class effects)
+
+**EvaluationResult**: Canonical output schema capturing run identity (deterministic SHA-256 `runId`), correctness, metrics, output artefacts, and provenance.
+
+### Subpath Exports
+
+Each module is independently importable:
 
 ```typescript
-const stats = Aggregate.mean(results);
-const median = Aggregate.median(results);
-const deviation = Aggregate.stdDev(results);
+import { SUTRegistry } from 'ppef/registry';
+import { EvaluationResult } from 'ppef/types';
+import { computeSummaryStats } from 'ppef/aggregation';
 ```
 
-### Evaluate
-Claim-driven validation framework. Define custom predicates to validate test results against expected properties and behaviors.
+Available subpaths: `ppef/types`, `ppef/registry`, `ppef/executor`, `ppef/collector`, `ppef/statistical`, `ppef/aggregation`, `ppef/evaluators`, `ppef/claims`, `ppef/robustness`, `ppef/renderers`.
 
-```typescript
-const claims = Evaluate.claims(results, {
-  'performance': (r) => r.duration < 100,
-  'correctness': (r) => r.output === expected,
-  'memory-safe': (r) => r.memoryUsage < 1024 * 1024
-});
-```
+## Conventions
 
-### Render
-Multi-format report generation. Output results to console, Markdown files, or JSON for documentation and CI/CD integration.
-
-```typescript
-Render.console(results);
-Render.markdown(results, './report.md');
-Render.json(results, './report.json');
-```
-
-### Monitor
-Built-in resource tracking for performance profiling. Monitor memory usage and CPU consumption during test execution.
-
-```typescript
-const monitor = new Monitor();
-monitor.start();
-// ... run tests ...
-const metrics = monitor.stop();
-console.log('Memory used:', metrics.memoryUsage);
-```
-
-## API Reference
-
-Detailed type definitions and API documentation are available in the source files:
-
-- `src/core/` - Core types and interfaces
-- `src/store.ts` - SUT registry API
-- `src/case.ts` - Test case API
-- `src/execute.ts` - Execution engine API
-- `src/aggregate.ts` - Statistical functions
-- `src/evaluate.ts` - Claim evaluation API
-- `src/render.ts` - Report generation API
-- `src/monitor.ts` - Resource monitoring API
+- TypeScript strict mode, ES2023 target, ES modules
+- Node.js native test runner (`node:test` + `node:assert`) — not Vitest/Jest
+- Coverage via c8 (text + html + json-summary in `./coverage/`)
+- Conventional commits enforced via commitlint + husky
+- Semantic release from all branches
+- No `any` types — use `unknown` with type guards
+- Executor produces deterministic `runId` via SHA-256 hash of inputs
 
 ## License
 
 MIT
-
----
-
-**PPEF** - Making experiments reproducible, evaluable, and documentable.
