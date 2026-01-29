@@ -107,16 +107,17 @@ describe("Executor", () => {
 
 	describe("execute with plannedRuns parameter", () => {
 		it("should use provided plannedRuns instead of planning", async () => {
+			const inProcessExecutor = new Executor({ forceInProcess: true });
 			const suts = [createMockSut("sut1")];
 			const cases = [createMockCase("case1")];
 
 			// Plan all runs
-			const allPlanned = executor.plan(suts, cases);
+			const allPlanned = inProcessExecutor.plan(suts, cases);
 
 			// Filter to only run the first one
 			const filteredRuns = [allPlanned[0]];
 
-			const summary = await executor.execute(
+			const summary = await inProcessExecutor.execute(
 				suts as never,
 				cases as never,
 				() => ({}),
@@ -128,16 +129,17 @@ describe("Executor", () => {
 		});
 
 		it("should use filtered plannedRuns for single execution", async () => {
+			const inProcessExecutor = new Executor({ forceInProcess: true });
 			const suts = [createMockSut("sut1")];
 			const cases = [createMockCase("case1"), createMockCase("case2")];
 
 			// Plan all runs
-			const allPlanned = executor.plan(suts, cases);
+			const allPlanned = inProcessExecutor.plan(suts, cases);
 
 			// Filter to only run half
 			const filteredRuns = allPlanned.slice(0, 1);
 
-			const summary = await executor.execute(
+			const summary = await inProcessExecutor.execute(
 				suts as never,
 				cases as never,
 				() => ({}),
@@ -149,20 +151,27 @@ describe("Executor", () => {
 		});
 
 		it("should plan all runs when plannedRuns is undefined", async () => {
+			const inProcessExecutor = new Executor({ forceInProcess: true });
 			const suts = [createMockSut("sut1")];
 			const cases = [createMockCase("case1")];
 
-			const summary = await executor.execute(suts as never, cases as never, () => ({}));
+			const summary = await inProcessExecutor.execute(suts as never, cases as never, () => ({}));
 
 			assert.strictEqual(summary.totalRuns, 1);
 			assert.strictEqual(summary.successfulRuns, 1);
 		});
 
 		it("should work with empty plannedRuns array", async () => {
+			const inProcessExecutor = new Executor({ forceInProcess: true });
 			const suts = [createMockSut("sut1")];
 			const cases = [createMockCase("case1")];
 
-			const summary = await executor.execute(suts as never, cases as never, () => ({}), []);
+			const summary = await inProcessExecutor.execute(
+				suts as never,
+				cases as never,
+				() => ({}),
+				[],
+			);
 
 			assert.strictEqual(summary.totalRuns, 0);
 			assert.strictEqual(summary.successfulRuns, 0);
@@ -171,7 +180,10 @@ describe("Executor", () => {
 
 	describe("execute with parallel execution", () => {
 		it("should use provided plannedRuns with concurrency > 1", async () => {
-			const executorWithConcurrency = new Executor({ concurrency: 2 });
+			const executorWithConcurrency = new Executor({
+				concurrency: 2,
+				forceInProcess: true,
+			});
 			const suts = [createMockSut("sut1"), createMockSut("sut2")];
 			const cases = [createMockCase("case1")];
 
