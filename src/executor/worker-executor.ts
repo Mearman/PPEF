@@ -74,14 +74,14 @@ export interface SerializedCase {
  */
 export interface RegistryManifest {
 	/** Pre-registered SUT metadata */
-	suts: Array<{
+	suts: {
 		id: string;
 		name: string;
 		version: string;
 		role: string;
 		config: Record<string, unknown>;
 		tags: string[];
-	}>;
+	}[];
 
 	/** Shared code bundle (registry functions) */
 	sharedCode: string;
@@ -508,7 +508,9 @@ export class WorkerExecutor {
 				const factory: unknown = module[registryManifest.exportName];
 
 				if (typeof factory !== "function") {
-					throw new Error(`Export ${registryManifest.exportName} in ${modulePath} is not a function`);
+					throw new Error(
+						`Export ${registryManifest.exportName} in ${modulePath} is not a function`,
+					);
 				}
 
 				// Build SutDefinition object with registry metadata
