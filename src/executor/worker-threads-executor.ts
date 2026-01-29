@@ -514,20 +514,17 @@ export class WorkerThreadsExecutor {
 			const checkCompletion = () => {
 				completedCount = workerStates.filter((s) => s.completed).length;
 				if (completedCount === totalWorkers) {
+					clearInterval(interval);
+					clearTimeout(timeout);
 					resolve();
 				}
 			};
 
 			// Poll for completion
-			const interval = setInterval(() => {
-				checkCompletion();
-				if (completedCount === totalWorkers) {
-					clearInterval(interval);
-				}
-			}, 100);
+			const interval = setInterval(checkCompletion, 100);
 
 			// Timeout after 1 hour
-			void setTimeout(() => {
+			const timeout = setTimeout(() => {
 				clearInterval(interval);
 				const incomplete = workerStates.filter((s) => !s.completed).map((s) => s.index);
 				reject(
