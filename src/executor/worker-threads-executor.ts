@@ -93,10 +93,12 @@ import { Worker } from "node:worker_threads";
 
 /**
  * Production worker factory using node:worker_threads.
+ * Registers the tsx loader when spawning workers from TypeScript source.
  */
 export class WorkerFactory implements IWorkerFactory {
 	create(workerPath: string): IWorker {
-		return new Worker(workerPath) as IWorker;
+		const execArgv = workerPath.endsWith(".ts") ? ["--import", "tsx"] : [];
+		return new Worker(workerPath, { execArgv }) as IWorker;
 	}
 }
 
@@ -113,12 +115,14 @@ export interface IWorkerEntryPath {
 
 /**
  * Production path resolver using import.meta.url.
+ * Handles both compiled (dist/*.js) and source (src/*.ts via tsx) contexts.
  */
 export class WorkerEntryPath implements IWorkerEntryPath {
 	getWorkerEntryPath(): string {
 		const __filename = fileURLToPath(import.meta.url);
 		const __dirname = resolve(__filename, "..");
-		return resolve(__dirname, "worker-entry.js");
+		const ext = __filename.endsWith(".ts") ? ".ts" : ".js";
+		return resolve(__dirname, `worker-entry${ext}`);
 	}
 }
 
