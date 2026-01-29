@@ -236,7 +236,11 @@ describe("Executor", () => {
 				getInputs: () => ({}),
 			};
 
-			const executorWithTimeout = new Executor({ timeoutMs: 50, continueOnError: true });
+			const executorWithTimeout = new Executor({
+				timeoutMs: 50,
+				continueOnError: true,
+				forceInProcess: true,
+			});
 			const suts = [createMockSut("sut1")];
 			const cases = [slowCase];
 
@@ -271,7 +275,11 @@ describe("Executor", () => {
 					}) as never,
 			};
 
-			const executorWithTimeout = new Executor({ timeoutMs: 50, continueOnError: true });
+			const executorWithTimeout = new Executor({
+				timeoutMs: 50,
+				continueOnError: true,
+				forceInProcess: true,
+			});
 			const suts = [slowSut];
 			const cases = [createMockCase("case1")];
 
@@ -288,6 +296,7 @@ describe("Executor", () => {
 		it("should call onProgress callback during execution", async () => {
 			const progressUpdates: unknown[] = [];
 			const executorWithProgress = new Executor({
+				forceInProcess: true,
 				onProgress: (progress) => {
 					progressUpdates.push(progress);
 				},
@@ -307,6 +316,7 @@ describe("Executor", () => {
 		it("should call onResult callback for each completed run", async () => {
 			const results: unknown[] = [];
 			const executorWithCallback = new Executor({
+				forceInProcess: true,
 				onResult: (result) => {
 					results.push(result);
 				},
