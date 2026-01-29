@@ -1,3 +1,88 @@
+## 1.2.0 (2026-01-29)
+
+* ci: add 15-minute timeout to test job ([2da376c](https://github.com/Mearman/ppef/commit/2da376c))
+* fix(checkpoint): use repo root path for auto mode git detection ([d405d05](https://github.com/Mearman/ppef/commit/d405d05))
+* fix(cli): add writefile implementation to filesystem mock ([e9991a3](https://github.com/Mearman/ppef/commit/e9991a3))
+* fix(executor): clear timeout in wait-for-workers to prevent event loop hang ([0ac5a08](https://github.com/Mearman/ppef/commit/0ac5a08))
+* fix(executor): handle null expander in inputs for expansion suts ([fa41313](https://github.com/Mearman/ppef/commit/fa41313))
+* fix(executor): move progress callback after completed counter increment ([ee46551](https://github.com/Mearman/ppef/commit/ee46551))
+* fix(executor): resolve worker entry path for source and compiled contexts ([4fab4ab](https://github.com/Mearman/ppef/commit/4fab4ab))
+* fix(executor): run unit tests in-process to avoid worker thread failures ([c30c4f2](https://github.com/Mearman/ppef/commit/c30c4f2))
+* fix(executor): update worker-entry module paths for ppef structure ([cd0b206](https://github.com/Mearman/ppef/commit/cd0b206))
+* fix(executor): use in-process execution for all unit tests ([66c1bd9](https://github.com/Mearman/ppef/commit/66c1bd9))
+* fix(metrics): pass unfiltered aggregates to baseline evaluation ([b38e356](https://github.com/Mearman/ppef/commit/b38e356))
+* fix(robustness): validate empty arrays as errors instead of warnings ([f74bf2c](https://github.com/Mearman/ppef/commit/f74bf2c))
+* fix(worker): correct projectroot path resolution ([0436f33](https://github.com/Mearman/ppef/commit/0436f33))
+* style(executor): apply lint formatting to worker-executor ([8f3713e](https://github.com/Mearman/ppef/commit/8f3713e))
+* chore(executor): add debug logging for execution tracing ([b957fcb](https://github.com/Mearman/ppef/commit/b957fcb))
+* chore(executor): remove debug logging and fix unused parameter ([e9c6aff](https://github.com/Mearman/ppef/commit/e9c6aff))
+* docs: rewrite readme with accurate architecture, add symlinks ([83f3bd7](https://github.com/Mearman/ppef/commit/83f3bd7))
+* docs(examples): add custom evaluator example ([5e8728c](https://github.com/Mearman/ppef/commit/5e8728c))
+* docs(examples): add metrics-only evaluation example ([ca3e5dd](https://github.com/Mearman/ppef/commit/ca3e5dd))
+* docs(examples): add robustness-only evaluation example ([f4ac523](https://github.com/Mearman/ppef/commit/f4ac523))
+* feat(cli): add binary sut configuration fields to sutconfig ([2d3eaed](https://github.com/Mearman/ppef/commit/2d3eaed))
+* feat(cli): add evaluate command for all evaluation types ([abb877c](https://github.com/Mearman/ppef/commit/abb877c))
+* feat(cli): add ibinaryconfig interface to command dependencies ([1b52024](https://github.com/Mearman/ppef/commit/1b52024))
+* feat(cli): add unsafe-in-process flag and checkpoint merging ([3e5e537](https://github.com/Mearman/ppef/commit/3e5e537))
+* feat(cli): pass binary configuration to module loader ([3c230d8](https://github.com/Mearman/ppef/commit/3c230d8))
+* feat(cli): register evaluate command ([6af98a8](https://github.com/Mearman/ppef/commit/6af98a8))
+* feat(evaluators): add barrel exports for evaluators module ([391bea9](https://github.com/Mearman/ppef/commit/391bea9))
+* feat(evaluators): add core evaluator type abstraction ([082f0cc](https://github.com/Mearman/ppef/commit/082f0cc))
+* feat(evaluators): add evaluator registry for plugin architecture ([96e3dec](https://github.com/Mearman/ppef/commit/96e3dec))
+* feat(evaluators): add exploratory evaluator for hypothesis-free analysis ([fc7e11a](https://github.com/Mearman/ppef/commit/fc7e11a))
+* feat(evaluators): implement claims evaluator class ([b0170bb](https://github.com/Mearman/ppef/commit/b0170bb))
+* feat(evaluators): implement metrics evaluator class ([cff5e52](https://github.com/Mearman/ppef/commit/cff5e52))
+* feat(evaluators): implement robustness evaluator class ([d79efdb](https://github.com/Mearman/ppef/commit/d79efdb))
+* feat(executor): add binary sut serialization for worker threads ([450e97a](https://github.com/Mearman/ppef/commit/450e97a))
+* feat(executor): add binary sut wrapper class for arbitrary executables ([98bc327](https://github.com/Mearman/ppef/commit/98bc327))
+* feat(executor): add resource calculator for 75% resource allocation ([3e9252e](https://github.com/Mearman/ppef/commit/3e9252e))
+* feat(executor): add serialized mode to worker-executor ([3dd29bd](https://github.com/Mearman/ppef/commit/3dd29bd))
+* feat(executor): add worker threads executor for parallel execution ([6d4ff60](https://github.com/Mearman/ppef/commit/6d4ff60))
+* feat(executor): export binarysut components from executor index ([ce954d1](https://github.com/Mearman/ppef/commit/ce954d1))
+* feat(executor): integrate worker threads as default execution mode ([1d0c5c1](https://github.com/Mearman/ppef/commit/1d0c5c1))
+* feat(executor): pass sut and case definitions to worker threads ([29388ee](https://github.com/Mearman/ppef/commit/29388ee))
+* feat(loader): add binary sut support to module loader ([85c285f](https://github.com/Mearman/ppef/commit/85c285f))
+* feat(renderers): implement generic render evaluation method ([44ab821](https://github.com/Mearman/ppef/commit/44ab821))
+* feat(types): add exploratory evaluator type definitions ([6ad4ccc](https://github.com/Mearman/ppef/commit/6ad4ccc))
+* feat(worker): add registry manifest support for worker threads ([b2e928e](https://github.com/Mearman/ppef/commit/b2e928e))
+* feat(worker): add useRegistryManifest option to WorkerThreadsExecutor ([7942e0e](https://github.com/Mearman/ppef/commit/7942e0e))
+* test: remove obsolete test files for deleted functions ([55734ed](https://github.com/Mearman/ppef/commit/55734ed))
+* test: update tests for new evaluator class api ([bf2f15a](https://github.com/Mearman/ppef/commit/bf2f15a))
+* test(cli): add binary sut integration tests ([24e282e](https://github.com/Mearman/ppef/commit/24e282e))
+* test(cli): add comprehensive tests for config loader ([124cfbd](https://github.com/Mearman/ppef/commit/124cfbd))
+* test(cli): resolve typescript compilation errors in test files ([3f21666](https://github.com/Mearman/ppef/commit/3f21666))
+* test(config): use before and after hooks for temp directory setup ([6957e8f](https://github.com/Mearman/ppef/commit/6957e8f))
+* test(evaluation): add metrics evaluation summary output ([c82e185](https://github.com/Mearman/ppef/commit/c82e185))
+* test(evaluation): add PPEF example evaluation results ([5ec1212](https://github.com/Mearman/ppef/commit/5ec1212))
+* test(evaluators): add unit tests for registry, metrics, and robustness ([7f8182c](https://github.com/Mearman/ppef/commit/7f8182c))
+* test(executor): add binarysut unit tests ([101814a](https://github.com/Mearman/ppef/commit/101814a))
+* test(executor): add checkpoint storage error handling and mode detection tests ([07c0f27](https://github.com/Mearman/ppef/commit/07c0f27))
+* test(executor): add tests for onprogress and onresult callbacks ([b18f2d3](https://github.com/Mearman/ppef/commit/b18f2d3))
+* test(registry): add missing import and fix unregister test ([490c90a](https://github.com/Mearman/ppef/commit/490c90a))
+* test(robustness): add perturbation config to mock results ([8b31c3a](https://github.com/Mearman/ppef/commit/8b31c3a))
+* refactor(cli,evaluators): add writeFile to IFileSystem interface ([6950647](https://github.com/Mearman/ppef/commit/6950647))
+* test(cli,evaluators): add integration tests and improve test coverage ([0674c4b](https://github.com/Mearman/ppef/commit/0674c4b))
+* refactor: delete old evaluator and analyzer files ([a6a824d](https://github.com/Mearman/ppef/commit/a6a824d))
+* refactor: update index exports to remove legacy functions ([300da5b](https://github.com/Mearman/ppef/commit/300da5b))
+* refactor(cli): use getas for type-safe evaluator retrieval ([68283c1](https://github.com/Mearman/ppef/commit/68283c1))
+* refactor(evaluators): implement ievaluator on all evaluator classes ([4269e06](https://github.com/Mearman/ppef/commit/4269e06))
+* refactor(evaluators): update registry to use ievaluator ([797bd26](https://github.com/Mearman/ppef/commit/797bd26))
+* refactor(renderers): update interface for generic evaluation ([b775737](https://github.com/Mearman/ppef/commit/b775737))
+* refactor(types): add ievaluator interface for registry storage ([dfa1285](https://github.com/Mearman/ppef/commit/dfa1285))
+
+
+### Breaking change
+
+* Worker threads are now the default. Use forceInProcess=true
+to opt out of worker thread isolation (not recommended for production use).
+
+### BREAKING CHANGE
+
+* Renderer.renderClaimSummary() removed.
+Use Renderer.renderEvaluation() with EvaluationOutput.
+
+Resolves phase 3.1 of extensible evaluation system.
+
 ## 1.1.0 (2026-01-24)
 
 * chore: add test-parallel-executor to gitignore ([7141b97](https://github.com/Mearman/ppef/commit/7141b97))
