@@ -1,4 +1,5 @@
 {
+  "$schema": "../../ppef.schema.json#/$defs/RobustnessEvaluatorConfig",
   "name": "Robustness Analysis",
   "description": "Analyze algorithm robustness under perturbations",
   "metrics": ["executionTime", "accuracy", "f1Score"],

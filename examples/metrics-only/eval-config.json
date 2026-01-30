@@ -1,4 +1,5 @@
 {
+  "$schema": "../../ppef.schema.json#/$defs/MetricsEvaluatorConfig",
   "name": "Metrics-Only Evaluation",
   "description": "Evaluate metrics against threshold and baseline criteria without using claims",
   "criteria": [
