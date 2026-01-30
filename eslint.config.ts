@@ -132,4 +132,12 @@ export default [
 			"eslint-comments/no-use": "off",
 		},
 	},
+
+	// Build scripts - allow eslint-disable for JSON.parse and file I/O boundaries
+	{
+		files: ["scripts/**/*.ts"],
+		rules: {
+			"eslint-comments/no-use": "off",
+		},
+	},
 ];
