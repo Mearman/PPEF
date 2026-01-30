@@ -1,0 +1,44 @@
+{
+	"$schema": "../../ppef.schema.json#/$defs/ClaimsEvaluatorConfig",
+	"claims": [
+		{
+			"claimId": "C001",
+			"description": "Binary search performs fewer comparisons than linear search overall",
+			"sut": "binary-search",
+			"baseline": "linear-search",
+			"metric": "comparisons",
+			"direction": "less",
+			"scope": "global"
+		},
+		{
+			"claimId": "C002",
+			"description": "Binary search performs fewer comparisons than linear search on large inputs",
+			"sut": "binary-search",
+			"baseline": "linear-search",
+			"metric": "comparisons",
+			"direction": "less",
+			"scope": "caseClass",
+			"scopeConstraints": { "caseClass": "large" }
+		},
+		{
+			"claimId": "C003",
+			"description": "Map search executes faster than linear search on large inputs",
+			"sut": "map-search",
+			"baseline": "linear-search",
+			"metric": "executionTimeMs",
+			"direction": "less",
+			"scope": "caseClass",
+			"scopeConstraints": { "caseClass": "large" }
+		},
+		{
+			"claimId": "C004",
+			"description": "Set search performs fewer comparisons than linear search overall",
+			"sut": "set-search",
+			"baseline": "linear-search",
+			"metric": "comparisons",
+			"direction": "less",
+			"scope": "global"
+		}
+	],
+	"significanceLevel": 0.05
+}

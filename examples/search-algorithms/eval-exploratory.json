@@ -1,0 +1,15 @@
+{
+	"$schema": "../../ppef.schema.json#/$defs/ExploratoryEvaluatorConfig",
+	"metrics": [
+		"comparisons",
+		"found",
+		"executionTimeMs"
+	],
+	"metricDirections": {
+		"comparisons": "lower-better",
+		"found": "higher-better",
+		"executionTimeMs": "lower-better"
+	},
+	"analyzeCaseClassEffects": true,
+	"computeCorrelations": true
+}

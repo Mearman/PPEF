@@ -1,0 +1,51 @@
+{
+	"$schema": "../../ppef.schema.json#/$defs/MetricsEvaluatorConfig",
+	"criteria": [
+		{
+			"criterionId": "comparisons-positive",
+			"description": "All SUTs perform at least one comparison",
+			"type": "threshold",
+			"metric": "comparisons",
+			"sut": "*",
+			"threshold": {
+				"operator": "gte",
+				"value": 1
+			}
+		},
+		{
+			"criterionId": "binary-search-log-range",
+			"description": "Binary search comparisons in [1, 20] for large inputs (log2(10000) ~ 13.3)",
+			"type": "target-range",
+			"metric": "comparisons",
+			"sut": "binary-search",
+			"targetRange": {
+				"min": 1,
+				"max": 20,
+				"minInclusive": true,
+				"maxInclusive": true
+			}
+		},
+		{
+			"criterionId": "binary-fewer-than-linear",
+			"description": "Binary search performs fewer comparisons than linear search",
+			"type": "baseline",
+			"metric": "comparisons",
+			"sut": "binary-search",
+			"baseline": {
+				"sut": "linear-search",
+				"operator": "lt"
+			}
+		},
+		{
+			"criterionId": "exec-time-limit",
+			"description": "Execution time under 1000ms for all SUTs",
+			"type": "threshold",
+			"metric": "executionTimeMs",
+			"sut": "*",
+			"threshold": {
+				"operator": "lt",
+				"value": 1000
+			}
+		}
+	]
+}

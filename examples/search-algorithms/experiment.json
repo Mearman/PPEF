@@ -1,0 +1,91 @@
+{
+	"$schema": "../../ppef.schema.json",
+	"experiment": {
+		"name": "search-algorithms",
+		"description": "Compare search algorithm performance across array sizes and target positions"
+	},
+	"executor": {
+		"repetitions": 10
+	},
+	"suts": [
+		{
+			"id": "linear-search",
+			"module": "./sut-linear-search.ts",
+			"exportName": "createSut",
+			"registration": {
+				"name": "Linear Search",
+				"version": "1.0.0",
+				"role": "baseline"
+			}
+		},
+		{
+			"id": "binary-search",
+			"module": "./sut-binary-search.ts",
+			"exportName": "createSut",
+			"registration": {
+				"name": "Binary Search",
+				"version": "1.0.0",
+				"role": "primary"
+			}
+		},
+		{
+			"id": "map-search",
+			"module": "./sut-map-search.ts",
+			"exportName": "createSut",
+			"registration": {
+				"name": "Map Search",
+				"version": "1.0.0",
+				"role": "primary"
+			}
+		},
+		{
+			"id": "set-search",
+			"module": "./sut-set-search.ts",
+			"exportName": "createSut",
+			"registration": {
+				"name": "Set Search",
+				"version": "1.0.0",
+				"role": "primary"
+			}
+		}
+	],
+	"cases": [
+		{
+			"id": "small-found",
+			"module": "./case-small-found.ts",
+			"exportName": "createCase"
+		},
+		{
+			"id": "small-not-found",
+			"module": "./case-small-not-found.ts",
+			"exportName": "createCase"
+		},
+		{
+			"id": "large-found-start",
+			"module": "./case-large-found-start.ts",
+			"exportName": "createCase"
+		},
+		{
+			"id": "large-found-middle",
+			"module": "./case-large-found-middle.ts",
+			"exportName": "createCase"
+		},
+		{
+			"id": "large-found-end",
+			"module": "./case-large-found-end.ts",
+			"exportName": "createCase"
+		},
+		{
+			"id": "large-not-found",
+			"module": "./case-large-not-found.ts",
+			"exportName": "createCase"
+		}
+	],
+	"metricsExtractor": {
+		"module": "./metrics.ts",
+		"exportName": "extract"
+	},
+	"output": {
+		"path": "./results"
+	}
+}
