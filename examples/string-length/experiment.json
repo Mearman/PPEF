@@ -1,0 +1,36 @@
+{
+  "$schema": "../../ppef.schema.json",
+  "experiment": {
+    "name": "string-length",
+    "description": "Compare string length implementations"
+  },
+  "executor": {
+    "repetitions": 3
+  },
+  "suts": [
+    {
+      "id": "builtin-length",
+      "module": "./sut.mjs",
+      "exportName": "createSut",
+      "registration": {
+        "name": "Built-in .length",
+        "version": "1.0.0",
+        "role": "primary"
+      }
+    }
+  ],
+  "cases": [
+    {
+      "id": "hello-world",
+      "module": "./case.mjs",
+      "exportName": "createCase"
+    }
+  ],
+  "metricsExtractor": {
+    "module": "./metrics.mjs",
+    "exportName": "extract"
+  },
+  "output": {
+    "path": "./results"
+  }
+}
