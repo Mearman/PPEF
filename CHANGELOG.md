@@ -1,3 +1,7 @@
+## <small>1.2.1 (2026-01-30)</small>
+
+* fix(release): publish to latest dist-tag instead of main ([c255101](https://github.com/Mearman/ppef/commit/c255101))
+
 ## 1.2.0 (2026-01-29)
 
 * ci: add 15-minute timeout to test job ([2da376c](https://github.com/Mearman/ppef/commit/2da376c))
