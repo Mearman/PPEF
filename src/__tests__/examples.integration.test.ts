@@ -140,6 +140,158 @@ describe("Example Integration Tests", () => {
 		});
 	});
 
+	describe("two-sut evaluation pipeline", () => {
+		let twoSutOutputDir: string;
+		let twoSutAggregatesPath: string;
+
+		it("runs two-SUT experiment end-to-end", async () => {
+			twoSutOutputDir = join(tempDir, "two-sut-results");
+			const configPath = join(EXAMPLES_DIR, "string-length", "experiment-two-suts.json");
+
+			// Read config and override output path
+			const configContent = JSON.parse(await readFile(configPath, "utf-8"));
+			configContent.output.path = twoSutOutputDir;
+
+			const tempConfig = join(tempDir, "experiment-two-suts.json");
+			const { writeFile: writeFileFs, copyFile } = await import("node:fs/promises");
+			await writeFileFs(tempConfig, JSON.stringify(configContent));
+
+			// Copy all required modules
+			for (const file of [
+				"sut.mjs",
+				"sut-spread.mjs",
+				"case.mjs",
+				"case-unicode.mjs",
+				"metrics.mjs",
+			]) {
+				await copyFile(join(EXAMPLES_DIR, "string-length", file), join(tempDir, file));
+			}
+
+			const { stdout } = await execFileAsync(
+				"node",
+				[BIN_PATH, "run", tempConfig, "--unsafe-in-process"],
+				{
+					cwd: tempDir,
+					timeout: 30000,
+				},
+			);
+
+			assert.ok(stdout.length > 0, "Expected CLI output");
+
+			// Find the aggregates file
+			const files = await readdir(twoSutOutputDir);
+			const aggregatesFiles = files.filter((f) => f.includes("aggregates"));
+			assert.ok(aggregatesFiles.length > 0, "Expected aggregates file");
+			twoSutAggregatesPath = join(twoSutOutputDir, aggregatesFiles[0]);
+
+			// Verify aggregates structure
+			const aggContent = JSON.parse(await readFile(twoSutAggregatesPath, "utf-8"));
+			assert.ok(Array.isArray(aggContent.aggregates), "Expected aggregates array in output");
+			assert.ok(aggContent.aggregates.length >= 2, "Expected at least 2 aggregated results");
+		});
+
+		it("evaluates claims on two-SUT results", async () => {
+			assert.ok(twoSutAggregatesPath, "Aggregates path must be set by previous test");
+
+			const claimsConfig = join(EXAMPLES_DIR, "string-length", "eval-claims.json");
+			const claimsOutput = join(tempDir, "claims-output.json");
+
+			const { stdout } = await execFileAsync(
+				"node",
+				[
+					BIN_PATH,
+					"evaluate",
+					twoSutAggregatesPath,
+					"-t",
+					"claims",
+					"-c",
+					claimsConfig,
+					"-o",
+					claimsOutput,
+					"-v",
+				],
+				{
+					cwd: tempDir,
+					timeout: 15000,
+				},
+			);
+
+			assert.ok(stdout.length > 0, "Expected CLI output");
+
+			const output = JSON.parse(await readFile(claimsOutput, "utf-8"));
+			assert.strictEqual(output.type, "claims", "Expected claims evaluation type");
+		});
+
+		it("evaluates exploratory analysis on two-SUT results", async () => {
+			assert.ok(twoSutAggregatesPath, "Aggregates path must be set by previous test");
+
+			const exploratoryConfig = join(EXAMPLES_DIR, "string-length", "eval-exploratory.json");
+			const exploratoryOutput = join(tempDir, "exploratory-output.json");
+
+			const { stdout } = await execFileAsync(
+				"node",
+				[
+					BIN_PATH,
+					"evaluate",
+					twoSutAggregatesPath,
+					"-t",
+					"exploratory",
+					"-c",
+					exploratoryConfig,
+					"-o",
+					exploratoryOutput,
+					"-v",
+				],
+				{
+					cwd: tempDir,
+					timeout: 15000,
+				},
+			);
+
+			assert.ok(stdout.length > 0, "Expected CLI output");
+
+			const output = JSON.parse(await readFile(exploratoryOutput, "utf-8"));
+			assert.strictEqual(output.type, "exploratory", "Expected exploratory evaluation type");
+			assert.ok(output.data.rankings, "Expected rankings in exploratory output");
+			assert.ok(
+				Array.isArray(output.data.pairwiseComparisons),
+				"Expected pairwiseComparisons array",
+			);
+		});
+
+		it("evaluates metrics on two-SUT results", async () => {
+			assert.ok(twoSutAggregatesPath, "Aggregates path must be set by previous test");
+
+			const metricsConfig = join(EXAMPLES_DIR, "metrics-only", "eval-config.json");
+			const metricsOutput = join(tempDir, "metrics-output.json");
+
+			const { stdout } = await execFileAsync(
+				"node",
+				[
+					BIN_PATH,
+					"evaluate",
+					twoSutAggregatesPath,
+					"-t",
+					"metrics",
+					"-c",
+					metricsConfig,
+					"-o",
+					metricsOutput,
+					"-v",
+				],
+				{
+					cwd: tempDir,
+					timeout: 15000,
+				},
+			);
+
+			assert.ok(stdout.length > 0, "Expected CLI output");
+
+			const output = JSON.parse(await readFile(metricsOutput, "utf-8"));
+			assert.strictEqual(output.type, "metrics", "Expected metrics evaluation type");
+		});
+	});
+
 	describe("invalid config", () => {
 		it("rejects malformed config with non-zero exit code", async () => {
 			const invalidConfig = join(tempDir, "invalid.json");
