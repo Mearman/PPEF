@@ -8,6 +8,7 @@ import type { Command } from "commander";
 
 import { loadAndValidateConfig } from "../config-loader.js";
 import type { IConfigLoader, ICommandLogger } from "../command-deps.js";
+import { createValidator } from "../../schemas/index.js";
 
 // Note: createLogger imported lazily in action handler to avoid circular dependency
 
@@ -73,6 +74,68 @@ export async function executeValidate(
 		logger.info(`  Path: ${output.path ?? "./results"}`);
 		logger.info(`  Format: ${output.format ?? "json-pretty"}`);
 		logger.info(`  Aggregate: ${output.aggregate ?? "true"}`);
+
+		// Validate JSON Schemas compile correctly
+		const schemaErrors: string[] = [];
+
+		if (loaded.config.schemas?.input) {
+			try {
+				createValidator(loaded.config.schemas.input);
+				const props = loaded.config.schemas.input.properties;
+				const propCount =
+					typeof props === "object" && props !== null ? Object.keys(props).length : 0;
+				logger.info("");
+				logger.info(`Input schema: compiles OK (${propCount} properties)`);
+			} catch (e) {
+				schemaErrors.push(`schemas.input: ${e instanceof Error ? e.message : String(e)}`);
+			}
+		}
+
+		if (loaded.config.schemas?.output) {
+			try {
+				createValidator(loaded.config.schemas.output);
+				const props = loaded.config.schemas.output.properties;
+				const propCount =
+					typeof props === "object" && props !== null ? Object.keys(props).length : 0;
+				logger.info(`Output schema: compiles OK (${propCount} properties)`);
+			} catch (e) {
+				schemaErrors.push(`schemas.output: ${e instanceof Error ? e.message : String(e)}`);
+			}
+		}
+
+		for (const sut of loaded.config.suts) {
+			if (sut.outputSchema) {
+				try {
+					createValidator(sut.outputSchema);
+					logger.info(`SUT "${sut.id}" output schema: compiles OK`);
+				} catch (e) {
+					schemaErrors.push(
+						`suts[${sut.id}].outputSchema: ${e instanceof Error ? e.message : String(e)}`,
+					);
+				}
+			}
+		}
+
+		for (const testCase of loaded.config.cases) {
+			if (testCase.inputSchema) {
+				try {
+					createValidator(testCase.inputSchema);
+					logger.info(`Case "${testCase.id}" input schema: compiles OK`);
+				} catch (e) {
+					schemaErrors.push(
+						`cases[${testCase.id}].inputSchema: ${e instanceof Error ? e.message : String(e)}`,
+					);
+				}
+			}
+		}
+
+		if (schemaErrors.length > 0) {
+			logger.subheader("Schema Compilation Errors");
+			for (const err of schemaErrors) {
+				logger.error(`  ${err}`);
+			}
+			processExit(1);
+		}
 
 		logger.info("");
 		logger.info("Configuration is valid!");

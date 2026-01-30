@@ -121,6 +121,38 @@ export async function executePlan(
 			}
 		}
 
+		// Show schema validation status
+		const hasInputSchema = !!config.schemas?.input;
+		const hasOutputSchema = !!config.schemas?.output;
+		const sutOverrides = config.suts.filter((s) => s.outputSchema).length;
+		const caseOverrides = config.cases.filter((c) => c.inputSchema).length;
+
+		if (hasInputSchema || hasOutputSchema || sutOverrides > 0 || caseOverrides > 0) {
+			logger.subheader("Schema Validation");
+			const parts: string[] = [];
+			if (hasInputSchema) {
+				const props = config.schemas?.input?.properties;
+				const propCount =
+					typeof props === "object" && props !== null ? Object.keys(props).length : 0;
+				parts.push(`input (${propCount} properties)`);
+			}
+			if (hasOutputSchema) {
+				const props = config.schemas?.output?.properties;
+				const propCount =
+					typeof props === "object" && props !== null ? Object.keys(props).length : 0;
+				parts.push(`output (${propCount} properties)`);
+			}
+			if (parts.length > 0) {
+				logger.info(`  Experiment-level: ${parts.join(", ")}`);
+			}
+			if (sutOverrides > 0) {
+				logger.info(`  Per-SUT output overrides: ${sutOverrides}`);
+			}
+			if (caseOverrides > 0) {
+				logger.info(`  Per-case input overrides: ${caseOverrides}`);
+			}
+		}
+
 		logger.info("");
 		logger.info("Execution plan validated successfully!");
 	} catch (error) {

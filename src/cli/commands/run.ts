@@ -166,6 +166,36 @@ export async function executeRun(
 			logger.warn("Running in-process without worker thread isolation (SUT crashes can crash CLI)");
 		}
 
+		// Propagate schema validation config
+		if (config.schemas?.input) {
+			(executorConfig as Record<string, unknown>).inputSchema = config.schemas.input;
+		}
+		if (config.schemas?.output) {
+			(executorConfig as Record<string, unknown>).outputSchema = config.schemas.output;
+		}
+
+		// Collect per-SUT output schema overrides
+		const sutOutputSchemas: Record<string, Record<string, unknown>> = {};
+		for (const sutConfig of config.suts) {
+			if (sutConfig.outputSchema) {
+				sutOutputSchemas[sutConfig.id] = sutConfig.outputSchema;
+			}
+		}
+		if (Object.keys(sutOutputSchemas).length > 0) {
+			(executorConfig as Record<string, unknown>).sutOutputSchemas = sutOutputSchemas;
+		}
+
+		// Collect per-case input schema overrides
+		const caseInputSchemas: Record<string, Record<string, unknown>> = {};
+		for (const caseConfig of config.cases) {
+			if (caseConfig.inputSchema) {
+				caseInputSchemas[caseConfig.id] = caseConfig.inputSchema;
+			}
+		}
+		if (Object.keys(caseInputSchemas).length > 0) {
+			(executorConfig as Record<string, unknown>).caseInputSchemas = caseInputSchemas;
+		}
+
 		// Load SUTs
 		logger.subheader("Loading SUTs...");
 		const sutDefinitions = await Promise.all(
