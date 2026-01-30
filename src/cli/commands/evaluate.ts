@@ -17,6 +17,7 @@ import {
 	ExploratoryEvaluator,
 } from "../../evaluators/index.js";
 import type { ICommandLogger, IFileSystem } from "../command-deps.js";
+import { toBufferEncoding } from "../type-utils.js";
 import type { EvaluationContext, EvaluationType, EvaluationOutput } from "../../types/evaluator.js";
 import {
 	ClaimsEvaluatorConfigSchema,
@@ -65,7 +66,11 @@ export async function executeEvaluate(
 		// Load aggregates
 		logger.info(`Reading aggregates from: ${aggregatesFile}`);
 		const content = await fileSystem.readFile(aggregatesFile, "utf-8");
-		const data = JSON.parse(content) as { aggregates?: unknown[]; results?: unknown[] };
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- JSON.parse returns any; shape validated below
+		const data: {
+			aggregates?: AggregatedResult[];
+			results?: EvaluationResult[];
+		} = JSON.parse(content);
 
 		// Determine if file has aggregates or raw results
 		const hasAggregates = data.aggregates && Array.isArray(data.aggregates);
@@ -74,8 +79,8 @@ export async function executeEvaluate(
 		let aggregates: AggregatedResult[];
 		let rawResults: EvaluationResult[] | undefined;
 
-		if (hasAggregates) {
-			aggregates = data.aggregates as AggregatedResult[];
+		if (hasAggregates && data.aggregates) {
+			aggregates = data.aggregates;
 			logger.info(`Found ${aggregates.length} aggregated results`);
 		} else if (hasResults) {
 			// Need to aggregate first
@@ -409,6 +414,28 @@ export async function executeEvaluate(
 	}
 }
 
+const VALID_OUTPUT_FORMATS = new Set<string>(["json", "json-pretty", "latex", "markdown"]);
+
+const EVALUATION_TYPE_MAP = new Map<string, EvaluationType>([
+	["claims", "claims"],
+	["robustness", "robustness"],
+	["metrics", "metrics"],
+	["exploratory", "exploratory"],
+	["custom", "custom"],
+]);
+
+function toEvaluationType(value: string): EvaluationType {
+	const mapped = EVALUATION_TYPE_MAP.get(value);
+	if (mapped === undefined) {
+		throw new Error(`Invalid evaluation type: ${value}`);
+	}
+	return mapped;
+}
+
+function isOutputFormat(value: unknown): value is OutputFormat {
+	return typeof value === "string" && VALID_OUTPUT_FORMATS.has(value);
+}
+
 /**
  * Register the evaluate command.
  *
@@ -433,25 +460,28 @@ export function registerEvaluateCommand(program: Command): void {
 
 			const logger = createLogger();
 
-			await executeEvaluate(
-				aggregatesFile,
-				{
-					type: options.type as EvaluationType,
-					config: options.config as string | undefined,
-					output: options.output as string | undefined,
-					format: options.format as OutputFormat | undefined,
-					verbose: options.verbose as boolean | undefined,
+			const parsedOptions: {
+				type: EvaluationType;
+				config?: string;
+				output?: string;
+				format?: OutputFormat;
+				verbose?: boolean;
+			} = {
+				type: toEvaluationType(String(options.type)),
+				config: typeof options.config === "string" ? options.config : undefined,
+				output: typeof options.output === "string" ? options.output : undefined,
+				format: isOutputFormat(options.format) ? options.format : undefined,
+				verbose: typeof options.verbose === "boolean" ? options.verbose : undefined,
+			};
+
+			await executeEvaluate(aggregatesFile, parsedOptions, {
+				logger,
+				fileSystem: {
+					readFile: (path: string, encoding: string) => readFile(path, toBufferEncoding(encoding)),
+					writeFile: (path: string, data: string, encoding: string) =>
+						writeFile(path, data, toBufferEncoding(encoding)),
 				},
-				{
-					logger,
-					fileSystem: {
-						readFile: (path: string, encoding: string) =>
-							readFile(path, encoding as BufferEncoding),
-						writeFile: (path: string, data: string, encoding: string) =>
-							writeFile(path, data, encoding as BufferEncoding),
-					},
-					processExit: (code: number) => process.exit(code),
-				},
-			);
+				processExit: (code: number) => process.exit(code),
+			});
 		});
 }

@@ -22,6 +22,7 @@ import type { CliOptions } from "../types.js";
 import { loadAndValidateConfig } from "../config-loader.js";
 import { loadCaseDefinition, loadMetricsExtractor, loadSutFactory } from "../module-loader.js";
 import { generateOutputFilename, writeAggregates, writeResults } from "../output-writer.js";
+import { coerce } from "../type-utils.js";
 
 /**
  * Merge checkpoint shards from worker threads.
@@ -152,26 +153,26 @@ export async function executeRun(
 			logger.info(`Description: ${config.experiment.description}`);
 		}
 
-		// Apply CLI overrides
-		const executorConfig = { ...config.executor };
-		(executorConfig as Record<string, unknown>).baseDir = baseDir;
+		// Apply CLI overrides — build a mutable record and merge typed fields
+		const executorConfig: Record<string, unknown> = { ...config.executor };
+		executorConfig.baseDir = baseDir;
 		if (options.jobs !== undefined) {
-			(executorConfig as Record<string, unknown>).concurrency = options.jobs;
+			executorConfig.concurrency = options.jobs;
 			logger.debug(`Concurrency overridden to ${options.jobs}`);
 		}
 
 		// Handle unsafe in-process flag
 		if (options.unsafeInProcess) {
-			(executorConfig as Record<string, unknown>).forceInProcess = true;
+			executorConfig.forceInProcess = true;
 			logger.warn("Running in-process without worker thread isolation (SUT crashes can crash CLI)");
 		}
 
 		// Propagate schema validation config
 		if (config.schemas?.input) {
-			(executorConfig as Record<string, unknown>).inputSchema = config.schemas.input;
+			executorConfig.inputSchema = config.schemas.input;
 		}
 		if (config.schemas?.output) {
-			(executorConfig as Record<string, unknown>).outputSchema = config.schemas.output;
+			executorConfig.outputSchema = config.schemas.output;
 		}
 
 		// Collect per-SUT output schema overrides
@@ -182,7 +183,7 @@ export async function executeRun(
 			}
 		}
 		if (Object.keys(sutOutputSchemas).length > 0) {
-			(executorConfig as Record<string, unknown>).sutOutputSchemas = sutOutputSchemas;
+			executorConfig.sutOutputSchemas = sutOutputSchemas;
 		}
 
 		// Collect per-case input schema overrides
@@ -193,7 +194,7 @@ export async function executeRun(
 			}
 		}
 		if (Object.keys(caseInputSchemas).length > 0) {
-			(executorConfig as Record<string, unknown>).caseInputSchemas = caseInputSchemas;
+			executorConfig.caseInputSchemas = caseInputSchemas;
 		}
 
 		// Load SUTs
@@ -384,14 +385,20 @@ async function createRunDependencies(
 
 	const logger = createLogger(options);
 
+	const moduleLoader = coerce<IModuleLoader>({
+		loadSutFactory,
+		loadCaseDefinition,
+		loadMetricsExtractor,
+	});
+
 	return {
 		logger,
 		configLoader: { loadAndValidateConfig },
-		moduleLoader: { loadSutFactory, loadCaseDefinition, loadMetricsExtractor } as never,
-		createExecutor: (config: unknown) =>
-			new Executor(
-				config as Partial<import("../../executor/executor.js").ExecutorConfig>,
-			) as unknown as IExecutor,
+		moduleLoader,
+		createExecutor: (config: unknown) => {
+			const executorInstance = new Executor(config ?? {});
+			return coerce<IExecutor>(executorInstance);
+		},
 		aggregator: { aggregateResults, createAggregationOutput },
 		outputWriter: { generateOutputFilename, writeResults, writeAggregates },
 		processExit: (code: number) => process.exit(code),

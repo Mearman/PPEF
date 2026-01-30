@@ -16,6 +16,7 @@ import type {
 } from "../command-deps.js";
 import { loadAndValidateConfig } from "../config-loader.js";
 import { loadCaseDefinition, loadSutFactory } from "../module-loader.js";
+import { coerce } from "../type-utils.js";
 
 // Note: createLogger is imported in the action handler to avoid circular dependency with logger.ts
 
@@ -182,15 +183,32 @@ export function registerPlanCommand(program: Command): void {
 			const logger = createLogger();
 			const executor = new Executor({});
 
+			// Wrap concrete implementations to match dependency interfaces.
+			// The concrete types are structurally compatible at runtime but
+			// have narrower TypeScript types (e.g., literal unions vs string).
+			const moduleLoaderDep = coerce<IModuleLoader>({
+				loadSutFactory,
+				loadCaseDefinition,
+				loadMetricsExtractor,
+			});
+
+			const executorDep = coerce<{
+				plan: (
+					suts: ISutFactory[],
+					cases: ICaseDefinition[],
+				) => {
+					sutId: string;
+					caseId: string;
+					repetition: number;
+					seed: number;
+				}[];
+			}>(executor);
+
 			await executePlan(configFile, {
 				logger,
 				configLoader: { loadAndValidateConfig },
-				moduleLoader: {
-					loadSutFactory,
-					loadCaseDefinition,
-					loadMetricsExtractor,
-				} as never,
-				executor: executor as never,
+				moduleLoader: moduleLoaderDep,
+				executor: executorDep,
 				processExit: (code: number) => process.exit(code),
 			});
 		});

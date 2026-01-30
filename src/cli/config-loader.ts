@@ -11,6 +11,13 @@ import { ExperimentConfig } from "./types.js";
 import type { LoadedConfig, ValidationResult } from "./types.js";
 
 /**
+ * Type guard for plain objects (Record<string, unknown>).
+ */
+function isRecord(value: unknown): value is Record<string, unknown> {
+	return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+/**
  * Load and parse experiment configuration from a JSON file.
  *
  * @param configPath - Path to config file (can be absolute or relative)
@@ -23,7 +30,8 @@ export async function loadConfig(configPath: string): Promise<LoadedConfig> {
 
 	// Read and parse JSON
 	const content = await readFile(absolutePath, "utf-8");
-	const config = JSON.parse(content) as ExperimentConfig;
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- JSON.parse returns any; Zod validates in validateExperimentConfig
+	const config: ExperimentConfig = JSON.parse(content);
 
 	// Get base directory (for resolving module paths)
 	const baseDir = dirname(absolutePath);
@@ -67,15 +75,14 @@ export function validateConfig(config: unknown): ValidationResult {
 		}
 	} else {
 		// Even on parse failure, try to extract warnings from the raw input
-		const raw = config as Record<string, unknown> | null;
-		if (raw && typeof raw === "object") {
-			if (!raw.output) {
+		if (isRecord(config)) {
+			if (!config.output) {
 				warnings.push("No output configuration specified - using defaults");
 			}
-			if (Array.isArray(raw.suts) && raw.suts.length === 0) {
+			if (Array.isArray(config.suts) && config.suts.length === 0) {
 				warnings.push("No SUTs configured - experiment will have nothing to execute");
 			}
-			if (Array.isArray(raw.cases) && raw.cases.length === 0) {
+			if (Array.isArray(config.cases) && config.cases.length === 0) {
 				warnings.push("No cases configured - experiment will have nothing to execute");
 			}
 		}

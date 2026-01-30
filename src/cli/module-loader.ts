@@ -41,6 +41,36 @@ interface BinaryConfig {
 }
 
 /**
+ * Extract a function export from a loaded module with type checking.
+ *
+ * @param module - Loaded module exports
+ * @param exportName - Name of the export to extract
+ * @param modulePath - Module path (for error messages)
+ * @returns The typed export function
+ * @throws Error if export is not a function
+ */
+// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters -- T is intentionally used only in return type for type coercion
+function getExportedFunction<T extends (...args: never[]) => unknown>(
+	module: Record<string, unknown>,
+	exportName: string,
+	modulePath: string,
+): T {
+	const exported = module[exportName];
+
+	if (typeof exported !== "function") {
+		throw new Error(
+			`Export "${exportName}" in ${modulePath} is not a function. ` +
+				`Found type: ${typeof exported}`,
+		);
+	}
+
+	// The typeof check confirms this is a function.
+	// The caller is responsible for ensuring the function signature matches T.
+	// eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+	return exported as T;
+}
+
+/**
  * Load a module from a file path.
  *
  * @param modulePath - Path to module file (relative to base directory)
@@ -106,39 +136,37 @@ export async function loadSutFactory(
 			cwd: binaryConfig.cwd ?? resolve(baseDir),
 		});
 
+		const typedFactory: (config?: Record<string, unknown>) => {
+			id: string;
+			config: Readonly<Record<string, unknown>>;
+			run: (inputs: unknown) => Promise<unknown>;
+		} = factory;
+
 		return {
 			registration,
-			factory: factory as (config?: Record<string, unknown>) => {
-				id: string;
-				config: Readonly<Record<string, unknown>>;
-				run: (inputs: unknown) => Promise<unknown>;
-			},
+			factory: typedFactory,
 		};
 	}
 
 	const module = await loadModule(modulePath, baseDir);
-	const factoryExport = module[exportName] as SutFactoryExport | undefined;
+	const factoryExport = getExportedFunction<SutFactoryExport>(module, exportName, modulePath);
 
-	if (typeof factoryExport !== "function") {
-		throw new Error(
-			`Export "${exportName}" in ${modulePath} is not a function. ` +
-				`Found type: ${typeof factoryExport}`,
-		);
-	}
-
-	// Wrap the factory to match our expected SutFactory type
 	const factory: (config?: Record<string, unknown>) => {
 		id: string;
 		config: Readonly<Record<string, unknown>>;
 		run: (inputs: unknown) => Promise<unknown>;
 	} = (userConfig?: Record<string, unknown>) => {
 		const instance = factoryExport({ ...config, ...userConfig });
-		const mergedConfig = { ...config, ...userConfig, ...(instance.config ?? {}) };
+		const mergedConfig: Readonly<Record<string, unknown>> = {
+			...config,
+			...userConfig,
+			...(instance.config ?? {}),
+		};
 
 		return {
 			id: registration.id,
-			config: mergedConfig as Readonly<Record<string, unknown>>,
-			run: instance.run as (inputs: unknown) => Promise<unknown>,
+			config: mergedConfig,
+			run: instance.run,
 		};
 	};
 
@@ -165,14 +193,7 @@ export async function loadCaseDefinition(
 	baseDir: string,
 ): Promise<CaseDefinition> {
 	const module = await loadModule(modulePath, baseDir);
-	const caseExport = module[exportName] as CaseDefinitionExport | undefined;
-
-	if (typeof caseExport !== "function") {
-		throw new Error(
-			`Export "${exportName}" in ${modulePath} is not a function. ` +
-				`Found type: ${typeof caseExport}`,
-		);
-	}
+	const caseExport = getExportedFunction<CaseDefinitionExport>(module, exportName, modulePath);
 
 	const definition = caseExport();
 
@@ -199,6 +220,7 @@ export async function loadCaseDefinition(
 		);
 	}
 
+	// eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- bridging CaseDefinitionExport to CaseDefinition (dynamic module boundary)
 	const result = definition as CaseDefinition;
 	result.sourceModule = modulePath;
 	result.sourceExportName = exportName;
@@ -220,14 +242,5 @@ export async function loadMetricsExtractor(
 	baseDir: string,
 ): Promise<(result: unknown) => Record<string, number>> {
 	const module = await loadModule(modulePath, baseDir);
-	const extractorExport = module[exportName] as MetricsExtractorExport | undefined;
-
-	if (typeof extractorExport !== "function") {
-		throw new Error(
-			`Export "${exportName}" in ${modulePath} is not a function. ` +
-				`Found type: ${typeof extractorExport}`,
-		);
-	}
-
-	return extractorExport;
+	return getExportedFunction<MetricsExtractorExport>(module, exportName, modulePath);
 }

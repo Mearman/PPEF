@@ -11,6 +11,7 @@ import type { Command } from "commander";
 import { aggregateResults, createAggregationOutput } from "../../aggregation/index.js";
 import type { IAggregator, ICommandLogger, IFileSystem, IOutputWriter } from "../command-deps.js";
 import { writeAggregates } from "../output-writer.js";
+import { toBufferEncoding } from "../type-utils.js";
 import type { EvaluationResult } from "../../types/result.js";
 
 /**
@@ -46,7 +47,8 @@ export async function executeAggregate(
 		// Read results file
 		logger.info(`Reading results from: ${resultsFile}`);
 		const content = await fileSystem.readFile(resultsFile, "utf-8");
-		const data = JSON.parse(content) as { results?: unknown[] };
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- JSON.parse returns any; shape validated below
+		const data: { results?: EvaluationResult[] } = JSON.parse(content);
 
 		if (!data.results || !Array.isArray(data.results)) {
 			throw new Error("Invalid results file: missing or invalid 'results' array");
@@ -56,7 +58,7 @@ export async function executeAggregate(
 
 		// Aggregate
 		logger.subheader("Computing aggregations...");
-		const results = data.results as EvaluationResult[];
+		const results: EvaluationResult[] = data.results;
 		const aggregates = aggregator.aggregateResults(results, {
 			groupByCaseClass: options.groupByCaseClass ?? true,
 			computeComparisons: options.computeComparisons ?? true,
@@ -138,33 +140,44 @@ export function registerAggregateCommand(program: Command): void {
 
 			const logger = createLogger();
 
-			await executeAggregate(
-				resultsFile,
-				{
-					output: options.output as string | undefined,
-					format: options.format as "json" | "json-pretty" | undefined,
-					groupByCaseClass: options.groupByCaseClass as boolean | undefined,
-					computeComparisons: options.computeComparisons as boolean | undefined,
+			const parsedOptions: {
+				output?: string;
+				format?: "json" | "json-pretty";
+				groupByCaseClass?: boolean;
+				computeComparisons?: boolean;
+			} = {
+				output: typeof options.output === "string" ? options.output : undefined,
+				format:
+					options.format === "json" || options.format === "json-pretty"
+						? options.format
+						: undefined,
+				groupByCaseClass:
+					typeof options.groupByCaseClass === "boolean" ? options.groupByCaseClass : undefined,
+				computeComparisons:
+					typeof options.computeComparisons === "boolean" ? options.computeComparisons : undefined,
+			};
+
+			const deps: {
+				logger: ICommandLogger;
+				fileSystem: IFileSystem;
+				aggregator: IAggregator;
+				outputWriter: IOutputWriter;
+				processExit: (code: number) => never;
+			} = {
+				logger,
+				fileSystem: {
+					readFile: (path: string, encoding: string) => readFile(path, toBufferEncoding(encoding)),
+					writeFile: () => Promise.resolve(),
 				},
-				{
-					logger,
-					fileSystem: {
-						readFile: (path: string, encoding: string) =>
-							readFile(path, encoding as BufferEncoding),
-						writeFile: async () => {
-							// Do nothing for CLI aggregate command
-						},
-					},
-					aggregator: { aggregateResults, createAggregationOutput },
-					outputWriter: { writeAggregates } as Partial<IOutputWriter>,
-					processExit: (code: number) => process.exit(code),
-				} as {
-					logger: ICommandLogger;
-					fileSystem: IFileSystem;
-					aggregator: IAggregator;
-					outputWriter: IOutputWriter;
-					processExit: (code: number) => never;
+				aggregator: { aggregateResults, createAggregationOutput },
+				outputWriter: {
+					writeAggregates,
+					generateOutputFilename: () => "",
+					writeResults: () => Promise.resolve(),
 				},
-			);
+				processExit: (code: number) => process.exit(code),
+			};
+
+			await executeAggregate(resultsFile, parsedOptions, deps);
 		});
 }
