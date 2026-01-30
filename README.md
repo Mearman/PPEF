@@ -136,6 +136,186 @@ Run it:
 npx ppef experiment.json
 ```
 
+## Workflows
+
+The typical pipeline chains CLI commands: validate, run, aggregate, then evaluate.
+
+```
+ppef validate config.json
+    → ppef run config.json
+        → ppef aggregate results.json
+            → ppef evaluate aggregates.json -t claims -c claims.json
+```
+
+### 1. Validate Configuration
+
+Check an experiment config for errors before running:
+
+```bash
+ppef validate experiment.json
+```
+
+### 2. Preview Execution Plan
+
+See what would run without executing (SUTs x cases x repetitions):
+
+```bash
+ppef plan experiment.json
+```
+
+### 3. Run an Experiment
+
+Execute all SUTs against all cases with worker thread isolation:
+
+```bash
+ppef run experiment.json
+ppef run experiment.json -o ./output -j 4 --verbose
+ppef run experiment.json --unsafe-in-process  # No worker isolation (debugging only)
+```
+
+The output directory contains a results JSON and (by default) an aggregates JSON.
+
+### 4. Aggregate Results
+
+Compute summary statistics, pairwise comparisons, and rankings from raw results:
+
+```bash
+ppef aggregate results.json
+ppef aggregate results.json -o aggregates.json --compute-comparisons
+```
+
+### 5. Evaluate Results
+
+Run evaluators against aggregated (or raw) results. Each evaluator type takes a JSON config file.
+
+#### Claims — Test Explicit Hypotheses
+
+Test whether SUT A outperforms baseline B on a given metric with statistical significance:
+
+```bash
+ppef evaluate aggregates.json -t claims -c claims.json -v
+```
+
+**claims.json**:
+```json
+{
+  "claims": [
+    {
+      "claimId": "C001",
+      "description": "Primary has greater accuracy than baseline",
+      "sut": "primary-sut",
+      "baseline": "baseline-sut",
+      "metric": "accuracy",
+      "direction": "greater",
+      "scope": "global"
+    }
+  ],
+  "significanceLevel": 0.05
+}
+```
+
+#### Metrics — Threshold, Baseline, and Range Criteria
+
+Evaluate metrics against fixed thresholds, baselines, or target ranges:
+
+```bash
+ppef evaluate aggregates.json -t metrics -c metrics-config.json
+```
+
+**metrics-config.json**:
+```json
+{
+  "criteria": [
+    {
+      "criterionId": "exec-time",
+      "description": "Execution time under 1000ms",
+      "type": "threshold",
+      "metric": "executionTime",
+      "sut": "*",
+      "threshold": { "operator": "lt", "value": 1000 }
+    },
+    {
+      "criterionId": "f1-range",
+      "description": "F1 score in [0.8, 1.0]",
+      "type": "target-range",
+      "metric": "f1Score",
+      "sut": "*",
+      "targetRange": { "min": 0.8, "max": 1.0, "minInclusive": true, "maxInclusive": true }
+    }
+  ]
+}
+```
+
+#### Robustness — Sensitivity Under Perturbations
+
+Measure how performance degrades under perturbations at varying intensity levels:
+
+```bash
+ppef evaluate results.json -t robustness -c robustness-config.json
+```
+
+**robustness-config.json**:
+```json
+{
+  "metrics": ["executionTime", "accuracy"],
+  "perturbations": ["edge-removal", "noise", "seed-shift"],
+  "intensityLevels": [0.1, 0.2, 0.3, 0.4, 0.5],
+  "runsPerLevel": 10
+}
+```
+
+#### Output Formats
+
+All evaluators support JSON and LaTeX output:
+
+```bash
+ppef evaluate aggregates.json -t claims -c claims.json -f latex
+ppef evaluate aggregates.json -t metrics -c metrics.json -f json -o results.json
+```
+
+### Inline Evaluators
+
+Evaluator configs can be embedded directly in the experiment config via the optional `evaluators` field, making the config self-contained:
+
+```json
+{
+  "experiment": { "name": "my-experiment" },
+  "executor": { "repetitions": 10 },
+  "suts": [ ... ],
+  "cases": [ ... ],
+  "metricsExtractor": { ... },
+  "output": { "path": "./results" },
+  "evaluators": [
+    {
+      "type": "claims",
+      "config": {
+        "claims": [ ... ]
+      }
+    }
+  ]
+}
+```
+
+### JSON Schema Validation
+
+Experiment configs can reference the generated schema for IDE autocompletion:
+
+```json
+{
+  "$schema": "./ppef.schema.json",
+  "experiment": { ... }
+}
+```
+
+Standalone evaluator configs reference schema `$defs`:
+
+```json
+{
+  "$schema": "./ppef.schema.json#/$defs/ClaimsEvaluatorConfig",
+  "claims": [ ... ]
+}
+```
+
 ## Architecture
 
 ### Data Flow Pipeline
