@@ -32,6 +32,18 @@ export interface ExecutorConfig {
 	timeoutMs: number;
 	collectProvenance: boolean;
 	forceInProcess?: boolean;
+
+	/** Experiment-level input schema (validates case getInputs() return values) */
+	inputSchema?: Record<string, unknown>;
+
+	/** Experiment-level output schema (validates sut.run() return values) */
+	outputSchema?: Record<string, unknown>;
+
+	/** Per-SUT output schema overrides (sutId → JSON Schema) */
+	sutOutputSchemas?: Record<string, Record<string, unknown>>;
+
+	/** Per-case input schema overrides (caseId → JSON Schema) */
+	caseInputSchemas?: Record<string, Record<string, unknown>>;
 }
 
 /**
@@ -471,6 +483,10 @@ export class WorkerExecutor {
 			timeoutMs: message.config.timeoutMs,
 			collectProvenance: message.config.collectProvenance,
 			forceInProcess: true,
+			inputSchema: message.config.inputSchema,
+			outputSchema: message.config.outputSchema,
+			sutOutputSchemas: message.config.sutOutputSchemas,
+			caseInputSchemas: message.config.caseInputSchemas,
 		});
 
 		// Execute the runs (pass no-op callback - workers don't save checkpoints)
@@ -585,6 +601,10 @@ export class WorkerExecutor {
 			timeoutMs: message.config.timeoutMs,
 			collectProvenance: message.config.collectProvenance,
 			forceInProcess: true,
+			inputSchema: message.config.inputSchema,
+			outputSchema: message.config.outputSchema,
+			sutOutputSchemas: message.config.sutOutputSchemas,
+			caseInputSchemas: message.config.caseInputSchemas,
 		});
 
 		// Execute the runs
