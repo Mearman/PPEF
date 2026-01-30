@@ -1,0 +1,15 @@
+{
+  "$schema": "../../ppef.schema.json#/$defs/ClaimsEvaluatorConfig",
+  "claims": [
+    {
+      "claimId": "C001",
+      "description": "Built-in .length reports greater length than spread operator on emoji strings",
+      "sut": "builtin-length",
+      "baseline": "spread-length",
+      "metric": "length",
+      "direction": "greater",
+      "scope": "global"
+    }
+  ],
+  "significanceLevel": 0.05
+}

@@ -1,0 +1,51 @@
+{
+  "$schema": "../../ppef.schema.json",
+  "experiment": {
+    "name": "string-length-two-suts",
+    "description": "Compare built-in .length vs spread operator for string length measurement"
+  },
+  "executor": {
+    "repetitions": 5
+  },
+  "suts": [
+    {
+      "id": "builtin-length",
+      "module": "./sut.mjs",
+      "exportName": "createSut",
+      "registration": {
+        "name": "Built-in .length",
+        "version": "1.0.0",
+        "role": "primary"
+      }
+    },
+    {
+      "id": "spread-length",
+      "module": "./sut-spread.mjs",
+      "exportName": "createSut",
+      "registration": {
+        "name": "Spread [...str].length",
+        "version": "1.0.0",
+        "role": "baseline"
+      }
+    }
+  ],
+  "cases": [
+    {
+      "id": "hello-world",
+      "module": "./case.mjs",
+      "exportName": "createCase"
+    },
+    {
+      "id": "unicode-emoji",
+      "module": "./case-unicode.mjs",
+      "exportName": "createCase"
+    }
+  ],
+  "metricsExtractor": {
+    "module": "./metrics.mjs",
+    "exportName": "extract"
+  },
+  "output": {
+    "path": "./results"
+  }
+}
