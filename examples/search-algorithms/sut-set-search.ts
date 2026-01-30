@@ -23,7 +23,7 @@ export function createSut() {
 	return {
 		id: "set-search",
 		config: {},
-		run: async (input: SearchInput): Promise<SearchResult> => {
+		run: (input: SearchInput): Promise<SearchResult> => {
 			const { data, target } = input;
 			const start = performance.now();
 
@@ -34,12 +34,12 @@ export function createSut() {
 
 			const index = found ? data.indexOf(target) : -1;
 
-			return {
+			return Promise.resolve({
 				found,
 				index,
 				comparisons: 1,
 				executionTimeMs,
-			};
+			});
 		},
 	};
 }

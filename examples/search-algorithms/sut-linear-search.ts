@@ -22,7 +22,7 @@ export function createSut() {
 	return {
 		id: "linear-search",
 		config: {},
-		run: async (input: SearchInput): Promise<SearchResult> => {
+		run: (input: SearchInput): Promise<SearchResult> => {
 			const { data, target } = input;
 			const start = performance.now();
 
@@ -39,12 +39,12 @@ export function createSut() {
 
 			const executionTimeMs = performance.now() - start;
 
-			return {
+			return Promise.resolve({
 				found: index !== -1,
 				index,
 				comparisons,
 				executionTimeMs,
-			};
+			});
 		},
 	};
 }
