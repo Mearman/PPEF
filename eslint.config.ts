@@ -9,7 +9,7 @@ import prettierPlugin from "eslint-plugin-prettier";
 export default [
 	// Ignore patterns
 	{
-		ignores: ["dist/**", "coverage/**", "node_modules/**", "examples/**"],
+		ignores: ["dist/**", "coverage/**", "node_modules/**"],
 	},
 
 	// Base JavaScript/TypeScript rules (scoped to JS/TS files only)
