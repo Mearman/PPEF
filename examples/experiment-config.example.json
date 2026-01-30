@@ -1,5 +1,5 @@
 {
-  "$schema": "../schema/experiment-config.schema.json",
+  "$schema": "../ppef.schema.json",
   "experiment": {
     "name": "Graph Expansion Benchmark",
     "description": "Compare degree-prioritised expansion against baseline BFS",
