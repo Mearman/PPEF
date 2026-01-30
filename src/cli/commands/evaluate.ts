@@ -14,6 +14,7 @@ import {
 	ClaimsEvaluator,
 	RobustnessEvaluator,
 	MetricsEvaluator,
+	ExploratoryEvaluator,
 } from "../../evaluators/index.js";
 import type { ICommandLogger, IFileSystem } from "../command-deps.js";
 import type { EvaluationContext, EvaluationType, EvaluationOutput } from "../../types/evaluator.js";
@@ -21,6 +22,7 @@ import {
 	ClaimsEvaluatorConfigSchema,
 	RobustnessEvaluatorConfigSchema,
 	MetricsEvaluatorConfigSchema,
+	ExploratoryEvaluatorConfigSchema,
 } from "../evaluator-schemas.js";
 import type { AggregatedResult } from "../../types/aggregate.js";
 import type { EvaluationResult } from "../../types/result.js";
@@ -272,6 +274,61 @@ export async function executeEvaluate(
 				// Run evaluation
 				logger.subheader("Running evaluation...");
 				const evalOutput = evaluator.evaluate(metricsConfig, context);
+				output = evalOutput;
+				summary = evaluator.summarize(evalOutput);
+				break;
+			}
+			case "exploratory": {
+				const evaluator = EvaluatorRegistry.getAs("exploratory", ExploratoryEvaluator);
+				if (!evaluator) {
+					logger.error(`Evaluator not found for type: exploratory`);
+					processExit(1);
+					return; // Type narrowing
+				}
+
+				// Validate config with Zod schema
+				logger.subheader("Validating evaluator configuration...");
+				const parseResult = ExploratoryEvaluatorConfigSchema.safeParse(rawConfig);
+				if (!parseResult.success) {
+					logger.error("Evaluator configuration validation failed:");
+					for (const issue of parseResult.error.issues) {
+						logger.error(`  - ${issue.path.join(".")}: ${issue.message}`);
+					}
+					processExit(1);
+					return; // Type narrowing
+				}
+				const exploratoryConfig = parseResult.data;
+
+				// Also run evaluator's own validation (business logic checks)
+				const validation = evaluator.validateConfig(exploratoryConfig);
+				if (!validation.valid) {
+					logger.error("Evaluator configuration validation failed:");
+					for (const error of validation.errors ?? []) {
+						logger.error(`  - ${error}`);
+					}
+					processExit(1);
+					return; // Type narrowing
+				}
+				if (validation.warnings && validation.warnings.length > 0) {
+					logger.warn("Configuration warnings:");
+					for (const warning of validation.warnings) {
+						logger.warn(`  - ${warning}`);
+					}
+				}
+				logger.info("Configuration valid");
+
+				// Prepare evaluation context
+				const context: EvaluationContext = {
+					aggregates,
+					rawResults,
+					metadata: {
+						source: aggregatesFile,
+					},
+				};
+
+				// Run evaluation
+				logger.subheader("Running evaluation...");
+				const evalOutput = evaluator.evaluate(exploratoryConfig, context);
 				output = evalOutput;
 				summary = evaluator.summarize(evalOutput);
 				break;
