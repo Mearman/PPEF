@@ -1,0 +1,38 @@
+{
+	"$schema": "../../ppef.schema.json#/$defs/MetricsEvaluatorConfig",
+	"criteria": [
+		{
+			"criterionId": "comparisons-positive",
+			"description": "All SUTs perform at least one comparison",
+			"type": "threshold",
+			"metric": "comparisons",
+			"sut": "*",
+			"threshold": {
+				"operator": "gt",
+				"value": 0
+			}
+		},
+		{
+			"criterionId": "merge-fewer-than-bubble",
+			"description": "Merge sort performs fewer comparisons than bubble sort",
+			"type": "baseline",
+			"metric": "comparisons",
+			"sut": "merge-sort",
+			"baseline": {
+				"sut": "bubble-sort",
+				"operator": "lt"
+			}
+		},
+		{
+			"criterionId": "exec-time-limit",
+			"description": "Execution time under 5000ms for all SUTs",
+			"type": "threshold",
+			"metric": "executionTimeMs",
+			"sut": "*",
+			"threshold": {
+				"operator": "lt",
+				"value": 5000
+			}
+		}
+	]
+}

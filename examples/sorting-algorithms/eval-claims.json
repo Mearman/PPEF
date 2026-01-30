@@ -1,0 +1,44 @@
+{
+	"$schema": "../../ppef.schema.json#/$defs/ClaimsEvaluatorConfig",
+	"claims": [
+		{
+			"claimId": "C001",
+			"description": "Merge sort performs fewer comparisons than bubble sort overall",
+			"sut": "merge-sort",
+			"baseline": "bubble-sort",
+			"metric": "comparisons",
+			"direction": "less",
+			"scope": "global"
+		},
+		{
+			"claimId": "C002",
+			"description": "Quick sort executes faster than bubble sort overall",
+			"sut": "quick-sort",
+			"baseline": "bubble-sort",
+			"metric": "executionTimeMs",
+			"direction": "less",
+			"scope": "global"
+		},
+		{
+			"claimId": "C003",
+			"description": "Merge sort performs fewer comparisons than insertion sort on large inputs",
+			"sut": "merge-sort",
+			"baseline": "insertion-sort",
+			"metric": "comparisons",
+			"direction": "less",
+			"scope": "caseClass",
+			"scopeConstraints": { "caseClass": "large" }
+		},
+		{
+			"claimId": "C004",
+			"description": "Insertion sort performs fewer swaps than bubble sort on sorted inputs",
+			"sut": "insertion-sort",
+			"baseline": "bubble-sort",
+			"metric": "swaps",
+			"direction": "less",
+			"scope": "caseClass",
+			"scopeConstraints": { "caseClass": "sorted" }
+		}
+	],
+	"significanceLevel": 0.05
+}

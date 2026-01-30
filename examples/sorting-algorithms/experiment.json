@@ -1,0 +1,91 @@
+{
+	"$schema": "../../ppef.schema.json",
+	"experiment": {
+		"name": "sorting-algorithms",
+		"description": "Compare sorting algorithm performance across input sizes and distributions"
+	},
+	"executor": {
+		"repetitions": 10
+	},
+	"suts": [
+		{
+			"id": "bubble-sort",
+			"module": "./sut-bubble-sort.ts",
+			"exportName": "createSut",
+			"registration": {
+				"name": "Bubble Sort",
+				"version": "1.0.0",
+				"role": "baseline"
+			}
+		},
+		{
+			"id": "insertion-sort",
+			"module": "./sut-insertion-sort.ts",
+			"exportName": "createSut",
+			"registration": {
+				"name": "Insertion Sort",
+				"version": "1.0.0",
+				"role": "baseline"
+			}
+		},
+		{
+			"id": "merge-sort",
+			"module": "./sut-merge-sort.ts",
+			"exportName": "createSut",
+			"registration": {
+				"name": "Merge Sort",
+				"version": "1.0.0",
+				"role": "primary"
+			}
+		},
+		{
+			"id": "quick-sort",
+			"module": "./sut-quick-sort.ts",
+			"exportName": "createSut",
+			"registration": {
+				"name": "Quick Sort",
+				"version": "1.0.0",
+				"role": "primary"
+			}
+		}
+	],
+	"cases": [
+		{
+			"id": "small-random",
+			"module": "./case-small-random.ts",
+			"exportName": "createCase"
+		},
+		{
+			"id": "medium-random",
+			"module": "./case-medium-random.ts",
+			"exportName": "createCase"
+		},
+		{
+			"id": "large-random",
+			"module": "./case-large-random.ts",
+			"exportName": "createCase"
+		},
+		{
+			"id": "already-sorted",
+			"module": "./case-already-sorted.ts",
+			"exportName": "createCase"
+		},
+		{
+			"id": "reverse-sorted",
+			"module": "./case-reverse-sorted.ts",
+			"exportName": "createCase"
+		},
+		{
+			"id": "nearly-sorted",
+			"module": "./case-nearly-sorted.ts",
+			"exportName": "createCase"
+		}
+	],
+	"metricsExtractor": {
+		"module": "./metrics.ts",
+		"exportName": "extract"
+	},
+	"output": {
+		"path": "./results"
+	}
+}
