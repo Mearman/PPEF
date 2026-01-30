@@ -33,3 +33,6 @@ export * from "./robustness/index.js";
 
 // Renderers
 export * from "./renderers/index.js";
+
+// Schemas (JSON Schema validation)
+export * from "./schemas/index.js";

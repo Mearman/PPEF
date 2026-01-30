@@ -26,6 +26,29 @@
       "title": "ExperimentMeta",
       "description": "Experiment metadata"
     },
+    "schemas": {
+      "description": "Optional JSON Schemas for input/output validation",
+      "type": "object",
+      "properties": {
+        "input": {
+          "description": "Schema for case inputs",
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {}
+        },
+        "output": {
+          "description": "Schema for SUT outputs",
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {}
+        }
+      },
+      "additionalProperties": false
+    },
     "executor": {
       "type": "object",
       "properties": {
@@ -179,6 +202,14 @@
             "additionalProperties": false,
             "title": "SutRegistration",
             "description": "SUT registration metadata"
+          },
+          "outputSchema": {
+            "description": "Per-SUT output schema (overrides schemas.output)",
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {}
           }
         },
         "required": [
@@ -212,6 +243,14 @@
             "type": "string",
             "minLength": 1,
             "description": "Name of the export to use as case factory"
+          },
+          "inputSchema": {
+            "description": "Per-case input schema (overrides schemas.input)",
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {}
           }
         },
         "required": [

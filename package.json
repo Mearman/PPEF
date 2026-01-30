@@ -82,6 +82,14 @@
     "./renderers/*": {
       "types": "./dist/renderers/*.d.ts",
       "import": "./dist/renderers/*.js"
+    },
+    "./schemas": {
+      "types": "./dist/schemas/index.d.ts",
+      "import": "./dist/schemas/index.js"
+    },
+    "./schemas/*": {
+      "types": "./dist/schemas/*.d.ts",
+      "import": "./dist/schemas/*.js"
     }
   },
   "files": [

@@ -4,6 +4,31 @@
 		"name": "sorting-algorithms",
 		"description": "Compare sorting algorithm performance across input sizes and distributions"
 	},
+	"schemas": {
+		"input": {
+			"type": "object",
+			"properties": {
+				"data": {
+					"type": "array",
+					"items": { "type": "number" }
+				}
+			},
+			"required": ["data"]
+		},
+		"output": {
+			"type": "object",
+			"properties": {
+				"sorted": {
+					"type": "array",
+					"items": { "type": "number" }
+				},
+				"comparisons": { "type": "integer" },
+				"swaps": { "type": "integer" },
+				"executionTimeMs": { "type": "number" }
+			},
+			"required": ["sorted", "comparisons", "swaps", "executionTimeMs"]
+		}
+	},
 	"executor": {
 		"repetitions": 10
 	},
