@@ -11,6 +11,7 @@ import { arch, platform, version as nodeVersion } from "node:process";
 import type { CaseDefinition, Primitive } from "../types/case.js";
 import type { CorrectnessResult, EvaluationResult, Provenance } from "../types/result.js";
 import type { SutDefinition } from "../types/sut.js";
+import { type JsonSchemaValidator, createValidator } from "../schemas/index.js";
 import { MemoryMonitor, MemoryWarningLevel } from "./memory-monitor.js";
 import { generateRunId } from "./run-id.js";
 
@@ -70,6 +71,18 @@ export interface ExecutorConfig {
 	 * Defaults to process.cwd() if not set.
 	 */
 	baseDir?: string;
+
+	/** Experiment-level input schema (validates case getInputs() return values) */
+	inputSchema?: Record<string, unknown>;
+
+	/** Experiment-level output schema (validates sut.run() return values) */
+	outputSchema?: Record<string, unknown>;
+
+	/** Per-SUT output schema overrides (sutId → JSON Schema) */
+	sutOutputSchemas?: Record<string, Record<string, unknown>>;
+
+	/** Per-case input schema overrides (caseId → JSON Schema) */
+	caseInputSchemas?: Record<string, Record<string, unknown>>;
 }
 
 /**
@@ -205,6 +218,18 @@ export class Executor<TInput = unknown, TInputs = unknown, TResult = unknown> {
 	private readonly inputCache: Map<string, TInput>;
 	private readonly memoryMonitor?: MemoryMonitor;
 
+	/** Pre-compiled input validators (experiment-level + per-case overrides) */
+	private readonly inputValidators: Map<string, JsonSchemaValidator>;
+
+	/** Pre-compiled output validators (experiment-level + per-SUT overrides) */
+	private readonly outputValidators: Map<string, JsonSchemaValidator>;
+
+	/** Default input validator (experiment-level schema) */
+	private readonly defaultInputValidator?: JsonSchemaValidator;
+
+	/** Default output validator (experiment-level schema) */
+	private readonly defaultOutputValidator?: JsonSchemaValidator;
+
 	constructor(config: Partial<ExecutorConfig> = {}) {
 		this.config = {
 			...DEFAULT_EXECUTOR_CONFIG,
@@ -212,6 +237,30 @@ export class Executor<TInput = unknown, TInputs = unknown, TResult = unknown> {
 			...config,
 		};
 		this.inputCache = new Map();
+
+		// Compile schema validators once (not per-run)
+		this.defaultInputValidator = createValidator(this.config.inputSchema);
+		this.defaultOutputValidator = createValidator(this.config.outputSchema);
+
+		this.inputValidators = new Map();
+		if (this.config.caseInputSchemas) {
+			for (const [caseId, schema] of Object.entries(this.config.caseInputSchemas)) {
+				const validator = createValidator(schema);
+				if (validator) {
+					this.inputValidators.set(caseId, validator);
+				}
+			}
+		}
+
+		this.outputValidators = new Map();
+		if (this.config.sutOutputSchemas) {
+			for (const [sutId, schema] of Object.entries(this.config.sutOutputSchemas)) {
+				const validator = createValidator(schema);
+				if (validator) {
+					this.outputValidators.set(sutId, validator);
+				}
+			}
+		}
 
 		// Initialize memory monitor if enabled
 		if (this.config.monitorMemory) {
@@ -645,6 +694,42 @@ export class Executor<TInput = unknown, TInputs = unknown, TResult = unknown> {
 			inputs = { ...inputs, expander: input } as TInputs;
 		}
 
+		// Validate inputs against schema (per-case override → experiment-level)
+		const inputValidator = this.inputValidators.get(run.caseId) ?? this.defaultInputValidator;
+		if (inputValidator) {
+			const inputValidation = inputValidator.validate(inputs);
+			if (!inputValidation.success) {
+				const executionTimeMs = performance.now() - runStartTime;
+				const provenance = getProvenance(this.config.collectProvenance);
+				provenance.executionTimeMs = executionTimeMs;
+				return {
+					run: {
+						runId: run.runId,
+						sut: run.sutId,
+						sutRole: sutDef.registration.role,
+						sutVersion: sutDef.registration.version,
+						caseId: run.caseId,
+						caseClass: caseDef.case.caseClass,
+						config: run.config as Record<string, Primitive> | undefined,
+						seed: run.seed,
+						repetition: run.repetition,
+					},
+					correctness: {
+						expectedExists: caseDef.case.expectedOutput !== undefined,
+						producedOutput: false,
+						valid: false,
+						matchesExpected: null,
+					},
+					outputs: {
+						summary: {},
+					},
+					metrics: { numeric: {} },
+					provenance,
+					error: `Input schema validation failed: ${inputValidation.errors.join("; ")}`,
+				};
+			}
+		}
+
 		// Create SUT instance (factory now takes only config)
 		const sut = sutDef.factory(run.config);
 
@@ -659,6 +744,42 @@ export class Executor<TInput = unknown, TInputs = unknown, TResult = unknown> {
 					),
 				])
 			: sut.run({ ...inputs, input }));
+
+		// Validate output against schema (per-SUT override → experiment-level)
+		const outputValidator = this.outputValidators.get(run.sutId) ?? this.defaultOutputValidator;
+		if (outputValidator) {
+			const outputValidation = outputValidator.validate(sutResult);
+			if (!outputValidation.success) {
+				const executionTimeMs = performance.now() - runStartTime;
+				const provenance = getProvenance(this.config.collectProvenance);
+				provenance.executionTimeMs = executionTimeMs;
+				return {
+					run: {
+						runId: run.runId,
+						sut: run.sutId,
+						sutRole: sutDef.registration.role,
+						sutVersion: sutDef.registration.version,
+						caseId: run.caseId,
+						caseClass: caseDef.case.caseClass,
+						config: run.config as Record<string, Primitive> | undefined,
+						seed: run.seed,
+						repetition: run.repetition,
+					},
+					correctness: {
+						expectedExists: caseDef.case.expectedOutput !== undefined,
+						producedOutput: true,
+						valid: false,
+						matchesExpected: null,
+					},
+					outputs: {
+						summary: {},
+					},
+					metrics: { numeric: {} },
+					provenance,
+					error: `Output schema validation failed: ${outputValidation.errors.join("; ")}`,
+				};
+			}
+		}
 
 		const executionTimeMs = performance.now() - runStartTime;
 
