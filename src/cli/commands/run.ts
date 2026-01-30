@@ -154,6 +154,7 @@ export async function executeRun(
 
 		// Apply CLI overrides
 		const executorConfig = { ...config.executor };
+		(executorConfig as Record<string, unknown>).baseDir = baseDir;
 		if (options.jobs !== undefined) {
 			(executorConfig as Record<string, unknown>).concurrency = options.jobs;
 			logger.debug(`Concurrency overridden to ${options.jobs}`);

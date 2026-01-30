@@ -63,6 +63,13 @@ export interface ExecutorConfig {
 	 * Default: false (worker threads are always used for main thread isolation)
 	 */
 	forceInProcess?: boolean;
+
+	/**
+	 * Base directory for resolving relative module paths in worker threads.
+	 * This is typically the directory containing the experiment config file.
+	 * Defaults to process.cwd() if not set.
+	 */
+	baseDir?: string;
 }
 
 /**
@@ -357,6 +364,7 @@ export class Executor<TInput = unknown, TInputs = unknown, TResult = unknown> {
 			workers: workerCount,
 			maxMemoryMb: resources.maxMemoryMb,
 			maxConcurrentIo: resources.maxConcurrentIo,
+			baseDir: this.config.baseDir,
 		});
 
 		// Execute using worker threads
