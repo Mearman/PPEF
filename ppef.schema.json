@@ -1,18 +1,170 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ppef.dev/schemas/v1.2.1/ppef.schema.json",
+  "title": "ExperimentConfig",
+  "description": "PPEF experiment configuration",
   "type": "object",
   "properties": {
-    "experiment": {
+    "cases": {
+      "description": "Test cases to run",
+      "type": "array",
+      "items": {
+        "title": "CaseConfig",
+        "description": "Test case configuration",
+        "type": "object",
+        "properties": {
+          "exportName": {
+            "description": "Name of the export to use as case factory",
+            "type": "string",
+            "minLength": 1
+          },
+          "id": {
+            "description": "Unique case identifier",
+            "type": "string",
+            "minLength": 1
+          },
+          "inputSchema": {
+            "description": "Per-case input schema (overrides schemas.input)",
+            "type": "object",
+            "additionalProperties": {},
+            "propertyNames": {
+              "type": "string"
+            }
+          },
+          "module": {
+            "description": "Path to module file (relative to config file)",
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "exportName",
+          "id",
+          "module"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "evaluators": {
+      "description": "Evaluator configurations to run after experiment completion",
+      "type": "array",
+      "items": {
+        "title": "EvaluatorEntry",
+        "description": "An evaluator configuration entry",
+        "type": "object",
+        "properties": {
+          "config": {
+            "$comment": "Discriminated by sibling 'type' field: claims -> ClaimsEvaluatorConfig, metrics -> MetricsEvaluatorConfig, robustness -> RobustnessEvaluatorConfig, exploratory -> ExploratoryEvaluatorConfig, custom -> CustomEvaluatorConfig",
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ClaimsEvaluatorConfig"
+              },
+              {
+                "$ref": "#/$defs/MetricsEvaluatorConfig"
+              },
+              {
+                "$ref": "#/$defs/RobustnessEvaluatorConfig"
+              },
+              {
+                "$ref": "#/$defs/ExploratoryEvaluatorConfig"
+              },
+              {
+                "$ref": "#/$defs/CustomEvaluatorConfig"
+              }
+            ]
+          },
+          "type": {
+            "description": "Evaluation type",
+            "type": "string",
+            "oneOf": [
+              {
+                "description": "Test explicit hypotheses with statistical significance",
+                "const": "claims"
+              },
+              {
+                "description": "Measure sensitivity under perturbations",
+                "const": "robustness"
+              },
+              {
+                "description": "Evaluate against thresholds, baselines, or target ranges",
+                "const": "metrics"
+              },
+              {
+                "description": "Hypothesis-free analysis: rankings, correlations",
+                "const": "exploratory"
+              },
+              {
+                "description": "User-defined evaluator loaded from a module",
+                "const": "custom"
+              }
+            ]
+          }
+        },
+        "required": [
+          "config",
+          "type"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "executor": {
+      "title": "ExecutorConfig",
+      "description": "Executor configuration",
       "type": "object",
       "properties": {
-        "name": {
-          "type": "string",
-          "minLength": 1,
-          "description": "Human-readable experiment name"
+        "collectProvenance": {
+          "description": "Whether to collect provenance information",
+          "type": "boolean",
+          "default": true
         },
+        "concurrency": {
+          "description": "Number of concurrent runs",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 256
+        },
+        "continueOnError": {
+          "description": "Continue execution if a single run fails",
+          "type": "boolean",
+          "default": true
+        },
+        "repetitions": {
+          "description": "Number of repetitions per case",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000,
+          "default": 1
+        },
+        "seedBase": {
+          "description": "Random seed base",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647,
+          "default": 42
+        },
+        "timeoutMs": {
+          "description": "Timeout per run in milliseconds (0 = no timeout)",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 86400000,
+          "default": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "experiment": {
+      "title": "ExperimentMeta",
+      "description": "Experiment metadata",
+      "type": "object",
+      "properties": {
         "description": {
           "description": "Experiment description",
           "type": "string"
+        },
+        "name": {
+          "description": "Human-readable experiment name",
+          "type": "string",
+          "minLength": 1
         },
         "version": {
           "description": "Experiment version string",
@@ -22,9 +174,55 @@
       "required": [
         "name"
       ],
-      "additionalProperties": false,
-      "title": "ExperimentMeta",
-      "description": "Experiment metadata"
+      "additionalProperties": false
+    },
+    "metricsExtractor": {
+      "title": "MetricsExtractorConfig",
+      "description": "Metrics extractor configuration",
+      "type": "object",
+      "properties": {
+        "exportName": {
+          "description": "Name of the export to use as metrics extractor",
+          "type": "string",
+          "minLength": 1
+        },
+        "module": {
+          "description": "Path to module file (relative to config file)",
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "exportName",
+        "module"
+      ],
+      "additionalProperties": false
+    },
+    "output": {
+      "title": "OutputConfig",
+      "description": "Output configuration",
+      "type": "object",
+      "properties": {
+        "aggregate": {
+          "description": "Whether to aggregate results",
+          "type": "boolean",
+          "default": true
+        },
+        "format": {
+          "description": "Output format",
+          "type": "string",
+          "enum": [
+            "json",
+            "json-pretty"
+          ],
+          "default": "json-pretty"
+        },
+        "path": {
+          "description": "Output directory path",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
     },
     "schemas": {
       "description": "Optional JSON Schemas for input/output validation",
@@ -33,108 +231,40 @@
         "input": {
           "description": "Schema for case inputs",
           "type": "object",
+          "additionalProperties": {},
           "propertyNames": {
             "type": "string"
-          },
-          "additionalProperties": {}
+          }
         },
         "output": {
           "description": "Schema for SUT outputs",
           "type": "object",
+          "additionalProperties": {},
           "propertyNames": {
             "type": "string"
-          },
-          "additionalProperties": {}
+          }
         }
       },
       "additionalProperties": false
     },
-    "executor": {
-      "type": "object",
-      "properties": {
-        "continueOnError": {
-          "description": "Continue execution if a single run fails",
-          "type": "boolean"
-        },
-        "repetitions": {
-          "description": "Number of repetitions per case",
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 9007199254740991
-        },
-        "seedBase": {
-          "description": "Random seed base",
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 9007199254740991
-        },
-        "timeoutMs": {
-          "description": "Timeout per run in milliseconds (0 = no timeout)",
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 9007199254740991
-        },
-        "collectProvenance": {
-          "description": "Whether to collect provenance information",
-          "type": "boolean"
-        },
-        "concurrency": {
-          "description": "Number of concurrent runs",
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 9007199254740991
-        }
-      },
-      "additionalProperties": false,
-      "title": "ExecutorConfig",
-      "description": "Executor configuration"
-    },
     "suts": {
+      "description": "Systems Under Test to evaluate",
       "type": "array",
       "items": {
+        "title": "SutConfig",
+        "description": "System Under Test configuration",
         "type": "object",
         "properties": {
-          "id": {
-            "type": "string",
-            "minLength": 1,
-            "description": "Unique SUT identifier"
-          },
-          "module": {
-            "type": "string",
-            "minLength": 1,
-            "description": "Path to module file (relative to config file)"
-          },
-          "exportName": {
-            "type": "string",
-            "minLength": 1,
-            "description": "Name of the export to use as factory"
-          },
-          "config": {
-            "description": "Optional configuration to pass to factory",
-            "type": "object",
-            "propertyNames": {
-              "type": "string"
-            },
-            "additionalProperties": {}
-          },
-          "type": {
-            "description": "SUT type: \"module\" (default) or \"binary\"",
-            "type": "string",
-            "enum": [
-              "module",
-              "binary"
-            ]
-          },
-          "binaryCommand": {
-            "description": "Command to execute (when type=\"binary\")",
-            "type": "string"
-          },
           "binaryArgs": {
             "description": "Arguments to pass to binary command",
             "type": "array",
             "items": {
               "type": "string"
             }
+          },
+          "binaryCommand": {
+            "description": "Command to execute (when type=\"binary\")",
+            "type": "string"
           },
           "binaryInputFormat": {
             "description": "How to serialize inputs to stdin",
@@ -158,29 +288,70 @@
             "description": "Binary SUT timeout per run in milliseconds",
             "type": "integer",
             "minimum": 0,
-            "maximum": 9007199254740991
+            "maximum": 86400000
+          },
+          "config": {
+            "description": "Optional configuration to pass to factory",
+            "type": "object",
+            "additionalProperties": {},
+            "propertyNames": {
+              "type": "string"
+            }
+          },
+          "exportName": {
+            "description": "Name of the export to use as factory",
+            "type": "string",
+            "minLength": 1
+          },
+          "id": {
+            "description": "Unique SUT identifier",
+            "type": "string",
+            "minLength": 1
+          },
+          "module": {
+            "description": "Path to module file (relative to config file)",
+            "type": "string",
+            "minLength": 1
+          },
+          "outputSchema": {
+            "description": "Per-SUT output schema (overrides schemas.output)",
+            "type": "object",
+            "additionalProperties": {},
+            "propertyNames": {
+              "type": "string"
+            }
           },
           "registration": {
+            "title": "SutRegistration",
+            "description": "SUT registration metadata",
             "type": "object",
             "properties": {
-              "name": {
-                "type": "string",
-                "minLength": 1,
-                "description": "Human-readable SUT name"
+              "description": {
+                "description": "Optional SUT description",
+                "type": "string"
               },
-              "version": {
+              "name": {
+                "description": "Human-readable SUT name",
                 "type": "string",
-                "minLength": 1,
-                "description": "SUT version string"
+                "minLength": 1
               },
               "role": {
+                "description": "Role of the SUT in evaluation",
                 "type": "string",
-                "enum": [
-                  "primary",
-                  "baseline",
-                  "oracle"
-                ],
-                "description": "Role of the SUT in evaluation"
+                "oneOf": [
+                  {
+                    "description": "The system being evaluated; the novel algorithm or implementation",
+                    "const": "primary"
+                  },
+                  {
+                    "description": "A reference implementation for comparison",
+                    "const": "baseline"
+                  },
+                  {
+                    "description": "Ground truth provider; defines correct answers",
+                    "const": "oracle"
+                  }
+                ]
               },
               "tags": {
                 "description": "Searchable tags",
@@ -189,772 +360,170 @@
                   "type": "string"
                 }
               },
-              "description": {
-                "description": "Optional SUT description",
-                "type": "string"
+              "version": {
+                "description": "SUT version string",
+                "type": "string",
+                "minLength": 1
               }
             },
             "required": [
               "name",
-              "version",
-              "role"
+              "role",
+              "version"
             ],
-            "additionalProperties": false,
-            "title": "SutRegistration",
-            "description": "SUT registration metadata"
+            "additionalProperties": false
           },
-          "outputSchema": {
-            "description": "Per-SUT output schema (overrides schemas.output)",
-            "type": "object",
-            "propertyNames": {
-              "type": "string"
-            },
-            "additionalProperties": {}
-          }
-        },
-        "required": [
-          "id",
-          "module",
-          "exportName",
-          "registration"
-        ],
-        "additionalProperties": false,
-        "title": "SutConfig",
-        "description": "System Under Test configuration"
-      },
-      "description": "Systems Under Test to evaluate"
-    },
-    "cases": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "minLength": 1,
-            "description": "Unique case identifier"
-          },
-          "module": {
-            "type": "string",
-            "minLength": 1,
-            "description": "Path to module file (relative to config file)"
-          },
-          "exportName": {
-            "type": "string",
-            "minLength": 1,
-            "description": "Name of the export to use as case factory"
-          },
-          "inputSchema": {
-            "description": "Per-case input schema (overrides schemas.input)",
-            "type": "object",
-            "propertyNames": {
-              "type": "string"
-            },
-            "additionalProperties": {}
-          }
-        },
-        "required": [
-          "id",
-          "module",
-          "exportName"
-        ],
-        "additionalProperties": false,
-        "title": "CaseConfig",
-        "description": "Test case configuration"
-      },
-      "description": "Test cases to run"
-    },
-    "metricsExtractor": {
-      "type": "object",
-      "properties": {
-        "module": {
-          "type": "string",
-          "minLength": 1,
-          "description": "Path to module file (relative to config file)"
-        },
-        "exportName": {
-          "type": "string",
-          "minLength": 1,
-          "description": "Name of the export to use as metrics extractor"
-        }
-      },
-      "required": [
-        "module",
-        "exportName"
-      ],
-      "additionalProperties": false,
-      "title": "MetricsExtractorConfig",
-      "description": "Metrics extractor configuration"
-    },
-    "output": {
-      "type": "object",
-      "properties": {
-        "path": {
-          "description": "Output directory path",
-          "type": "string"
-        },
-        "format": {
-          "description": "Output format",
-          "type": "string",
-          "enum": [
-            "json",
-            "json-pretty"
-          ]
-        },
-        "aggregate": {
-          "description": "Whether to aggregate results",
-          "type": "boolean"
-        }
-      },
-      "additionalProperties": false,
-      "title": "OutputConfig",
-      "description": "Output configuration"
-    },
-    "evaluators": {
-      "description": "Evaluator configurations to run after experiment completion",
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
           "type": {
+            "description": "SUT type: \"module\" (default) or \"binary\"",
             "type": "string",
             "enum": [
-              "claims",
-              "robustness",
-              "metrics",
-              "exploratory",
-              "custom"
-            ],
-            "description": "Evaluation type"
-          },
-          "config": {
-            "anyOf": [
-              {
-                "type": "object",
-                "properties": {
-                  "name": {
-                    "description": "Human-readable evaluator name",
-                    "type": "string"
-                  },
-                  "description": {
-                    "description": "Evaluator description",
-                    "type": "string"
-                  },
-                  "options": {
-                    "description": "Additional evaluator-specific options",
-                    "type": "object",
-                    "propertyNames": {
-                      "type": "string"
-                    },
-                    "additionalProperties": {}
-                  },
-                  "claims": {
-                    "minItems": 1,
-                    "type": "array",
-                    "items": {
-                      "type": "object",
-                      "properties": {
-                        "claimId": {
-                          "type": "string",
-                          "minLength": 1,
-                          "description": "Unique claim identifier"
-                        },
-                        "description": {
-                          "type": "string",
-                          "minLength": 1,
-                          "description": "Human-readable claim description"
-                        },
-                        "sut": {
-                          "type": "string",
-                          "minLength": 1,
-                          "description": "Primary SUT being evaluated"
-                        },
-                        "baseline": {
-                          "type": "string",
-                          "minLength": 1,
-                          "description": "Baseline SUT for comparison"
-                        },
-                        "metric": {
-                          "type": "string",
-                          "minLength": 1,
-                          "description": "Metric being compared"
-                        },
-                        "direction": {
-                          "type": "string",
-                          "enum": [
-                            "greater",
-                            "less",
-                            "equal"
-                          ],
-                          "description": "Expected direction of difference"
-                        },
-                        "threshold": {
-                          "description": "Optional threshold for the difference",
-                          "type": "number"
-                        },
-                        "scope": {
-                          "type": "string",
-                          "enum": [
-                            "global",
-                            "caseClass",
-                            "parameterRange",
-                            "localStructure"
-                          ],
-                          "description": "Scope of claim validity"
-                        },
-                        "scopeConstraints": {
-                          "description": "Scope constraints",
-                          "type": "object",
-                          "propertyNames": {
-                            "type": "string"
-                          },
-                          "additionalProperties": {
-                            "anyOf": [
-                              {
-                                "anyOf": [
-                                  {
-                                    "type": "string"
-                                  },
-                                  {
-                                    "type": "number"
-                                  },
-                                  {
-                                    "type": "boolean"
-                                  },
-                                  {
-                                    "type": "null"
-                                  }
-                                ]
-                              },
-                              {
-                                "type": "array",
-                                "items": {
-                                  "anyOf": [
-                                    {
-                                      "type": "string"
-                                    },
-                                    {
-                                      "type": "number"
-                                    },
-                                    {
-                                      "type": "boolean"
-                                    },
-                                    {
-                                      "type": "null"
-                                    }
-                                  ]
-                                }
-                              }
-                            ]
-                          }
-                        },
-                        "significanceLevel": {
-                          "description": "Required significance level (default: 0.05)",
-                          "type": "number",
-                          "minimum": 0,
-                          "maximum": 1
-                        },
-                        "minEffectSize": {
-                          "description": "Minimum effect size (Cohen's d)",
-                          "type": "number",
-                          "minimum": 0
-                        },
-                        "tags": {
-                          "description": "Tags for filtering",
-                          "type": "array",
-                          "items": {
-                            "type": "string"
-                          }
-                        },
-                        "citation": {
-                          "description": "Citation/reference for the claim",
-                          "type": "string"
-                        }
-                      },
-                      "required": [
-                        "claimId",
-                        "description",
-                        "sut",
-                        "baseline",
-                        "metric",
-                        "direction",
-                        "scope"
-                      ],
-                      "additionalProperties": false,
-                      "title": "EvaluationClaim",
-                      "description": "An evaluation claim (hypothesis)"
-                    },
-                    "description": "Claims to evaluate"
-                  },
-                  "significanceLevel": {
-                    "description": "Global significance level override",
-                    "type": "number",
-                    "minimum": 0,
-                    "maximum": 1
-                  },
-                  "minEffectSize": {
-                    "description": "Global minimum effect size override",
-                    "type": "number",
-                    "minimum": 0
-                  }
-                },
-                "required": [
-                  "claims"
-                ],
-                "additionalProperties": false,
-                "title": "ClaimsEvaluatorConfig",
-                "description": "Configuration for the claims evaluator"
-              },
-              {
-                "type": "object",
-                "properties": {
-                  "name": {
-                    "description": "Human-readable evaluator name",
-                    "type": "string"
-                  },
-                  "description": {
-                    "description": "Evaluator description",
-                    "type": "string"
-                  },
-                  "options": {
-                    "description": "Additional evaluator-specific options",
-                    "type": "object",
-                    "propertyNames": {
-                      "type": "string"
-                    },
-                    "additionalProperties": {}
-                  },
-                  "criteria": {
-                    "minItems": 1,
-                    "type": "array",
-                    "items": {
-                      "type": "object",
-                      "properties": {
-                        "criterionId": {
-                          "type": "string",
-                          "minLength": 1,
-                          "description": "Unique criterion identifier"
-                        },
-                        "description": {
-                          "type": "string",
-                          "minLength": 1,
-                          "description": "Human-readable description"
-                        },
-                        "type": {
-                          "type": "string",
-                          "enum": [
-                            "threshold",
-                            "baseline",
-                            "target-range"
-                          ],
-                          "description": "Type of metrics criterion"
-                        },
-                        "metric": {
-                          "type": "string",
-                          "minLength": 1,
-                          "description": "Metric to evaluate"
-                        },
-                        "sut": {
-                          "type": "string",
-                          "minLength": 1,
-                          "description": "SUT to evaluate (or \"*\" for all SUTs)"
-                        },
-                        "threshold": {
-                          "description": "Threshold operator and value (required when type is threshold)",
-                          "type": "object",
-                          "properties": {
-                            "operator": {
-                              "type": "string",
-                              "enum": [
-                                "gt",
-                                "gte",
-                                "lt",
-                                "lte",
-                                "eq"
-                              ],
-                              "description": "Comparison operator"
-                            },
-                            "value": {
-                              "type": "number",
-                              "description": "Threshold value"
-                            }
-                          },
-                          "required": [
-                            "operator",
-                            "value"
-                          ],
-                          "additionalProperties": false
-                        },
-                        "baseline": {
-                          "description": "Baseline comparison (required when type is baseline)",
-                          "type": "object",
-                          "properties": {
-                            "sut": {
-                              "type": "string",
-                              "minLength": 1,
-                              "description": "Baseline SUT identifier"
-                            },
-                            "operator": {
-                              "type": "string",
-                              "enum": [
-                                "gt",
-                                "gte",
-                                "lt",
-                                "lte",
-                                "eq"
-                              ],
-                              "description": "Comparison operator"
-                            }
-                          },
-                          "required": [
-                            "sut",
-                            "operator"
-                          ],
-                          "additionalProperties": false
-                        },
-                        "targetRange": {
-                          "description": "Target range (required when type is target-range)",
-                          "type": "object",
-                          "properties": {
-                            "min": {
-                              "description": "Minimum value",
-                              "type": "number"
-                            },
-                            "max": {
-                              "description": "Maximum value",
-                              "type": "number"
-                            },
-                            "minInclusive": {
-                              "description": "Whether min is inclusive",
-                              "type": "boolean"
-                            },
-                            "maxInclusive": {
-                              "description": "Whether max is inclusive",
-                              "type": "boolean"
-                            }
-                          },
-                          "additionalProperties": false
-                        },
-                        "scopeConstraints": {
-                          "description": "Optional scope constraints",
-                          "type": "object",
-                          "properties": {
-                            "caseClass": {
-                              "description": "Case class filter",
-                              "anyOf": [
-                                {
-                                  "type": "string"
-                                },
-                                {
-                                  "type": "array",
-                                  "items": {
-                                    "type": "string"
-                                  }
-                                }
-                              ]
-                            }
-                          },
-                          "additionalProperties": false
-                        },
-                        "tags": {
-                          "description": "Tags for filtering",
-                          "type": "array",
-                          "items": {
-                            "type": "string"
-                          }
-                        }
-                      },
-                      "required": [
-                        "criterionId",
-                        "description",
-                        "type",
-                        "metric",
-                        "sut"
-                      ],
-                      "additionalProperties": false,
-                      "title": "MetricsCriterion",
-                      "description": "A metrics evaluation criterion"
-                    },
-                    "description": "Criteria to evaluate"
-                  }
-                },
-                "required": [
-                  "criteria"
-                ],
-                "additionalProperties": false,
-                "title": "MetricsEvaluatorConfig",
-                "description": "Configuration for the metrics evaluator"
-              },
-              {
-                "type": "object",
-                "properties": {
-                  "name": {
-                    "description": "Human-readable evaluator name",
-                    "type": "string"
-                  },
-                  "description": {
-                    "description": "Evaluator description",
-                    "type": "string"
-                  },
-                  "options": {
-                    "description": "Additional evaluator-specific options",
-                    "type": "object",
-                    "propertyNames": {
-                      "type": "string"
-                    },
-                    "additionalProperties": {}
-                  },
-                  "metrics": {
-                    "minItems": 1,
-                    "type": "array",
-                    "items": {
-                      "type": "string",
-                      "minLength": 1
-                    },
-                    "description": "Metrics to analyze"
-                  },
-                  "perturbations": {
-                    "minItems": 1,
-                    "type": "array",
-                    "items": {
-                      "type": "string",
-                      "minLength": 1
-                    },
-                    "description": "Perturbations applied"
-                  },
-                  "intensityLevels": {
-                    "description": "Intensity levels tested",
-                    "type": "array",
-                    "items": {
-                      "type": "number"
-                    }
-                  },
-                  "runsPerLevel": {
-                    "description": "Number of runs per perturbation level",
-                    "type": "integer",
-                    "minimum": 1,
-                    "maximum": 9007199254740991
-                  }
-                },
-                "required": [
-                  "metrics",
-                  "perturbations"
-                ],
-                "additionalProperties": false,
-                "title": "RobustnessEvaluatorConfig",
-                "description": "Configuration for the robustness evaluator"
-              },
-              {
-                "type": "object",
-                "properties": {
-                  "name": {
-                    "description": "Human-readable evaluator name",
-                    "type": "string"
-                  },
-                  "description": {
-                    "description": "Evaluator description",
-                    "type": "string"
-                  },
-                  "options": {
-                    "description": "Additional evaluator-specific options",
-                    "type": "object",
-                    "propertyNames": {
-                      "type": "string"
-                    },
-                    "additionalProperties": {}
-                  },
-                  "metrics": {
-                    "description": "Metrics to analyze (all if not specified)",
-                    "type": "array",
-                    "items": {
-                      "type": "string",
-                      "minLength": 1
-                    }
-                  },
-                  "suts": {
-                    "description": "SUTs to include (all if not specified)",
-                    "type": "array",
-                    "items": {
-                      "type": "string",
-                      "minLength": 1
-                    }
-                  },
-                  "metricDirections": {
-                    "description": "Metric directions for ranking interpretation",
-                    "type": "object",
-                    "propertyNames": {
-                      "type": "string"
-                    },
-                    "additionalProperties": {
-                      "type": "string",
-                      "enum": [
-                        "higher-better",
-                        "lower-better"
-                      ],
-                      "description": "Metric direction for ranking"
-                    }
-                  },
-                  "significanceLevel": {
-                    "description": "Significance level for statistical tests (default: 0.05)",
-                    "type": "number",
-                    "minimum": 0,
-                    "maximum": 1
-                  },
-                  "minEffectSize": {
-                    "description": "Minimum effect size to consider meaningful",
-                    "type": "number",
-                    "minimum": 0
-                  },
-                  "computeCorrelations": {
-                    "description": "Whether to compute metric correlations",
-                    "type": "boolean"
-                  },
-                  "analyzeCaseClassEffects": {
-                    "description": "Whether to analyze case-class effects",
-                    "type": "boolean"
-                  }
-                },
-                "additionalProperties": false,
-                "title": "ExploratoryEvaluatorConfig",
-                "description": "Configuration for the exploratory evaluator"
-              },
-              {
-                "type": "object",
-                "properties": {
-                  "name": {
-                    "description": "Human-readable evaluator name",
-                    "type": "string"
-                  },
-                  "description": {
-                    "description": "Evaluator description",
-                    "type": "string"
-                  },
-                  "options": {
-                    "description": "Additional evaluator-specific options",
-                    "type": "object",
-                    "propertyNames": {
-                      "type": "string"
-                    },
-                    "additionalProperties": {}
-                  },
-                  "customType": {
-                    "type": "string",
-                    "minLength": 1,
-                    "description": "Custom evaluator type name"
-                  }
-                },
-                "required": [
-                  "customType"
-                ],
-                "additionalProperties": {},
-                "title": "CustomEvaluatorConfig",
-                "description": "Configuration for a custom evaluator"
-              }
+              "module",
+              "binary"
             ]
           }
         },
         "required": [
-          "type",
-          "config"
+          "exportName",
+          "id",
+          "module",
+          "registration"
         ],
-        "additionalProperties": false,
-        "title": "EvaluatorEntry",
-        "description": "An evaluator configuration entry"
+        "additionalProperties": false
       }
     }
   },
   "required": [
-    "experiment",
-    "executor",
-    "suts",
     "cases",
+    "executor",
+    "experiment",
     "metricsExtractor",
-    "output"
+    "output",
+    "suts"
   ],
   "additionalProperties": false,
-  "title": "ExperimentConfig",
-  "description": "PPEF experiment configuration",
+  "examples": [
+    {
+      "cases": [
+        {
+          "exportName": "createCase",
+          "id": "hello-world",
+          "module": "./case.mjs"
+        }
+      ],
+      "executor": {
+        "repetitions": 3
+      },
+      "experiment": {
+        "description": "Compare string length implementations",
+        "name": "string-length"
+      },
+      "metricsExtractor": {
+        "exportName": "extract",
+        "module": "./metrics.mjs"
+      },
+      "output": {
+        "path": "./results"
+      },
+      "suts": [
+        {
+          "exportName": "createSut",
+          "id": "builtin-length",
+          "module": "./sut.mjs",
+          "registration": {
+            "name": "Built-in .length",
+            "role": "primary",
+            "version": "1.0.0"
+          }
+        }
+      ]
+    }
+  ],
   "$defs": {
     "ClaimsEvaluatorConfig": {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "title": "ClaimsEvaluatorConfig",
+      "description": "Configuration for the claims evaluator",
       "type": "object",
       "properties": {
-        "name": {
-          "description": "Human-readable evaluator name",
-          "type": "string"
-        },
-        "description": {
-          "description": "Evaluator description",
-          "type": "string"
-        },
-        "options": {
-          "description": "Additional evaluator-specific options",
-          "type": "object",
-          "propertyNames": {
-            "type": "string"
-          },
-          "additionalProperties": {}
-        },
         "claims": {
-          "minItems": 1,
+          "description": "Claims to evaluate",
           "type": "array",
           "items": {
+            "title": "EvaluationClaim",
+            "description": "An evaluation claim (hypothesis)",
             "type": "object",
             "properties": {
-              "claimId": {
+              "baseline": {
+                "description": "Baseline SUT for comparison",
                 "type": "string",
-                "minLength": 1,
-                "description": "Unique claim identifier"
+                "minLength": 1
+              },
+              "citation": {
+                "description": "Citation/reference for the claim",
+                "type": "string"
+              },
+              "claimId": {
+                "description": "Unique claim identifier",
+                "type": "string",
+                "minLength": 1
               },
               "description": {
+                "description": "Human-readable claim description",
                 "type": "string",
-                "minLength": 1,
-                "description": "Human-readable claim description"
-              },
-              "sut": {
-                "type": "string",
-                "minLength": 1,
-                "description": "Primary SUT being evaluated"
-              },
-              "baseline": {
-                "type": "string",
-                "minLength": 1,
-                "description": "Baseline SUT for comparison"
-              },
-              "metric": {
-                "type": "string",
-                "minLength": 1,
-                "description": "Metric being compared"
+                "minLength": 1
               },
               "direction": {
+                "description": "Expected direction of difference",
                 "type": "string",
-                "enum": [
-                  "greater",
-                  "less",
-                  "equal"
-                ],
-                "description": "Expected direction of difference"
+                "oneOf": [
+                  {
+                    "description": "Primary SUT metric should be greater than baseline",
+                    "const": "greater"
+                  },
+                  {
+                    "description": "Primary SUT metric should be less than baseline",
+                    "const": "less"
+                  },
+                  {
+                    "description": "Primary SUT metric should be equal to baseline",
+                    "const": "equal"
+                  }
+                ]
               },
-              "threshold": {
-                "description": "Optional threshold for the difference",
-                "type": "number"
+              "metric": {
+                "description": "Metric being compared",
+                "type": "string",
+                "minLength": 1
+              },
+              "minEffectSize": {
+                "description": "Minimum effect size (Cohen's d)",
+                "type": "number",
+                "minimum": 0
               },
               "scope": {
+                "description": "Scope of claim validity",
                 "type": "string",
-                "enum": [
-                  "global",
-                  "caseClass",
-                  "parameterRange",
-                  "localStructure"
-                ],
-                "description": "Scope of claim validity"
+                "oneOf": [
+                  {
+                    "description": "Claim applies across all cases and conditions",
+                    "const": "global"
+                  },
+                  {
+                    "description": "Claim applies within a specific case class",
+                    "const": "caseClass"
+                  },
+                  {
+                    "description": "Claim applies within a parameter range",
+                    "const": "parameterRange"
+                  },
+                  {
+                    "description": "Claim applies to local structural properties",
+                    "const": "localStructure"
+                  }
+                ]
               },
               "scopeConstraints": {
                 "description": "Scope constraints",
                 "type": "object",
-                "propertyNames": {
-                  "type": "string"
-                },
                 "additionalProperties": {
                   "anyOf": [
                     {
@@ -993,6 +562,9 @@
                       }
                     }
                   ]
+                },
+                "propertyNames": {
+                  "type": "string"
                 }
               },
               "significanceLevel": {
@@ -1001,10 +573,10 @@
                 "minimum": 0,
                 "maximum": 1
               },
-              "minEffectSize": {
-                "description": "Minimum effect size (Cohen's d)",
-                "type": "number",
-                "minimum": 0
+              "sut": {
+                "description": "Primary SUT being evaluated",
+                "type": "string",
+                "minLength": 1
               },
               "tags": {
                 "description": "Tags for filtering",
@@ -1013,175 +585,319 @@
                   "type": "string"
                 }
               },
-              "citation": {
-                "description": "Citation/reference for the claim",
-                "type": "string"
+              "threshold": {
+                "description": "Optional threshold for the difference",
+                "type": "number"
               }
             },
             "required": [
+              "baseline",
               "claimId",
               "description",
-              "sut",
-              "baseline",
-              "metric",
               "direction",
-              "scope"
+              "metric",
+              "scope",
+              "sut"
             ],
-            "additionalProperties": false,
-            "title": "EvaluationClaim",
-            "description": "An evaluation claim (hypothesis)"
+            "additionalProperties": false
           },
-          "description": "Claims to evaluate"
+          "minItems": 1
+        },
+        "description": {
+          "description": "Evaluator description",
+          "type": "string"
+        },
+        "minEffectSize": {
+          "description": "Global minimum effect size override",
+          "type": "number",
+          "minimum": 0
+        },
+        "name": {
+          "description": "Human-readable evaluator name",
+          "type": "string"
+        },
+        "options": {
+          "description": "Additional evaluator-specific options",
+          "type": "object",
+          "additionalProperties": {},
+          "propertyNames": {
+            "type": "string"
+          }
         },
         "significanceLevel": {
           "description": "Global significance level override",
           "type": "number",
           "minimum": 0,
           "maximum": 1
-        },
-        "minEffectSize": {
-          "description": "Global minimum effect size override",
-          "type": "number",
-          "minimum": 0
         }
       },
       "required": [
         "claims"
       ],
       "additionalProperties": false,
-      "title": "ClaimsEvaluatorConfig",
-      "description": "Configuration for the claims evaluator"
+      "examples": [
+        {
+          "claims": [
+            {
+              "description": "Built-in .length reports greater length than spread operator on emoji strings",
+              "baseline": "spread-length",
+              "claimId": "C001",
+              "direction": "greater",
+              "metric": "length",
+              "scope": "global",
+              "sut": "builtin-length"
+            }
+          ],
+          "significanceLevel": 0.05
+        }
+      ]
     },
-    "MetricsEvaluatorConfig": {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "CustomEvaluatorConfig": {
+      "title": "CustomEvaluatorConfig",
+      "description": "Configuration for a custom evaluator",
       "type": "object",
       "properties": {
-        "name": {
-          "description": "Human-readable evaluator name",
-          "type": "string"
+        "customType": {
+          "description": "Custom evaluator type name",
+          "type": "string",
+          "minLength": 1
         },
         "description": {
           "description": "Evaluator description",
           "type": "string"
         },
+        "name": {
+          "description": "Human-readable evaluator name",
+          "type": "string"
+        },
         "options": {
           "description": "Additional evaluator-specific options",
           "type": "object",
+          "additionalProperties": {},
           "propertyNames": {
             "type": "string"
-          },
-          "additionalProperties": {}
+          }
+        }
+      },
+      "required": [
+        "customType"
+      ],
+      "additionalProperties": {}
+    },
+    "ExploratoryEvaluatorConfig": {
+      "title": "ExploratoryEvaluatorConfig",
+      "description": "Configuration for the exploratory evaluator",
+      "type": "object",
+      "properties": {
+        "analyzeCaseClassEffects": {
+          "description": "Whether to analyze case-class effects",
+          "type": "boolean"
         },
-        "criteria": {
-          "minItems": 1,
+        "computeCorrelations": {
+          "description": "Whether to compute metric correlations",
+          "type": "boolean"
+        },
+        "description": {
+          "description": "Evaluator description",
+          "type": "string"
+        },
+        "metricDirections": {
+          "description": "Metric directions for ranking interpretation",
+          "type": "object",
+          "additionalProperties": {
+            "description": "Metric direction for ranking",
+            "type": "string",
+            "oneOf": [
+              {
+                "description": "Higher values indicate better performance",
+                "const": "higher-better"
+              },
+              {
+                "description": "Lower values indicate better performance",
+                "const": "lower-better"
+              }
+            ]
+          },
+          "propertyNames": {
+            "type": "string"
+          }
+        },
+        "metrics": {
+          "description": "Metrics to analyze (all if not specified)",
           "type": "array",
           "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "minEffectSize": {
+          "description": "Minimum effect size to consider meaningful",
+          "type": "number",
+          "minimum": 0
+        },
+        "name": {
+          "description": "Human-readable evaluator name",
+          "type": "string"
+        },
+        "options": {
+          "description": "Additional evaluator-specific options",
+          "type": "object",
+          "additionalProperties": {},
+          "propertyNames": {
+            "type": "string"
+          }
+        },
+        "significanceLevel": {
+          "description": "Significance level for statistical tests (default: 0.05)",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "suts": {
+          "description": "SUTs to include (all if not specified)",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "additionalProperties": false,
+      "examples": [
+        {
+          "analyzeCaseClassEffects": true,
+          "computeCorrelations": false,
+          "metricDirections": {
+            "length": "higher-better"
+          },
+          "metrics": [
+            "length"
+          ]
+        }
+      ]
+    },
+    "MetricsEvaluatorConfig": {
+      "title": "MetricsEvaluatorConfig",
+      "description": "Configuration for the metrics evaluator",
+      "type": "object",
+      "properties": {
+        "criteria": {
+          "description": "Criteria to evaluate",
+          "type": "array",
+          "items": {
+            "title": "MetricsCriterion",
+            "description": "A metrics evaluation criterion",
             "type": "object",
-            "properties": {
-              "criterionId": {
-                "type": "string",
-                "minLength": 1,
-                "description": "Unique criterion identifier"
-              },
-              "description": {
-                "type": "string",
-                "minLength": 1,
-                "description": "Human-readable description"
-              },
-              "type": {
-                "type": "string",
-                "enum": [
-                  "threshold",
-                  "baseline",
-                  "target-range"
-                ],
-                "description": "Type of metrics criterion"
-              },
-              "metric": {
-                "type": "string",
-                "minLength": 1,
-                "description": "Metric to evaluate"
-              },
-              "sut": {
-                "type": "string",
-                "minLength": 1,
-                "description": "SUT to evaluate (or \"*\" for all SUTs)"
-              },
-              "threshold": {
-                "description": "Threshold operator and value (required when type is threshold)",
-                "type": "object",
-                "properties": {
-                  "operator": {
-                    "type": "string",
-                    "enum": [
-                      "gt",
-                      "gte",
-                      "lt",
-                      "lte",
-                      "eq"
-                    ],
-                    "description": "Comparison operator"
+            "allOf": [
+              {
+                "if": {
+                  "properties": {
+                    "type": {
+                      "const": "threshold"
+                    }
                   },
-                  "value": {
-                    "type": "number",
-                    "description": "Threshold value"
-                  }
+                  "required": [
+                    "type"
+                  ]
                 },
-                "required": [
-                  "operator",
-                  "value"
-                ],
-                "additionalProperties": false
+                "then": {
+                  "required": [
+                    "threshold"
+                  ]
+                }
               },
+              {
+                "if": {
+                  "properties": {
+                    "type": {
+                      "const": "baseline"
+                    }
+                  },
+                  "required": [
+                    "type"
+                  ]
+                },
+                "then": {
+                  "required": [
+                    "baseline"
+                  ]
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "type": {
+                      "const": "target-range"
+                    }
+                  },
+                  "required": [
+                    "type"
+                  ]
+                },
+                "then": {
+                  "required": [
+                    "targetRange"
+                  ]
+                }
+              }
+            ],
+            "properties": {
               "baseline": {
                 "description": "Baseline comparison (required when type is baseline)",
                 "type": "object",
                 "properties": {
-                  "sut": {
-                    "type": "string",
-                    "minLength": 1,
-                    "description": "Baseline SUT identifier"
-                  },
                   "operator": {
+                    "description": "Comparison operator",
                     "type": "string",
-                    "enum": [
-                      "gt",
-                      "gte",
-                      "lt",
-                      "lte",
-                      "eq"
-                    ],
-                    "description": "Comparison operator"
+                    "oneOf": [
+                      {
+                        "description": "Greater than",
+                        "const": "gt"
+                      },
+                      {
+                        "description": "Greater than or equal to",
+                        "const": "gte"
+                      },
+                      {
+                        "description": "Less than",
+                        "const": "lt"
+                      },
+                      {
+                        "description": "Less than or equal to",
+                        "const": "lte"
+                      },
+                      {
+                        "description": "Equal to",
+                        "const": "eq"
+                      }
+                    ]
+                  },
+                  "sut": {
+                    "description": "Baseline SUT identifier",
+                    "type": "string",
+                    "minLength": 1
                   }
                 },
                 "required": [
-                  "sut",
-                  "operator"
+                  "operator",
+                  "sut"
                 ],
                 "additionalProperties": false
               },
-              "targetRange": {
-                "description": "Target range (required when type is target-range)",
-                "type": "object",
-                "properties": {
-                  "min": {
-                    "description": "Minimum value",
-                    "type": "number"
-                  },
-                  "max": {
-                    "description": "Maximum value",
-                    "type": "number"
-                  },
-                  "minInclusive": {
-                    "description": "Whether min is inclusive",
-                    "type": "boolean"
-                  },
-                  "maxInclusive": {
-                    "description": "Whether max is inclusive",
-                    "type": "boolean"
-                  }
-                },
-                "additionalProperties": false
+              "criterionId": {
+                "description": "Unique criterion identifier",
+                "type": "string",
+                "minLength": 1
+              },
+              "description": {
+                "description": "Human-readable description",
+                "type": "string",
+                "minLength": 1
+              },
+              "metric": {
+                "description": "Metric to evaluate",
+                "type": "string",
+                "minLength": 1
               },
               "scopeConstraints": {
                 "description": "Optional scope constraints",
@@ -1204,72 +920,185 @@
                 },
                 "additionalProperties": false
               },
+              "sut": {
+                "description": "SUT to evaluate (or \"*\" for all SUTs)",
+                "type": "string",
+                "minLength": 1
+              },
               "tags": {
                 "description": "Tags for filtering",
                 "type": "array",
                 "items": {
                   "type": "string"
                 }
+              },
+              "targetRange": {
+                "description": "Target range (required when type is target-range)",
+                "type": "object",
+                "properties": {
+                  "max": {
+                    "description": "Maximum value",
+                    "type": "number"
+                  },
+                  "maxInclusive": {
+                    "description": "Whether max is inclusive",
+                    "type": "boolean"
+                  },
+                  "min": {
+                    "description": "Minimum value",
+                    "type": "number"
+                  },
+                  "minInclusive": {
+                    "description": "Whether min is inclusive",
+                    "type": "boolean"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "threshold": {
+                "description": "Threshold operator and value (required when type is threshold)",
+                "type": "object",
+                "properties": {
+                  "operator": {
+                    "description": "Comparison operator",
+                    "type": "string",
+                    "oneOf": [
+                      {
+                        "description": "Greater than",
+                        "const": "gt"
+                      },
+                      {
+                        "description": "Greater than or equal to",
+                        "const": "gte"
+                      },
+                      {
+                        "description": "Less than",
+                        "const": "lt"
+                      },
+                      {
+                        "description": "Less than or equal to",
+                        "const": "lte"
+                      },
+                      {
+                        "description": "Equal to",
+                        "const": "eq"
+                      }
+                    ]
+                  },
+                  "value": {
+                    "description": "Threshold value",
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "operator",
+                  "value"
+                ],
+                "additionalProperties": false
+              },
+              "type": {
+                "description": "Type of metrics criterion",
+                "type": "string",
+                "oneOf": [
+                  {
+                    "description": "Compare a metric against a fixed threshold value",
+                    "const": "threshold"
+                  },
+                  {
+                    "description": "Compare a metric against a baseline SUT",
+                    "const": "baseline"
+                  },
+                  {
+                    "description": "Check that a metric falls within a target range",
+                    "const": "target-range"
+                  }
+                ]
               }
             },
             "required": [
               "criterionId",
               "description",
-              "type",
               "metric",
-              "sut"
+              "sut",
+              "type"
             ],
-            "additionalProperties": false,
-            "title": "MetricsCriterion",
-            "description": "A metrics evaluation criterion"
+            "additionalProperties": false
           },
-          "description": "Criteria to evaluate"
+          "minItems": 1
+        },
+        "description": {
+          "description": "Evaluator description",
+          "type": "string"
+        },
+        "name": {
+          "description": "Human-readable evaluator name",
+          "type": "string"
+        },
+        "options": {
+          "description": "Additional evaluator-specific options",
+          "type": "object",
+          "additionalProperties": {},
+          "propertyNames": {
+            "type": "string"
+          }
         }
       },
       "required": [
         "criteria"
       ],
       "additionalProperties": false,
-      "title": "MetricsEvaluatorConfig",
-      "description": "Configuration for the metrics evaluator"
+      "examples": [
+        {
+          "description": "Evaluate length metric against threshold, baseline, and target-range criteria",
+          "criteria": [
+            {
+              "description": "Measured length should be greater than zero",
+              "type": "threshold",
+              "criterionId": "length-threshold",
+              "metric": "length",
+              "sut": "*",
+              "threshold": {
+                "operator": "gt",
+                "value": 0
+              }
+            },
+            {
+              "description": "Built-in .length should be at least as large as spread operator",
+              "type": "baseline",
+              "baseline": {
+                "operator": "gte",
+                "sut": "spread-length"
+              },
+              "criterionId": "length-baseline",
+              "metric": "length",
+              "sut": "builtin-length"
+            },
+            {
+              "description": "Length should be in reasonable range [1, 100]",
+              "type": "target-range",
+              "criterionId": "length-target-range",
+              "metric": "length",
+              "sut": "*",
+              "targetRange": {
+                "max": 100,
+                "maxInclusive": true,
+                "min": 1,
+                "minInclusive": true
+              }
+            }
+          ],
+          "name": "Metrics-Only Evaluation"
+        }
+      ]
     },
     "RobustnessEvaluatorConfig": {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "title": "RobustnessEvaluatorConfig",
+      "description": "Configuration for the robustness evaluator",
       "type": "object",
       "properties": {
-        "name": {
-          "description": "Human-readable evaluator name",
-          "type": "string"
-        },
         "description": {
           "description": "Evaluator description",
           "type": "string"
-        },
-        "options": {
-          "description": "Additional evaluator-specific options",
-          "type": "object",
-          "propertyNames": {
-            "type": "string"
-          },
-          "additionalProperties": {}
-        },
-        "metrics": {
-          "minItems": 1,
-          "type": "array",
-          "items": {
-            "type": "string",
-            "minLength": 1
-          },
-          "description": "Metrics to analyze"
-        },
-        "perturbations": {
-          "minItems": 1,
-          "type": "array",
-          "items": {
-            "type": "string",
-            "minLength": 1
-          },
-          "description": "Perturbations applied"
         },
         "intensityLevels": {
           "description": "Intensity levels tested",
@@ -1278,11 +1107,41 @@
             "type": "number"
           }
         },
+        "metrics": {
+          "description": "Metrics to analyze",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        },
+        "name": {
+          "description": "Human-readable evaluator name",
+          "type": "string"
+        },
+        "options": {
+          "description": "Additional evaluator-specific options",
+          "type": "object",
+          "additionalProperties": {},
+          "propertyNames": {
+            "type": "string"
+          }
+        },
+        "perturbations": {
+          "description": "Perturbations applied",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        },
         "runsPerLevel": {
           "description": "Number of runs per perturbation level",
           "type": "integer",
           "minimum": 1,
-          "maximum": 9007199254740991
+          "maximum": 10000
         }
       },
       "required": [
@@ -1290,116 +1149,30 @@
         "perturbations"
       ],
       "additionalProperties": false,
-      "title": "RobustnessEvaluatorConfig",
-      "description": "Configuration for the robustness evaluator"
-    },
-    "ExploratoryEvaluatorConfig": {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "type": "object",
-      "properties": {
-        "name": {
-          "description": "Human-readable evaluator name",
-          "type": "string"
-        },
-        "description": {
-          "description": "Evaluator description",
-          "type": "string"
-        },
-        "options": {
-          "description": "Additional evaluator-specific options",
-          "type": "object",
-          "propertyNames": {
-            "type": "string"
-          },
-          "additionalProperties": {}
-        },
-        "metrics": {
-          "description": "Metrics to analyze (all if not specified)",
-          "type": "array",
-          "items": {
-            "type": "string",
-            "minLength": 1
-          }
-        },
-        "suts": {
-          "description": "SUTs to include (all if not specified)",
-          "type": "array",
-          "items": {
-            "type": "string",
-            "minLength": 1
-          }
-        },
-        "metricDirections": {
-          "description": "Metric directions for ranking interpretation",
-          "type": "object",
-          "propertyNames": {
-            "type": "string"
-          },
-          "additionalProperties": {
-            "type": "string",
-            "enum": [
-              "higher-better",
-              "lower-better"
-            ],
-            "description": "Metric direction for ranking"
-          }
-        },
-        "significanceLevel": {
-          "description": "Significance level for statistical tests (default: 0.05)",
-          "type": "number",
-          "minimum": 0,
-          "maximum": 1
-        },
-        "minEffectSize": {
-          "description": "Minimum effect size to consider meaningful",
-          "type": "number",
-          "minimum": 0
-        },
-        "computeCorrelations": {
-          "description": "Whether to compute metric correlations",
-          "type": "boolean"
-        },
-        "analyzeCaseClassEffects": {
-          "description": "Whether to analyze case-class effects",
-          "type": "boolean"
+      "examples": [
+        {
+          "description": "Analyze algorithm robustness under perturbations",
+          "intensityLevels": [
+            0.1,
+            0.2,
+            0.3,
+            0.4,
+            0.5
+          ],
+          "metrics": [
+            "executionTime",
+            "accuracy",
+            "f1Score"
+          ],
+          "name": "Robustness Analysis",
+          "perturbations": [
+            "edge-removal",
+            "noise",
+            "seed-shift"
+          ],
+          "runsPerLevel": 10
         }
-      },
-      "additionalProperties": false,
-      "title": "ExploratoryEvaluatorConfig",
-      "description": "Configuration for the exploratory evaluator"
-    },
-    "CustomEvaluatorConfig": {
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "type": "object",
-      "properties": {
-        "name": {
-          "description": "Human-readable evaluator name",
-          "type": "string"
-        },
-        "description": {
-          "description": "Evaluator description",
-          "type": "string"
-        },
-        "options": {
-          "description": "Additional evaluator-specific options",
-          "type": "object",
-          "propertyNames": {
-            "type": "string"
-          },
-          "additionalProperties": {}
-        },
-        "customType": {
-          "type": "string",
-          "minLength": 1,
-          "description": "Custom evaluator type name"
-        }
-      },
-      "required": [
-        "customType"
-      ],
-      "additionalProperties": {},
-      "title": "CustomEvaluatorConfig",
-      "description": "Configuration for a custom evaluator"
+      ]
     }
   }
 }
