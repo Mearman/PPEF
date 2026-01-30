@@ -359,6 +359,82 @@ describe("evaluate command - integration tests", () => {
 		});
 	});
 
+	describe("exploratory evaluation", () => {
+		it("should evaluate exploratory analysis successfully", async () => {
+			const aggregatesFile = "/mock/aggregates.json";
+			const configFile = "/mock/config.json";
+			const mockFS = new MockFS({
+				[aggregatesFile]: createMockAggregatesFile(),
+				[configFile]: JSON.stringify({ metrics: ["accuracy"] }),
+			});
+			const mockLogger = new SpyLogger();
+			let exitCode: number | undefined;
+			const mockExit = (code: number) => {
+				exitCode = code;
+				throw new Error(`Exit ${code}`);
+			};
+
+			try {
+				await executeEvaluate(
+					aggregatesFile,
+					{
+						type: "exploratory" as const,
+						config: configFile,
+						verbose: true,
+					},
+					{ logger: mockLogger, fileSystem: mockFS, processExit: mockExit },
+				);
+			} catch (e) {
+				if (exitCode !== undefined) {
+					const errorLogs = mockLogger.calls.filter((call) => call.startsWith("error:"));
+					assert.fail(
+						`processExit was called with code ${exitCode}. Logged errors:\n${errorLogs.join("\n")}`,
+					);
+				}
+				throw e;
+			}
+
+			assert.strictEqual(exitCode, undefined, "processExit should not be called on success");
+			assert.ok(mockLogger.calls.some((call) => call.startsWith("info:Evaluation complete:")));
+		});
+
+		it("should handle empty config for exploratory", async () => {
+			const aggregatesFile = "/mock/aggregates.json";
+			const configFile = "/mock/config.json";
+			const mockFS = new MockFS({
+				[aggregatesFile]: createMockAggregatesFile(),
+				[configFile]: JSON.stringify({}),
+			});
+			const mockLogger = new SpyLogger();
+			let exitCode: number | undefined;
+			const mockExit = (code: number) => {
+				exitCode = code;
+				throw new Error(`Exit ${code}`);
+			};
+
+			try {
+				await executeEvaluate(
+					aggregatesFile,
+					{
+						type: "exploratory" as const,
+						config: configFile,
+					},
+					{ logger: mockLogger, fileSystem: mockFS, processExit: mockExit },
+				);
+			} catch (e) {
+				if (exitCode !== undefined) {
+					const errorLogs = mockLogger.calls.filter((call) => call.startsWith("error:"));
+					assert.fail(
+						`processExit was called with code ${exitCode}. Logged errors:\n${errorLogs.join("\n")}`,
+					);
+				}
+				throw e;
+			}
+
+			assert.strictEqual(exitCode, undefined, "processExit should not be called on success");
+		});
+	});
+
 	describe("robustness evaluation", () => {
 		it("should require raw results for robustness", async () => {
 			const aggregatesFile = "/mock/aggregates.json";
