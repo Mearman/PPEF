@@ -1,50 +1,39 @@
 {
   "$schema": "../../ppef.schema.json#/$defs/MetricsEvaluatorConfig",
   "name": "Metrics-Only Evaluation",
-  "description": "Evaluate metrics against threshold and baseline criteria without using claims",
+  "description": "Evaluate length metric against threshold, baseline, and target-range criteria",
   "criteria": [
     {
-      "criterionId": "exec-time-threshold",
-      "description": "Execution time should be under 1000ms",
+      "criterionId": "length-threshold",
+      "description": "Measured length should be greater than zero",
       "type": "threshold",
-      "metric": "executionTime",
+      "metric": "length",
       "sut": "*",
       "threshold": {
-        "operator": "lt",
-        "value": 1000
+        "operator": "gt",
+        "value": 0
       }
     },
     {
-      "criterionId": "memory-threshold",
-      "description": "Memory usage should be under 100MB",
-      "type": "threshold",
-      "metric": "memoryUsage",
-      "sut": "*",
-      "threshold": {
-        "operator": "lte",
-        "value": 104857600
-      }
-    },
-    {
-      "criterionId": "accuracy-baseline",
-      "description": "New algorithm should have better accuracy than baseline",
+      "criterionId": "length-baseline",
+      "description": "Built-in .length should be at least as large as spread operator",
       "type": "baseline",
-      "metric": "accuracy",
-      "sut": "new-algorithm",
+      "metric": "length",
+      "sut": "builtin-length",
       "baseline": {
-        "sut": "baseline-algorithm",
+        "sut": "spread-length",
         "operator": "gte"
       }
     },
     {
-      "criterionId": "f1-target-range",
-      "description": "F1 score should be in acceptable range [0.8, 1.0]",
+      "criterionId": "length-target-range",
+      "description": "Length should be in reasonable range [1, 100]",
       "type": "target-range",
-      "metric": "f1Score",
+      "metric": "length",
       "sut": "*",
       "targetRange": {
-        "min": 0.8,
-        "max": 1.0,
+        "min": 1,
+        "max": 100,
         "minInclusive": true,
         "maxInclusive": true
       }
