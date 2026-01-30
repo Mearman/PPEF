@@ -102,6 +102,12 @@ export interface SutDefinition<TInputs = unknown, TResult = unknown> {
 
 	/** Factory for creating SUT instances */
 	factory: SutFactory<TInputs, TResult>;
+
+	/** Original module path (relative to experiment config), used for worker serialization */
+	sourceModule?: string;
+
+	/** Original export name, used for worker serialization */
+	sourceExportName?: string;
 }
 
 /**

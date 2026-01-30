@@ -93,6 +93,12 @@ export interface CaseDefinition<TInput = unknown, TInputs = unknown> {
 	/** The case specification */
 	case: EvaluationCase;
 
+	/** Original module path (relative to experiment config), used for worker serialization */
+	sourceModule?: string;
+
+	/** Original export name, used for worker serialization */
+	sourceExportName?: string;
+
 	/**
 	 * Load the primary resource needed by the algorithm.
 	 * This is called once per case and cached.
