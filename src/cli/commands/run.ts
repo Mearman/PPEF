@@ -341,6 +341,49 @@ export async function executeRun(
 }
 
 /**
+ * Create default dependencies for the run command.
+ *
+ * @param options - CLI options for logger configuration
+ * @returns Dependencies object for executeRun
+ */
+async function createRunDependencies(
+	options: CliOptions,
+): Promise<Parameters<typeof executeRun>[2]> {
+	const { createLogger } = await import("../logger.js");
+
+	const logger = createLogger(options);
+
+	return {
+		logger,
+		configLoader: { loadAndValidateConfig },
+		moduleLoader: { loadSutFactory, loadCaseDefinition, loadMetricsExtractor } as never,
+		createExecutor: (config: unknown) =>
+			new Executor(
+				config as Partial<import("../../executor/executor.js").ExecutorConfig>,
+			) as unknown as IExecutor,
+		aggregator: { aggregateResults, createAggregationOutput },
+		outputWriter: { generateOutputFilename, writeResults, writeAggregates },
+		processExit: (code: number) => process.exit(code),
+	};
+}
+
+/**
+ * Execute run command from a config file path with optional CLI options.
+ *
+ * This is the entry point used by the default command (ppef <config-file>).
+ *
+ * @param configFile - Path to experiment configuration JSON file
+ * @param options - CLI options
+ */
+export async function executeRunFromConfigFile(
+	configFile: string,
+	options: CliOptions,
+): Promise<void> {
+	const deps = await createRunDependencies(options);
+	await executeRun(configFile, options, deps);
+}
+
+/**
  * Register the run command.
  *
  * @param program - Commander program instance
@@ -362,21 +405,7 @@ export function registerRunCommand(program: Command): void {
 			"Run in-process without worker thread isolation (SUT crashes can crash CLI)",
 		)
 		.action(async (configFile: string, options: CliOptions) => {
-			const { createLogger } = await import("../logger.js");
-
-			const logger = createLogger(options);
-
-			await executeRun(configFile, options, {
-				logger,
-				configLoader: { loadAndValidateConfig },
-				moduleLoader: { loadSutFactory, loadCaseDefinition, loadMetricsExtractor } as never,
-				createExecutor: (config: unknown) =>
-					new Executor(
-						config as Partial<import("../../executor/executor.js").ExecutorConfig>,
-					) as unknown as IExecutor,
-				aggregator: { aggregateResults, createAggregationOutput },
-				outputWriter: { generateOutputFilename, writeResults, writeAggregates },
-				processExit: (code: number) => process.exit(code),
-			});
+			const deps = await createRunDependencies(options);
+			await executeRun(configFile, options, deps);
 		});
 }

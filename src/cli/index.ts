@@ -25,7 +25,21 @@ export function createCliProgram(): Command {
 	program
 		.name("ppef")
 		.description("Portable Programmatic Evaluation Framework - CLI for experiment execution")
-		.version("1.0.1");
+		.version("1.0.1")
+		.argument(
+			"[config-file]",
+			"Path to experiment configuration JSON file (shorthand for 'ppef run')",
+		)
+		.action(async (configFile?: string) => {
+			if (!configFile) {
+				program.help();
+				return;
+			}
+
+			// Delegate to the run command logic
+			const { executeRunFromConfigFile } = await import("./commands/run.js");
+			await executeRunFromConfigFile(configFile, {});
+		});
 
 	// Register commands
 	registerRunCommand(program);
