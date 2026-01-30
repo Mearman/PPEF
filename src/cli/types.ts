@@ -8,6 +8,8 @@
 
 import { z } from "zod";
 
+import { EvaluatorEntrySchema } from "./evaluator-schemas.js";
+
 /**
  * SUT role enum for JSON validation.
  * Values match the SutRole string literal union in types/sut.ts.
@@ -145,6 +147,10 @@ export const ExperimentConfig = z
 		cases: z.array(CaseConfig).describe("Test cases to run"),
 		metricsExtractor: MetricsExtractorConfig.describe("Metrics extractor configuration"),
 		output: OutputConfig.describe("Output configuration"),
+		evaluators: z
+			.array(EvaluatorEntrySchema)
+			.optional()
+			.describe("Evaluator configurations to run after experiment completion"),
 	})
 	.superRefine((data, ctx) => {
 		// Check for duplicate SUT IDs
