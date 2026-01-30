@@ -1,6 +1,8 @@
-# Custom Evaluator Example
+# Custom Evaluator Guide
 
-This example demonstrates how to create and register a custom evaluator for PPEF. The `EnergyEfficiencyEvaluator` evaluates algorithms based on energy consumption metrics.
+> **Documentation guide.** Custom evaluators require programmatic registration before they can be used via the CLI. This directory contains no runnable files — the code snippets below show how to implement and register your own evaluator.
+
+This guide demonstrates how to create and register a custom evaluator for PPEF. The `EnergyEfficiencyEvaluator` example evaluates algorithms based on energy consumption metrics.
 
 ## Usage
 
@@ -8,7 +10,7 @@ This example demonstrates how to create and register a custom evaluator for PPEF
 
 ```typescript
 // In your code, before running ppef evaluate
-import { registerEnergyEfficiencyEvaluator } from "./examples/custom/energy-efficiency-evaluator.js";
+import { registerEnergyEfficiencyEvaluator } from "./energy-efficiency-evaluator.js";
 
 registerEnergyEfficiencyEvaluator();
 ```
