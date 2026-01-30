@@ -22,11 +22,7 @@ interface Counters {
 	swaps: number;
 }
 
-function merge(
-	left: number[],
-	right: number[],
-	counters: Counters,
-): number[] {
+function merge(left: number[], right: number[], counters: Counters): number[] {
 	const result: number[] = [];
 	let i = 0;
 	let j = 0;
@@ -76,7 +72,7 @@ export function createSut(): {
 	return {
 		id: "merge-sort",
 		config: {},
-		run: async (input: SortInput): Promise<SortResult> => {
+		run: (input: SortInput): Promise<SortResult> => {
 			const arr = [...input.data];
 			const counters: Counters = { comparisons: 0, swaps: 0 };
 
@@ -84,12 +80,12 @@ export function createSut(): {
 			const sorted = mergeSort(arr, counters);
 			const executionTimeMs = performance.now() - start;
 
-			return {
+			return Promise.resolve({
 				sorted,
 				comparisons: counters.comparisons,
 				swaps: counters.swaps,
 				executionTimeMs,
-			};
+			});
 		},
 	};
 }

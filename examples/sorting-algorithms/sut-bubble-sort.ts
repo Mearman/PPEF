@@ -24,7 +24,7 @@ export function createSut(): {
 	return {
 		id: "bubble-sort",
 		config: {},
-		run: async (input: SortInput): Promise<SortResult> => {
+		run: (input: SortInput): Promise<SortResult> => {
 			const arr = [...input.data];
 			let comparisons = 0;
 			let swaps = 0;
@@ -51,7 +51,7 @@ export function createSut(): {
 
 			const executionTimeMs = performance.now() - start;
 
-			return { sorted: arr, comparisons, swaps, executionTimeMs };
+			return Promise.resolve({ sorted: arr, comparisons, swaps, executionTimeMs });
 		},
 	};
 }

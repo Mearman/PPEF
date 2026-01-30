@@ -28,12 +28,7 @@ function swap(arr: number[], i: number, j: number): void {
 	arr[j] = tmp;
 }
 
-function partition(
-	arr: number[],
-	lo: number,
-	hi: number,
-	counters: Counters,
-): number {
+function partition(arr: number[], lo: number, hi: number, counters: Counters): number {
 	const pivot = arr[hi];
 	let i = lo;
 
@@ -56,12 +51,7 @@ function partition(
 	return i;
 }
 
-function quickSort(
-	arr: number[],
-	lo: number,
-	hi: number,
-	counters: Counters,
-): void {
+function quickSort(arr: number[], lo: number, hi: number, counters: Counters): void {
 	if (lo < hi) {
 		const p = partition(arr, lo, hi, counters);
 		quickSort(arr, lo, p - 1, counters);
@@ -77,7 +67,7 @@ export function createSut(): {
 	return {
 		id: "quick-sort",
 		config: {},
-		run: async (input: SortInput): Promise<SortResult> => {
+		run: (input: SortInput): Promise<SortResult> => {
 			const arr = [...input.data];
 			const counters: Counters = { comparisons: 0, swaps: 0 };
 
@@ -87,12 +77,12 @@ export function createSut(): {
 			}
 			const executionTimeMs = performance.now() - start;
 
-			return {
+			return Promise.resolve({
 				sorted: arr,
 				comparisons: counters.comparisons,
 				swaps: counters.swaps,
 				executionTimeMs,
-			};
+			});
 		},
 	};
 }
