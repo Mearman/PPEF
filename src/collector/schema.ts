@@ -27,7 +27,7 @@ export const validateResult = (result: unknown): SchemaValidation => {
 		return { valid: false, errors: ["Result must be an object"] };
 	}
 
-	const r = result as Partial<EvaluationResult>;
+	const r: Partial<EvaluationResult> = result;
 
 	// Validate run context
 	if (!r.run || typeof r.run !== "object") {
@@ -101,7 +101,7 @@ export const validateCase = (evaluationCase: unknown): SchemaValidation => {
 		return { valid: false, errors: ["Case must be an object"] };
 	}
 
-	const c = evaluationCase as Partial<EvaluationCase>;
+	const c: Partial<EvaluationCase> = evaluationCase;
 
 	if (typeof c.caseId !== "string" || c.caseId.length === 0) {
 		errors.push("caseId must be a non-empty string");
@@ -128,7 +128,7 @@ export const validateSutRegistration = (registration: unknown): SchemaValidation
 		return { valid: false, errors: ["Registration must be an object"] };
 	}
 
-	const r = registration as Partial<SutRegistration>;
+	const r: Partial<SutRegistration> = registration;
 
 	if (typeof r.id !== "string" || r.id.length === 0) {
 		errors.push("id must be a non-empty string");

@@ -9,6 +9,7 @@ import type { AggregatedResult } from "../types/aggregate.js";
 import type { ClaimEvaluation, ClaimStatus } from "../types/claims.js";
 import type {
 	EvaluationOutput,
+	EvaluationType,
 	ClaimsEvaluatorData,
 	RobustnessEvaluatorData,
 	MetricsEvaluatorData,
@@ -110,23 +111,21 @@ export class LaTeXRenderer implements Renderer {
 	 * @returns Rendered output
 	 */
 	renderEvaluation<T>(evaluation: EvaluationOutput<T>): RenderOutput {
-		switch (evaluation.type) {
-			case "claims":
-				return this.renderClaimsEvaluation(evaluation as EvaluationOutput<ClaimsEvaluatorData>);
-			case "robustness":
-				return this.renderRobustnessEvaluation(
-					evaluation as EvaluationOutput<RobustnessEvaluatorData>,
-				);
-			case "metrics":
-				return this.renderMetricsEvaluation(evaluation as EvaluationOutput<MetricsEvaluatorData>);
-			case "exploratory":
-				return this.renderExploratoryEvaluation(
-					evaluation as EvaluationOutput<ExploratoryEvaluatorData>,
-				);
-			case "custom":
-			default:
-				return this.renderCustomEvaluation(evaluation);
+		const output: EvaluationOutput<unknown> = evaluation;
+
+		if (isEvaluationOutputOf<ClaimsEvaluatorData>(output, "claims")) {
+			return this.renderClaimsEvaluation(output);
 		}
+		if (isEvaluationOutputOf<RobustnessEvaluatorData>(output, "robustness")) {
+			return this.renderRobustnessEvaluation(output);
+		}
+		if (isEvaluationOutputOf<MetricsEvaluatorData>(output, "metrics")) {
+			return this.renderMetricsEvaluation(output);
+		}
+		if (isEvaluationOutputOf<ExploratoryEvaluatorData>(output, "exploratory")) {
+			return this.renderExploratoryEvaluation(output);
+		}
+		return this.renderCustomEvaluation(evaluation);
 	}
 
 	/**
@@ -654,6 +653,17 @@ ${rows.join("\n")}
 		}
 		return String.raw`${Math.round(n)}\%`;
 	}
+}
+
+/**
+ * Type guard to narrow an EvaluationOutput to a specific data type.
+ * Validates the type discriminant matches the expected evaluation type.
+ */
+function isEvaluationOutputOf<TData>(
+	output: EvaluationOutput<unknown>,
+	expectedType: EvaluationType,
+): output is EvaluationOutput<TData> {
+	return output.type === expectedType;
 }
 
 /**

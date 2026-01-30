@@ -70,8 +70,8 @@ export class ExploratoryEvaluator
 		// Validate metric directions
 		if (config.metricDirections) {
 			for (const [metric, direction] of Object.entries(config.metricDirections)) {
-				const validDirections = ["higher-better", "lower-better"] as const;
-				if (!validDirections.includes(direction as (typeof validDirections)[number])) {
+				const validDirections: readonly string[] = ["higher-better", "lower-better"];
+				if (!validDirections.includes(direction)) {
 					errors.push(
 						`Invalid direction for metric "${metric}": must be "higher-better" or "lower-better"`,
 					);

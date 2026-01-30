@@ -7,7 +7,6 @@
  */
 
 import type { AggregatedResult } from "../types/aggregate.js";
-import type { Primitive } from "../types/case.js";
 import type {
 	ClaimEvaluation,
 	ClaimEvaluationSummary,
@@ -232,7 +231,7 @@ export class ClaimsEvaluator
 			for (const [key, value] of Object.entries(claim.scopeConstraints ?? {})) {
 				if (key === "caseClass") {
 					const allowedClasses = Array.isArray(value) ? value : [value];
-					if (!allowedClasses.includes(agg.caseClass as Primitive)) {
+					if (agg.caseClass === undefined || !allowedClasses.includes(agg.caseClass)) {
 						return false;
 					}
 				}
