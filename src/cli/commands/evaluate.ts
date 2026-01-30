@@ -16,15 +16,12 @@ import {
 	MetricsEvaluator,
 } from "../../evaluators/index.js";
 import type { ICommandLogger, IFileSystem } from "../command-deps.js";
-import type {
-	EvaluationContext,
-	EvaluatorConfig,
-	EvaluationType,
-	EvaluationOutput,
-	ClaimsEvaluatorConfig,
-	RobustnessEvaluatorConfig,
-	MetricsEvaluatorConfig,
-} from "../../types/evaluator.js";
+import type { EvaluationContext, EvaluationType, EvaluationOutput } from "../../types/evaluator.js";
+import {
+	ClaimsEvaluatorConfigSchema,
+	RobustnessEvaluatorConfigSchema,
+	MetricsEvaluatorConfigSchema,
+} from "../evaluator-schemas.js";
 import type { AggregatedResult } from "../../types/aggregate.js";
 import type { EvaluationResult } from "../../types/result.js";
 import { LaTeXRenderer } from "../../renderers/latex-renderer.js";
@@ -90,15 +87,15 @@ export async function executeEvaluate(
 			throw new Error("Invalid file: must contain 'aggregates' or 'results' array");
 		}
 
-		// Load evaluator config
-		let evaluatorConfig: EvaluatorConfig;
+		// Load evaluator config as raw JSON (validated per-type in switch below)
+		let rawConfig: unknown;
 		if (options.config) {
 			logger.info(`Loading evaluator config from: ${options.config}`);
 			const configContent = await fileSystem.readFile(options.config, "utf-8");
-			evaluatorConfig = JSON.parse(configContent) as EvaluatorConfig;
+			rawConfig = JSON.parse(configContent);
 		} else {
 			logger.warn("No evaluator config provided - using default empty config");
-			evaluatorConfig = {};
+			rawConfig = {};
 		}
 
 		// Get evaluator from registry using type-safe retrieval
@@ -124,9 +121,21 @@ export async function executeEvaluate(
 					return; // Type narrowing
 				}
 
-				// Validate config
+				// Validate config with Zod schema
 				logger.subheader("Validating evaluator configuration...");
-				const validation = evaluator.validateConfig(evaluatorConfig as ClaimsEvaluatorConfig);
+				const parseResult = ClaimsEvaluatorConfigSchema.safeParse(rawConfig);
+				if (!parseResult.success) {
+					logger.error("Evaluator configuration validation failed:");
+					for (const issue of parseResult.error.issues) {
+						logger.error(`  - ${issue.path.join(".")}: ${issue.message}`);
+					}
+					processExit(1);
+					return; // Type narrowing
+				}
+				const claimsConfig = parseResult.data;
+
+				// Also run evaluator's own validation (business logic checks)
+				const validation = evaluator.validateConfig(claimsConfig);
 				if (!validation.valid) {
 					logger.error("Evaluator configuration validation failed:");
 					for (const error of validation.errors ?? []) {
@@ -154,7 +163,7 @@ export async function executeEvaluate(
 
 				// Run evaluation
 				logger.subheader("Running evaluation...");
-				const evalOutput = evaluator.evaluate(evaluatorConfig as ClaimsEvaluatorConfig, context);
+				const evalOutput = evaluator.evaluate(claimsConfig, context);
 				output = evalOutput;
 				summary = evaluator.summarize(evalOutput);
 				break;
@@ -167,9 +176,21 @@ export async function executeEvaluate(
 					return; // Type narrowing
 				}
 
-				// Validate config
+				// Validate config with Zod schema
 				logger.subheader("Validating evaluator configuration...");
-				const validation = evaluator.validateConfig(evaluatorConfig as RobustnessEvaluatorConfig);
+				const parseResult = RobustnessEvaluatorConfigSchema.safeParse(rawConfig);
+				if (!parseResult.success) {
+					logger.error("Evaluator configuration validation failed:");
+					for (const issue of parseResult.error.issues) {
+						logger.error(`  - ${issue.path.join(".")}: ${issue.message}`);
+					}
+					processExit(1);
+					return; // Type narrowing
+				}
+				const robustnessConfig = parseResult.data;
+
+				// Also run evaluator's own validation (business logic checks)
+				const validation = evaluator.validateConfig(robustnessConfig);
 				if (!validation.valid) {
 					logger.error("Evaluator configuration validation failed:");
 					for (const error of validation.errors ?? []) {
@@ -195,10 +216,7 @@ export async function executeEvaluate(
 
 				// Run evaluation
 				logger.subheader("Running evaluation...");
-				const evalOutput = evaluator.evaluate(
-					evaluatorConfig as RobustnessEvaluatorConfig,
-					rawResults,
-				);
+				const evalOutput = evaluator.evaluate(robustnessConfig, rawResults);
 				output = evalOutput;
 				summary = evaluator.summarize(evalOutput);
 				break;
@@ -211,9 +229,21 @@ export async function executeEvaluate(
 					return; // Type narrowing
 				}
 
-				// Validate config
+				// Validate config with Zod schema
 				logger.subheader("Validating evaluator configuration...");
-				const validation = evaluator.validateConfig(evaluatorConfig as MetricsEvaluatorConfig);
+				const parseResult = MetricsEvaluatorConfigSchema.safeParse(rawConfig);
+				if (!parseResult.success) {
+					logger.error("Evaluator configuration validation failed:");
+					for (const issue of parseResult.error.issues) {
+						logger.error(`  - ${issue.path.join(".")}: ${issue.message}`);
+					}
+					processExit(1);
+					return; // Type narrowing
+				}
+				const metricsConfig = parseResult.data;
+
+				// Also run evaluator's own validation (business logic checks)
+				const validation = evaluator.validateConfig(metricsConfig);
 				if (!validation.valid) {
 					logger.error("Evaluator configuration validation failed:");
 					for (const error of validation.errors ?? []) {
@@ -241,7 +271,7 @@ export async function executeEvaluate(
 
 				// Run evaluation
 				logger.subheader("Running evaluation...");
-				const evalOutput = evaluator.evaluate(evaluatorConfig as MetricsEvaluatorConfig, context);
+				const evalOutput = evaluator.evaluate(metricsConfig, context);
 				output = evalOutput;
 				summary = evaluator.summarize(evalOutput);
 				break;
