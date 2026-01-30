@@ -1,5 +1,7 @@
 # Robustness-Only Evaluation Example
 
+> **Reference only.** Robustness evaluation requires raw results that include perturbation metadata (perturbation type, intensity level). The config in this directory demonstrates the schema but cannot be run against the string-length example output, which does not include perturbation runs. Metric and perturbation names in `eval-config.json` are illustrative placeholders.
+
 This example demonstrates how to use PPEF's robustness evaluation to analyze how algorithms behave under perturbations (noise, structural changes, etc.).
 
 ## Usage
