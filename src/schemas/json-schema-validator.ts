@@ -21,7 +21,7 @@ export interface SchemaValidationResult {
 
 /** Minimal issue shape from Zod's safeParse error output. */
 interface ValidationIssue {
-	path: (string | number)[];
+	path: PropertyKey[];
 	message: string;
 }
 
