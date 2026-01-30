@@ -11,6 +11,14 @@ import { z } from "zod";
 import { EvaluatorEntrySchema } from "./evaluator-schemas.js";
 
 /**
+ * JSON Schema object definition.
+ * Accepts any valid JSON Schema (draft-2020-12, draft-07, or draft-04).
+ */
+const JsonSchemaObject = z
+	.record(z.string(), z.unknown())
+	.describe("JSON Schema (draft-2020-12, draft-07, or draft-04)");
+
+/**
  * SUT role enum for JSON validation.
  * Values match the SutRole string literal union in types/sut.ts.
  */
@@ -97,6 +105,9 @@ export const SutConfig = z
 			.optional()
 			.describe("Binary SUT timeout per run in milliseconds"),
 		registration: SutRegistration,
+		outputSchema: JsonSchemaObject.optional().describe(
+			"Per-SUT output schema (overrides schemas.output)",
+		),
 	})
 	.meta({ title: "SutConfig", description: "System Under Test configuration" });
 export type SutConfig = z.infer<typeof SutConfig>;
@@ -109,6 +120,9 @@ export const CaseConfig = z
 		id: z.string().min(1).describe("Unique case identifier"),
 		module: z.string().min(1).describe("Path to module file (relative to config file)"),
 		exportName: z.string().min(1).describe("Name of the export to use as case factory"),
+		inputSchema: JsonSchemaObject.optional().describe(
+			"Per-case input schema (overrides schemas.input)",
+		),
 	})
 	.meta({ title: "CaseConfig", description: "Test case configuration" });
 export type CaseConfig = z.infer<typeof CaseConfig>;
@@ -142,6 +156,13 @@ export type OutputConfig = z.infer<typeof OutputConfig>;
 export const ExperimentConfig = z
 	.object({
 		experiment: ExperimentMeta.describe("Experiment metadata"),
+		schemas: z
+			.object({
+				input: JsonSchemaObject.optional().describe("Schema for case inputs"),
+				output: JsonSchemaObject.optional().describe("Schema for SUT outputs"),
+			})
+			.optional()
+			.describe("Optional JSON Schemas for input/output validation"),
 		executor: ExecutorConfig.describe("Executor configuration"),
 		suts: z.array(SutConfig).describe("Systems Under Test to evaluate"),
 		cases: z.array(CaseConfig).describe("Test cases to run"),
