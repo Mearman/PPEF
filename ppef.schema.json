@@ -7,51 +7,64 @@
       "properties": {
         "name": {
           "type": "string",
-          "minLength": 1
+          "minLength": 1,
+          "description": "Human-readable experiment name"
         },
         "description": {
+          "description": "Experiment description",
           "type": "string"
         },
         "version": {
+          "description": "Experiment version string",
           "type": "string"
         }
       },
       "required": [
         "name"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "title": "ExperimentMeta",
+      "description": "Experiment metadata"
     },
     "executor": {
       "type": "object",
       "properties": {
         "continueOnError": {
+          "description": "Continue execution if a single run fails",
           "type": "boolean"
         },
         "repetitions": {
+          "description": "Number of repetitions per case",
           "type": "integer",
           "minimum": 1,
           "maximum": 9007199254740991
         },
         "seedBase": {
+          "description": "Random seed base",
           "type": "integer",
           "minimum": 0,
           "maximum": 9007199254740991
         },
         "timeoutMs": {
+          "description": "Timeout per run in milliseconds (0 = no timeout)",
           "type": "integer",
           "minimum": 0,
           "maximum": 9007199254740991
         },
         "collectProvenance": {
+          "description": "Whether to collect provenance information",
           "type": "boolean"
         },
         "concurrency": {
+          "description": "Number of concurrent runs",
           "type": "integer",
           "minimum": 1,
           "maximum": 9007199254740991
         }
       },
-      "additionalProperties": false
+      "additionalProperties": false,
+      "title": "ExecutorConfig",
+      "description": "Executor configuration"
     },
     "suts": {
       "type": "array",
@@ -60,17 +73,21 @@
         "properties": {
           "id": {
             "type": "string",
-            "minLength": 1
+            "minLength": 1,
+            "description": "Unique SUT identifier"
           },
           "module": {
             "type": "string",
-            "minLength": 1
+            "minLength": 1,
+            "description": "Path to module file (relative to config file)"
           },
           "exportName": {
             "type": "string",
-            "minLength": 1
+            "minLength": 1,
+            "description": "Name of the export to use as factory"
           },
           "config": {
+            "description": "Optional configuration to pass to factory",
             "type": "object",
             "propertyNames": {
               "type": "string"
@@ -78,6 +95,7 @@
             "additionalProperties": {}
           },
           "type": {
+            "description": "SUT type: \"module\" (default) or \"binary\"",
             "type": "string",
             "enum": [
               "module",
@@ -85,15 +103,18 @@
             ]
           },
           "binaryCommand": {
+            "description": "Command to execute (when type=\"binary\")",
             "type": "string"
           },
           "binaryArgs": {
+            "description": "Arguments to pass to binary command",
             "type": "array",
             "items": {
               "type": "string"
             }
           },
           "binaryInputFormat": {
+            "description": "How to serialize inputs to stdin",
             "type": "string",
             "enum": [
               "json",
@@ -102,6 +123,7 @@
             ]
           },
           "binaryOutputFormat": {
+            "description": "How to deserialize stdout",
             "type": "string",
             "enum": [
               "json",
@@ -110,6 +132,7 @@
             ]
           },
           "binaryTimeout": {
+            "description": "Binary SUT timeout per run in milliseconds",
             "type": "integer",
             "minimum": 0,
             "maximum": 9007199254740991
@@ -119,11 +142,13 @@
             "properties": {
               "name": {
                 "type": "string",
-                "minLength": 1
+                "minLength": 1,
+                "description": "Human-readable SUT name"
               },
               "version": {
                 "type": "string",
-                "minLength": 1
+                "minLength": 1,
+                "description": "SUT version string"
               },
               "role": {
                 "type": "string",
@@ -131,15 +156,18 @@
                   "primary",
                   "baseline",
                   "oracle"
-                ]
+                ],
+                "description": "Role of the SUT in evaluation"
               },
               "tags": {
+                "description": "Searchable tags",
                 "type": "array",
                 "items": {
                   "type": "string"
                 }
               },
               "description": {
+                "description": "Optional SUT description",
                 "type": "string"
               }
             },
@@ -148,7 +176,9 @@
               "version",
               "role"
             ],
-            "additionalProperties": false
+            "additionalProperties": false,
+            "title": "SutRegistration",
+            "description": "SUT registration metadata"
           }
         },
         "required": [
@@ -157,8 +187,11 @@
           "exportName",
           "registration"
         ],
-        "additionalProperties": false
-      }
+        "additionalProperties": false,
+        "title": "SutConfig",
+        "description": "System Under Test configuration"
+      },
+      "description": "Systems Under Test to evaluate"
     },
     "cases": {
       "type": "array",
@@ -167,15 +200,18 @@
         "properties": {
           "id": {
             "type": "string",
-            "minLength": 1
+            "minLength": 1,
+            "description": "Unique case identifier"
           },
           "module": {
             "type": "string",
-            "minLength": 1
+            "minLength": 1,
+            "description": "Path to module file (relative to config file)"
           },
           "exportName": {
             "type": "string",
-            "minLength": 1
+            "minLength": 1,
+            "description": "Name of the export to use as case factory"
           }
         },
         "required": [
@@ -183,34 +219,43 @@
           "module",
           "exportName"
         ],
-        "additionalProperties": false
-      }
+        "additionalProperties": false,
+        "title": "CaseConfig",
+        "description": "Test case configuration"
+      },
+      "description": "Test cases to run"
     },
     "metricsExtractor": {
       "type": "object",
       "properties": {
         "module": {
           "type": "string",
-          "minLength": 1
+          "minLength": 1,
+          "description": "Path to module file (relative to config file)"
         },
         "exportName": {
           "type": "string",
-          "minLength": 1
+          "minLength": 1,
+          "description": "Name of the export to use as metrics extractor"
         }
       },
       "required": [
         "module",
         "exportName"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "title": "MetricsExtractorConfig",
+      "description": "Metrics extractor configuration"
     },
     "output": {
       "type": "object",
       "properties": {
         "path": {
+          "description": "Output directory path",
           "type": "string"
         },
         "format": {
+          "description": "Output format",
           "type": "string",
           "enum": [
             "json",
@@ -218,10 +263,13 @@
           ]
         },
         "aggregate": {
+          "description": "Whether to aggregate results",
           "type": "boolean"
         }
       },
-      "additionalProperties": false
+      "additionalProperties": false,
+      "title": "OutputConfig",
+      "description": "Output configuration"
     }
   },
   "required": [
@@ -232,5 +280,7 @@
     "metricsExtractor",
     "output"
   ],
-  "additionalProperties": false
+  "additionalProperties": false,
+  "title": "ExperimentConfig",
+  "description": "PPEF experiment configuration"
 }
