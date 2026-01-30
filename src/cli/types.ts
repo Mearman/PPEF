@@ -2,161 +2,178 @@
  * CLI Type Definitions
  *
  * Types for the JSON experiment configuration and CLI options.
+ * Config types use Zod schemas for runtime validation + inferred TypeScript types.
  */
 
-import type { SutRole } from "../types/sut.js";
+import { z } from "zod";
+
+/**
+ * SUT role enum for JSON validation.
+ * Values match the SutRole string literal union in types/sut.ts.
+ */
+export const SutRoleSchema = z.enum(["primary", "baseline", "oracle"]);
 
 /**
  * Experiment metadata.
  */
-export interface ExperimentMeta {
+export const ExperimentMeta = z.object({
 	/** Experiment name */
-	name: string;
-
+	name: z.string().min(1),
 	/** Experiment description */
-	description?: string;
-
+	description: z.string().optional(),
 	/** Version string */
-	version?: string;
-}
+	version: z.string().optional(),
+});
+export type ExperimentMeta = z.infer<typeof ExperimentMeta>;
 
 /**
  * Executor configuration from JSON.
  */
-export interface ExecutorConfig {
+export const ExecutorConfig = z.object({
 	/** Continue execution if a single run fails */
-	continueOnError?: boolean;
-
+	continueOnError: z.boolean().optional(),
 	/** Number of repetitions per case */
-	repetitions?: number;
-
+	repetitions: z.number().int().min(1).optional(),
 	/** Random seed base */
-	seedBase?: number;
-
+	seedBase: z.number().int().min(0).optional(),
 	/** Timeout per run in milliseconds (0 = no timeout) */
-	timeoutMs?: number;
-
+	timeoutMs: z.number().int().min(0).optional(),
 	/** Whether to collect provenance information */
-	collectProvenance?: boolean;
-
+	collectProvenance: z.boolean().optional(),
 	/** Number of concurrent runs */
-	concurrency?: number;
-}
+	concurrency: z.number().int().min(1).optional(),
+});
+export type ExecutorConfig = z.infer<typeof ExecutorConfig>;
+
+/**
+ * SUT registration metadata.
+ */
+export const SutRegistration = z.object({
+	/** Human-readable name */
+	name: z.string().min(1),
+	/** Version string */
+	version: z.string().min(1),
+	/** Role in evaluation */
+	role: SutRoleSchema,
+	/** Searchable tags */
+	tags: z.array(z.string()).optional(),
+	/** Optional description */
+	description: z.string().optional(),
+});
+export type SutRegistration = z.infer<typeof SutRegistration>;
 
 /**
  * SUT configuration from JSON.
  */
-export interface SutConfig {
+export const SutConfig = z.object({
 	/** Unique SUT identifier */
-	id: string;
-
+	id: z.string().min(1),
 	/** Path to module file (relative to config file) */
-	module: string;
-
+	module: z.string().min(1),
 	/** Name of the export to use as factory */
-	exportName: string;
-
+	exportName: z.string().min(1),
 	/** Optional configuration to pass to factory */
-	config?: Record<string, unknown>;
-
+	config: z.record(z.string(), z.unknown()).optional(),
 	/** SUT type: "module" (default) or "binary" */
-	type?: "module" | "binary";
-
+	type: z.enum(["module", "binary"]).optional(),
 	/** Binary SUT: command to execute (when type="binary") */
-	binaryCommand?: string;
-
+	binaryCommand: z.string().optional(),
 	/** Binary SUT: arguments to pass to command */
-	binaryArgs?: string[];
-
+	binaryArgs: z.array(z.string()).optional(),
 	/** Binary SUT: how to serialize inputs to stdin */
-	binaryInputFormat?: "json" | "raw" | "lines";
-
+	binaryInputFormat: z.enum(["json", "raw", "lines"]).optional(),
 	/** Binary SUT: how to deserialize stdout */
-	binaryOutputFormat?: "json" | "raw" | "lines";
-
+	binaryOutputFormat: z.enum(["json", "raw", "lines"]).optional(),
 	/** Binary SUT: timeout per run in milliseconds */
-	binaryTimeout?: number;
-
+	binaryTimeout: z.number().int().min(0).optional(),
 	/** SUT registration metadata */
-	registration: {
-		/** Human-readable name */
-		name: string;
-
-		/** Version string */
-		version: string;
-
-		/** Role in evaluation */
-		role: SutRole;
-
-		/** Searchable tags */
-		tags?: string[];
-
-		/** Optional description */
-		description?: string;
-	};
-}
+	registration: SutRegistration,
+});
+export type SutConfig = z.infer<typeof SutConfig>;
 
 /**
  * Case configuration from JSON.
  */
-export interface CaseConfig {
+export const CaseConfig = z.object({
 	/** Unique case identifier */
-	id: string;
-
+	id: z.string().min(1),
 	/** Path to module file (relative to config file) */
-	module: string;
-
+	module: z.string().min(1),
 	/** Name of the export to use as case factory */
-	exportName: string;
-}
+	exportName: z.string().min(1),
+});
+export type CaseConfig = z.infer<typeof CaseConfig>;
 
 /**
  * Metrics extractor configuration from JSON.
  */
-export interface MetricsExtractorConfig {
+export const MetricsExtractorConfig = z.object({
 	/** Path to module file (relative to config file) */
-	module: string;
-
+	module: z.string().min(1),
 	/** Name of the export to use as metrics extractor */
-	exportName: string;
-}
+	exportName: z.string().min(1),
+});
+export type MetricsExtractorConfig = z.infer<typeof MetricsExtractorConfig>;
 
 /**
  * Output configuration from JSON.
  */
-export interface OutputConfig {
+export const OutputConfig = z.object({
 	/** Output directory path */
-	path?: string;
-
+	path: z.string().optional(),
 	/** Output format: "json" or "json-pretty" */
-	format?: "json" | "json-pretty";
-
+	format: z.enum(["json", "json-pretty"]).optional(),
 	/** Whether to aggregate results */
-	aggregate?: boolean;
-}
+	aggregate: z.boolean().optional(),
+});
+export type OutputConfig = z.infer<typeof OutputConfig>;
 
 /**
  * Complete experiment configuration from JSON.
  */
-export interface ExperimentConfig {
-	/** Experiment metadata */
-	experiment: ExperimentMeta;
+export const ExperimentConfig = z
+	.object({
+		/** Experiment metadata */
+		experiment: ExperimentMeta,
+		/** Executor configuration */
+		executor: ExecutorConfig,
+		/** SUTs to evaluate */
+		suts: z.array(SutConfig),
+		/** Test cases to run */
+		cases: z.array(CaseConfig),
+		/** Metrics extractor configuration */
+		metricsExtractor: MetricsExtractorConfig,
+		/** Output configuration */
+		output: OutputConfig,
+	})
+	.superRefine((data, ctx) => {
+		// Check for duplicate SUT IDs
+		const sutIds = new Set<string>();
+		for (const sut of data.suts) {
+			if (sutIds.has(sut.id)) {
+				ctx.addIssue({
+					code: "custom",
+					message: `Duplicate SUT ID: ${sut.id}`,
+					path: ["suts"],
+				});
+			}
+			sutIds.add(sut.id);
+		}
 
-	/** Executor configuration */
-	executor: ExecutorConfig;
-
-	/** SUTs to evaluate */
-	suts: SutConfig[];
-
-	/** Test cases to run */
-	cases: CaseConfig[];
-
-	/** Metrics extractor configuration */
-	metricsExtractor: MetricsExtractorConfig;
-
-	/** Output configuration */
-	output: OutputConfig;
-}
+		// Check for duplicate case IDs
+		const caseIds = new Set<string>();
+		for (const testCase of data.cases) {
+			if (caseIds.has(testCase.id)) {
+				ctx.addIssue({
+					code: "custom",
+					message: `Duplicate case ID: ${testCase.id}`,
+					path: ["cases"],
+				});
+			}
+			caseIds.add(testCase.id);
+		}
+	});
+export type ExperimentConfig = z.infer<typeof ExperimentConfig>;
 
 /**
  * CLI command options.
