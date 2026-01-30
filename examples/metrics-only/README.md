@@ -8,12 +8,11 @@ This example demonstrates how to use PPEF's evaluation system **without using cl
 
 ## Usage
 
-```bash
-# Run your experiment (if not already done)
-ppef run experiment-config.json
+This config is designed for the string-length two-SUT experiment. Run the experiment first, then evaluate:
 
-# Aggregate results
-ppef aggregate results/*.json -o results/aggregates.json
+```bash
+# Run the two-SUT string-length experiment
+ppef run examples/string-length/experiment-two-suts.json
 
 # Evaluate using metrics criteria
 ppef evaluate results/aggregates.json \
@@ -25,12 +24,11 @@ ppef evaluate results/aggregates.json \
 
 ## Configuration
 
-The `eval-config.json` file defines the evaluation criteria:
+The `eval-config.json` file defines three evaluation criteria against the `length` metric:
 
-- **exec-time-threshold**: All SUTs must have execution time under 1000ms
-- **memory-threshold**: All SUTs must use less than 100MB memory
-- **accuracy-baseline**: `new-algorithm` must match or beat `baseline-algorithm` accuracy
-- **f1-target-range**: All SUTs must have F1 scores between 0.8 and 1.0
+- **length-threshold**: All SUTs must produce a measured length greater than zero
+- **length-baseline**: `builtin-length` must return a length at least as large as `spread-length`
+- **length-target-range**: All SUTs must produce a length in the range [1, 100]
 
 ## Output
 
