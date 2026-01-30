@@ -183,6 +183,9 @@ export interface EvaluationResult {
 
 	/** Provenance for reproducibility */
 	provenance: Provenance;
+
+	/** Error message if the run failed (e.g., schema validation failure) */
+	error?: string;
 }
 
 /**
