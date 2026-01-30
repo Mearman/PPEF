@@ -45,11 +45,95 @@ npx tsx --test src/path/to/file.test.ts
 
 CLI (after build):
 ```bash
-ppef run          # Execute experiments
-ppef validate     # Validate configuration
-ppef plan         # Dry-run execution plan
-ppef aggregate    # Post-process results
-ppef evaluate     # Run evaluators on results
+ppef experiment.json   # Run experiment (default command)
+ppef run config.json   # Explicit run command
+ppef validate          # Validate configuration
+ppef plan              # Dry-run execution plan
+ppef aggregate         # Post-process results
+ppef evaluate          # Run evaluators on results
+```
+
+## Quick Start
+
+Create a minimal experiment with three files and a config:
+
+**experiment.json**
+```json
+{
+  "experiment": {
+    "name": "string-length",
+    "description": "Compare string length implementations"
+  },
+  "executor": {
+    "repetitions": 3
+  },
+  "suts": [
+    {
+      "id": "builtin-length",
+      "module": "./sut.mjs",
+      "exportName": "createSut",
+      "registration": {
+        "name": "Built-in .length",
+        "version": "1.0.0",
+        "role": "primary"
+      }
+    }
+  ],
+  "cases": [
+    {
+      "id": "hello-world",
+      "module": "./case.mjs",
+      "exportName": "createCase"
+    }
+  ],
+  "metricsExtractor": {
+    "module": "./metrics.mjs",
+    "exportName": "extract"
+  },
+  "output": {
+    "path": "./results"
+  }
+}
+```
+
+**sut.mjs** — System Under Test factory
+```js
+export function createSut() {
+  return {
+    id: "builtin-length",
+    config: {},
+    run: async (input) => ({ length: input.text.length }),
+  };
+}
+```
+
+**case.mjs** — Test case definition
+```js
+export function createCase() {
+  return {
+    case: {
+      caseId: "hello-world",
+      caseClass: "basic",
+      name: "Hello World",
+      version: "1.0.0",
+      inputs: { text: "hello world" },
+    },
+    getInput: async () => ({ text: "hello world" }),
+    getInputs: () => ({ text: "hello world" }),
+  };
+}
+```
+
+**metrics.mjs** — Metrics extractor
+```js
+export function extract(result) {
+  return { length: result.length ?? 0 };
+}
+```
+
+Run it:
+```bash
+npx ppef experiment.json
 ```
 
 ## Architecture
@@ -114,7 +198,7 @@ Available subpaths: `ppef/types`, `ppef/registry`, `ppef/executor`, `ppef/collec
 - Node.js native test runner (`node:test` + `node:assert`) — not Vitest/Jest
 - Coverage via c8 (text + html + json-summary in `./coverage/`)
 - Conventional commits enforced via commitlint + husky
-- Semantic release from all branches
+- Semantic release from main branch
 - No `any` types — use `unknown` with type guards
 - Executor produces deterministic `runId` via SHA-256 hash of inputs
 
