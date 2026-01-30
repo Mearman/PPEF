@@ -357,8 +357,9 @@ export class WorkerThreadsExecutor {
 		// Serialize SUTs for WorkerMessage
 		const serializedSuts: SerializedSut[] = suts.map((sut) => ({
 			id: sut.registration.id,
-			module: `./dist/suts/${sut.registration.id}.js`,
-			exportName: "createSut",
+			module:
+				(sut as { sourceModule?: string }).sourceModule ?? `./dist/suts/${sut.registration.id}.js`,
+			exportName: (sut as { sourceExportName?: string }).sourceExportName ?? "createSut",
 			registration: {
 				name: sut.registration.name,
 				version: sut.registration.version,
@@ -369,8 +370,8 @@ export class WorkerThreadsExecutor {
 		// Serialize cases for WorkerMessage
 		const serializedCases: SerializedCase[] = cases.map((c) => ({
 			caseId: c.case.caseId,
-			module: `./dist/cases/${c.case.caseId}.js`,
-			exportName: "createCase",
+			module: (c as { sourceModule?: string }).sourceModule ?? `./dist/cases/${c.case.caseId}.js`,
+			exportName: (c as { sourceExportName?: string }).sourceExportName ?? "createCase",
 		}));
 
 		for (const batch of batches) {

@@ -31,6 +31,7 @@ export interface ExecutorConfig {
 	continueOnError: boolean;
 	timeoutMs: number;
 	collectProvenance: boolean;
+	forceInProcess?: boolean;
 }
 
 /**
@@ -331,12 +332,14 @@ export class WorkerExecutor {
 		const cases = evaluateModule.getCaseDefinitions(caseRegistry);
 
 		// Create executor with no onResult callback (workers don't save checkpoints)
+		// Force in-process execution since we're already inside a worker thread
 		const executor = new executorModule.Executor({
 			repetitions: message.config.repetitions,
 			seedBase: message.config.seedBase,
 			continueOnError: message.config.continueOnError,
 			timeoutMs: message.config.timeoutMs,
 			collectProvenance: message.config.collectProvenance,
+			forceInProcess: true,
 		});
 
 		// Execute the runs
@@ -391,8 +394,8 @@ export class WorkerExecutor {
 					continue;
 				}
 
-				// Resolve module path (baseDir is already absolute)
-				const modulePath = `${this.projectRoot}/${serializedSut.module}`;
+				// Resolve module path relative to the experiment config's baseDir
+				const modulePath = `${message.baseDir}/${serializedSut.module}`;
 
 				// Dynamic import from the module path
 				const module = await dynamicImport(modulePath);
@@ -425,8 +428,8 @@ export class WorkerExecutor {
 		const caseMap = new Map<string, unknown>();
 
 		for (const serializedCase of message.cases) {
-			// Resolve module path (baseDir is already absolute)
-			const modulePath = `${this.projectRoot}/${serializedCase.module}`;
+			// Resolve module path relative to the experiment config's baseDir
+			const modulePath = `${message.baseDir}/${serializedCase.module}`;
 
 			try {
 				// Dynamic import from the module path
@@ -460,12 +463,14 @@ export class WorkerExecutor {
 		}
 
 		// Create executor with config
+		// Force in-process execution since we're already inside a worker thread
 		const executor = new executorModule.Executor({
 			repetitions: message.config.repetitions,
 			seedBase: message.config.seedBase,
 			continueOnError: message.config.continueOnError,
 			timeoutMs: message.config.timeoutMs,
 			collectProvenance: message.config.collectProvenance,
+			forceInProcess: true,
 		});
 
 		// Execute the runs (pass no-op callback - workers don't save checkpoints)
@@ -572,12 +577,14 @@ export class WorkerExecutor {
 		}
 
 		// Create executor with config
+		// Force in-process execution since we're already inside a worker thread
 		const executor = new executorModule.Executor({
 			repetitions: message.config.repetitions,
 			seedBase: message.config.seedBase,
 			continueOnError: message.config.continueOnError,
 			timeoutMs: message.config.timeoutMs,
 			collectProvenance: message.config.collectProvenance,
+			forceInProcess: true,
 		});
 
 		// Execute the runs
