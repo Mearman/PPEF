@@ -1,3 +1,7 @@
+## <small>1.3.1 (2026-01-30)</small>
+
+* ci: expand test matrix to node 18 through 25 ([0660697](https://github.com/Mearman/ppef/commit/0660697))
+
 ## 1.3.0 (2026-01-30)
 
 * fix(deps): sync package-lock.json with package.json ([2a576cd](https://github.com/Mearman/ppef/commit/2a576cd))
