@@ -30,7 +30,7 @@ export default [
 			},
 			parserOptions: {
 				projectService: {
-					allowDefaultProject: ["commitlint.config.ts", "eslint.config.ts"],
+					allowDefaultProject: ["commitlint.config.ts", "eslint.config.ts", "scripts/*.ts"],
 					tsconfigRootDir: import.meta.dirname,
 				},
 			},
