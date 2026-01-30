@@ -54,11 +54,12 @@ describe("validate command", () => {
 				module: "./metrics.js",
 				exportName: "extractMetrics",
 			},
+			output: {},
 		};
 
 		await writeFile(configPath, JSON.stringify(validConfig), "utf-8");
 
-		const result = validateConfig(validConfig as any);
+		const result = validateConfig(validConfig);
 		assert.strictEqual(result.valid, true);
 		assert.strictEqual(result.errors.length, 0);
 
@@ -76,11 +77,12 @@ describe("validate command", () => {
 				module: "./metrics.js",
 				exportName: "extractMetrics",
 			},
+			output: {},
 		};
 
-		const result = validateConfig(invalidConfig as any);
+		const result = validateConfig(invalidConfig);
 		assert.strictEqual(result.valid, false);
-		assert.ok(result.errors.some((e) => e.includes("experiment.name is required")));
+		assert.ok(result.errors.some((e) => e.includes("experiment.name")));
 	});
 
 	it("should detect invalid role values", () => {
@@ -97,7 +99,7 @@ describe("validate command", () => {
 					registration: {
 						name: "Test SUT",
 						version: "1.0.0",
-						role: "invalid" as any,
+						role: "invalid",
 						tags: [],
 					},
 				},
@@ -107,11 +109,12 @@ describe("validate command", () => {
 				module: "./metrics.js",
 				exportName: "extractMetrics",
 			},
+			output: {},
 		};
 
-		const result = validateConfig(invalidConfig as any);
+		const result = validateConfig(invalidConfig);
 		assert.strictEqual(result.valid, false);
-		assert.ok(result.errors.some((e) => e.includes("role must be one of")));
+		assert.ok(result.errors.some((e) => e.includes("suts.0.registration.role")));
 	});
 
 	it("should detect duplicate SUT IDs", () => {
@@ -149,9 +152,10 @@ describe("validate command", () => {
 				module: "./metrics.js",
 				exportName: "extractMetrics",
 			},
+			output: {},
 		};
 
-		const result = validateConfig(invalidConfig as any);
+		const result = validateConfig(invalidConfig);
 		assert.strictEqual(result.valid, false);
 		assert.ok(result.errors.some((e) => e.includes("Duplicate SUT ID")));
 	});
@@ -170,11 +174,12 @@ describe("validate command", () => {
 				module: "./metrics.js",
 				exportName: "extractMetrics",
 			},
+			output: {},
 		};
 
-		const result = validateConfig(invalidConfig as any);
+		const result = validateConfig(invalidConfig);
 		assert.strictEqual(result.valid, false);
-		assert.ok(result.errors.some((e) => e.includes("repetitions must be at least 1")));
+		assert.ok(result.errors.some((e) => e.includes("executor.repetitions")));
 	});
 
 	it("should validate required SUT fields", () => {
@@ -201,13 +206,12 @@ describe("validate command", () => {
 				module: "./metrics.js",
 				exportName: "extractMetrics",
 			},
+			output: {},
 		};
 
-		const result = validateConfig(invalidConfig as any);
+		const result = validateConfig(invalidConfig);
 		assert.strictEqual(result.valid, false);
-		assert.ok(
-			result.errors.some((e) => e.includes("registration.version") && e.includes("required")),
-		);
+		assert.ok(result.errors.some((e) => e.includes("suts.0.registration.version")));
 	});
 
 	it("should detect missing required case fields", () => {
@@ -228,10 +232,11 @@ describe("validate command", () => {
 				module: "./metrics.js",
 				exportName: "extractMetrics",
 			},
+			output: {},
 		};
 
-		const result = validateConfig(invalidConfig as any);
+		const result = validateConfig(invalidConfig);
 		assert.strictEqual(result.valid, false);
-		assert.ok(result.errors.some((e) => e.includes("id") && e.includes("required")));
+		assert.ok(result.errors.some((e) => e.includes("cases.0.id")));
 	});
 });
