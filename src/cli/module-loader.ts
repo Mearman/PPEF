@@ -145,6 +145,8 @@ export async function loadSutFactory(
 	return {
 		registration,
 		factory,
+		sourceModule: modulePath,
+		sourceExportName: exportName,
 	};
 }
 
@@ -197,7 +199,10 @@ export async function loadCaseDefinition(
 		);
 	}
 
-	return definition as CaseDefinition;
+	const result = definition as CaseDefinition;
+	result.sourceModule = modulePath;
+	result.sourceExportName = exportName;
+	return result;
 }
 
 /**
