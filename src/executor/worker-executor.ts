@@ -239,7 +239,43 @@ export interface IModuleLoader {
  * to satisfy ESLint's no-unsafe-assignment rule.
  */
 async function dynamicImport(modulePath: string): Promise<Record<string, unknown>> {
-	return import(modulePath) as Promise<Record<string, unknown>>;
+	// Dynamic import returns Promise<any>; use structuredClone-like identity to safely type
+	const mod: unknown = await (import(modulePath) satisfies Promise<unknown>);
+	if (typeof mod !== "object" || mod === null) {
+		throw new Error(`Module ${modulePath} did not return an object`);
+	}
+	// After narrowing to object, reconstruct as Record<string, unknown>
+	const record: Record<string, unknown> = Object.fromEntries(Object.entries(mod));
+	return record;
+}
+
+/**
+ * Runtime check that incoming data looks like a WorkerMessage.
+ */
+function isWorkerMessage(data: unknown): data is WorkerMessage {
+	if (typeof data !== "object" || data === null) return false;
+	if (!("runs" in data) || !("config" in data)) return false;
+	return Array.isArray(data.runs) && typeof data.config === "object" && data.config !== null;
+}
+
+/**
+ * Safely call an unknown value expected to be a no-arg factory function.
+ * Returns the result as a Record<string, unknown>.
+ *
+ * Uses a typed wrapper function to avoid eslint no-unsafe-call/no-unsafe-assignment
+ * violations that occur when calling Function-typed values directly.
+ */
+function callFactory(fn: unknown): Record<string, unknown> {
+	if (typeof fn !== "function") {
+		throw new TypeError("Expected a function");
+	}
+	// Wrap in a typed function to avoid unsafe-call on Function type
+	const wrapper: () => unknown = () => Reflect.apply(fn, undefined, []);
+	const result: unknown = wrapper();
+	if (typeof result !== "object" || result === null) {
+		throw new TypeError("Factory did not return an object");
+	}
+	return Object.fromEntries(Object.entries(result));
 }
 
 /**
@@ -279,7 +315,10 @@ export class WorkerExecutor {
 	 * Handle an incoming message from the parent thread.
 	 */
 	public async handleMessage(data: unknown): Promise<void> {
-		const message = data as WorkerMessage;
+		if (!isWorkerMessage(data)) {
+			throw new Error("Invalid worker message received");
+		}
+		const message: WorkerMessage = data;
 
 		try {
 			const result = await this.executeBatch(message);
@@ -389,11 +428,37 @@ export class WorkerExecutor {
 					const binarySutModule = await dynamicImport(
 						`${this.projectRoot}/dist/executor/binary-sut.js`,
 					);
-					const BinarySutClass = binarySutModule.BinarySut as new (
-						id: string,
-						config: unknown,
-					) => { id: string; config: unknown; run: (inputs: unknown) => Promise<unknown> };
-					const sut = new BinarySutClass(serializedSut.id, serializedSut.binary);
+					const BinarySutExport: unknown = binarySutModule.BinarySut;
+					if (typeof BinarySutExport !== "function") {
+						throw new Error("BinarySut export is not a constructor");
+					}
+					const constructed: unknown = Reflect.construct(BinarySutExport, [
+						serializedSut.id,
+						serializedSut.binary,
+					]);
+					if (
+						typeof constructed !== "object" ||
+						constructed === null ||
+						!("run" in constructed) ||
+						typeof constructed.run !== "function"
+					) {
+						throw new Error("BinarySut constructor did not return a valid SUT");
+					}
+					// Store run method while it's narrowed to Function by typeof check
+					const runMethod = constructed.run;
+					const constructedObj = constructed;
+					const sut: { id: string; config: unknown; run: (inputs: unknown) => Promise<unknown> } = {
+						id:
+							"id" in constructed && typeof constructed.id === "string"
+								? constructed.id
+								: serializedSut.id,
+						config: "config" in constructed ? constructed.config : undefined,
+						run: (inputs: unknown) => {
+							// Call run method on the constructed BinarySut object
+							const result: unknown = Reflect.apply(runMethod, constructedObj, [inputs]);
+							return result instanceof Promise ? result : Promise.resolve(result);
+						},
+					};
 					const sutDefinition = {
 						factory: () => sut,
 						registration: {
@@ -453,7 +518,7 @@ export class WorkerExecutor {
 				}
 
 				// Call the function to get the case definition
-				const caseDefinition = (caseDefinitionFn as () => Record<string, unknown>)();
+				const caseDefinition = callFactory(caseDefinitionFn);
 
 				// Validate that we got a proper CaseDefinition
 				if (
@@ -572,7 +637,7 @@ export class WorkerExecutor {
 					throw new Error(`Export ${serializedCase.exportName} in ${modulePath} is not a function`);
 				}
 
-				const caseDefinition = (caseDefinitionFn as () => Record<string, unknown>)();
+				const caseDefinition = callFactory(caseDefinitionFn);
 
 				if (
 					typeof caseDefinition.getInput !== "function" ||

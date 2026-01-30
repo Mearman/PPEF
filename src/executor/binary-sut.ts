@@ -236,7 +236,8 @@ export function createBinarySut(options: CreateBinarySutOptions): BinarySutFacto
 			...config,
 		};
 
-		const id = (config?.id as string | undefined) ?? options.id ?? `binary-${options.command}`;
+		const idFromConfig: string | undefined = typeof config?.id === "string" ? config.id : undefined;
+		const id = idFromConfig ?? options.id ?? `binary-${options.command}`;
 		return new BinarySut(id, mergedConfig);
 	};
 }

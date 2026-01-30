@@ -85,7 +85,13 @@ export interface IProcessSpawner {
  */
 export class ProcessSpawner implements IProcessSpawner {
 	spawn(command: string, args: string[], options: SpawnOptions): IChildProcess {
-		return spawn(command, args, options) as unknown as IChildProcess;
+		const child = spawn(command, args, options);
+		const process: IChildProcess = {
+			on(event: string, listener: (...args: unknown[]) => void): void {
+				child.on(event, listener);
+			},
+		};
+		return process;
 	}
 }
 
@@ -413,8 +419,9 @@ export class ParallelExecutor {
 			workers.map(
 				(w) =>
 					new Promise<number>((resolve) => {
-						w.on("exit", (code) => {
-							resolve(code as number);
+						w.on("exit", (...args: unknown[]) => {
+							const code: number = typeof args[0] === "number" ? args[0] : -1;
+							resolve(code);
 						});
 					}),
 			),

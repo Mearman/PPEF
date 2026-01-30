@@ -92,13 +92,26 @@ export interface IWorkerFactory {
 import { Worker } from "node:worker_threads";
 
 /**
+ * Create an IWorker adapter from a Node.js Worker.
+ * Uses bind to delegate methods without type assertions.
+ */
+function createWorkerAdapter(worker: Worker): IWorker {
+	return {
+		postMessage: worker.postMessage.bind(worker),
+		on: worker.on.bind(worker),
+		terminate: worker.terminate.bind(worker),
+	};
+}
+
+/**
  * Production worker factory using node:worker_threads.
  * Registers the tsx loader when spawning workers from TypeScript source.
  */
 export class WorkerFactory implements IWorkerFactory {
 	create(workerPath: string): IWorker {
 		const execArgv = workerPath.endsWith(".ts") ? ["--import", "tsx"] : [];
-		return new Worker(workerPath, { execArgv }) as IWorker;
+		const worker = new Worker(workerPath, { execArgv });
+		return createWorkerAdapter(worker);
 	}
 }
 
@@ -355,24 +368,43 @@ export class WorkerThreadsExecutor {
 		const workerStates: WorkerState[] = [];
 
 		// Serialize SUTs for WorkerMessage
-		const serializedSuts: SerializedSut[] = suts.map((sut) => ({
-			id: sut.registration.id,
-			module:
-				(sut as { sourceModule?: string }).sourceModule ?? `./dist/suts/${sut.registration.id}.js`,
-			exportName: (sut as { sourceExportName?: string }).sourceExportName ?? "createSut",
-			registration: {
-				name: sut.registration.name,
-				version: sut.registration.version,
-				role: sut.registration.role,
-			},
-		}));
+		const serializedSuts: SerializedSut[] = suts.map((sut) => {
+			const sutRecord: Record<string, unknown> = Object.fromEntries(Object.entries(sut));
+			const sourceModule: string =
+				typeof sutRecord.sourceModule === "string"
+					? sutRecord.sourceModule
+					: `./dist/suts/${sut.registration.id}.js`;
+			const sourceExportName: string =
+				typeof sutRecord.sourceExportName === "string" ? sutRecord.sourceExportName : "createSut";
+			return {
+				id: sut.registration.id,
+				module: sourceModule,
+				exportName: sourceExportName,
+				registration: {
+					name: sut.registration.name,
+					version: sut.registration.version,
+					role: sut.registration.role,
+				},
+			};
+		});
 
 		// Serialize cases for WorkerMessage
-		const serializedCases: SerializedCase[] = cases.map((c) => ({
-			caseId: c.case.caseId,
-			module: (c as { sourceModule?: string }).sourceModule ?? `./dist/cases/${c.case.caseId}.js`,
-			exportName: (c as { sourceExportName?: string }).sourceExportName ?? "createCase",
-		}));
+		const serializedCases: SerializedCase[] = cases.map((c) => {
+			const caseRecord: Record<string, unknown> = Object.fromEntries(Object.entries(c));
+			const sourceModule: string =
+				typeof caseRecord.sourceModule === "string"
+					? caseRecord.sourceModule
+					: `./dist/cases/${c.case.caseId}.js`;
+			const sourceExportName: string =
+				typeof caseRecord.sourceExportName === "string"
+					? caseRecord.sourceExportName
+					: "createCase";
+			return {
+				caseId: c.case.caseId,
+				module: sourceModule,
+				exportName: sourceExportName,
+			};
+		});
 
 		for (const batch of batches) {
 			const checkpointPath = resolve(
@@ -413,7 +445,7 @@ export class WorkerThreadsExecutor {
 					sutId: run.sutId,
 					caseId: run.caseId,
 					repetition: run.repetition,
-					config: run.config as unknown,
+					config: run.config,
 				})),
 				config: {
 					repetitions: config.repetitions,
@@ -433,14 +465,16 @@ export class WorkerThreadsExecutor {
 
 			// Add registry manifest if useRegistryManifest is enabled
 			if (this.useRegistryManifest) {
+				const emptyConfig: Record<string, unknown> = {};
+				const emptyTags: string[] = [];
 				const registryManifest: RegistryManifest = {
 					suts: suts.map((sut) => ({
 						id: sut.registration.id,
 						name: sut.registration.name,
 						version: sut.registration.version,
 						role: sut.registration.role,
-						config: {} as Record<string, unknown>,
-						tags: [] as string[],
+						config: emptyConfig,
+						tags: emptyTags,
 					})),
 					sharedCode: "", // Registry code not bundled in this implementation
 					sutModules: Object.fromEntries(

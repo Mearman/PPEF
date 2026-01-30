@@ -34,6 +34,16 @@ import { dirname, resolve } from "node:path";
 import type { CheckpointData } from "./checkpoint-manager.js";
 
 /**
+ * Parse JSON string and return as CheckpointData.
+ * JSON.parse returns `any`; the typed variable annotation provides narrowing.
+ */
+function parseCheckpointJson(content: string): CheckpointData {
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- JSON.parse returns any; checkpoint structure validated by caller
+	const parsed: CheckpointData = JSON.parse(content);
+	return parsed;
+}
+
+/**
  * Interface for file system operations.
  * Enables mocking for testing and alternative storage backends.
  */
@@ -211,7 +221,7 @@ export class FileStorage implements CheckpointStorage {
 	async load(): Promise<CheckpointData | null> {
 		try {
 			const content = await this.fs.readFile(this.path);
-			return JSON.parse(content) as CheckpointData;
+			return parseCheckpointJson(content);
 		} catch {
 			return null;
 		}
@@ -358,7 +368,7 @@ export class GitStorage implements CheckpointStorage {
 				return null;
 			}
 
-			return JSON.parse(content) as CheckpointData;
+			return parseCheckpointJson(content);
 		} catch {
 			return null;
 		}
@@ -438,7 +448,7 @@ export class GitStorage implements CheckpointStorage {
 						`git --work-tree="${this.repoRoot}" notes --ref=${this.getNotesRef()} show ${commitSha}`,
 						{ encoding: "utf-8", cwd: this.repoRoot },
 					);
-					const checkpoint = JSON.parse(content) as CheckpointData;
+					const checkpoint = parseCheckpointJson(content);
 					results.push({ commit: commitSha, checkpoint });
 				} catch {
 					// Skip invalid entries
@@ -465,7 +475,7 @@ export class GitStorage implements CheckpointStorage {
 				`git --work-tree="${this.repoRoot}" notes --ref=${this.getNotesRef()} show ${commitSha}`,
 				{ encoding: "utf-8", cwd: this.repoRoot },
 			);
-			return JSON.parse(content) as CheckpointData;
+			return parseCheckpointJson(content);
 		} catch {
 			return null;
 		}

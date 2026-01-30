@@ -42,7 +42,9 @@ const projectRoot = resolve(__dirname, "../../");
  */
 class RealModuleLoader implements IModuleLoader {
 	public async loadExecutor(): Promise<IExecutorModule> {
-		return (await import(`${projectRoot}/dist/executor/executor.js`)) as unknown as IExecutorModule;
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- dynamic import returns any; module shape validated by usage
+		const mod: IExecutorModule = await import(`${projectRoot}/dist/executor/executor.js`);
+		return mod;
 	}
 
 	public loadEvaluate(): Promise<IEvaluateModule> {

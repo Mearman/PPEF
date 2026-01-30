@@ -16,6 +16,30 @@ import { MemoryMonitor, MemoryWarningLevel } from "./memory-monitor.js";
 import { generateRunId } from "./run-id.js";
 
 /**
+ * Convert Record<string, unknown> to Record<string, Primitive> via runtime check.
+ * Values that are not primitives are coerced to their string representation.
+ */
+function toPrimitiveRecord(
+	config: Record<string, unknown> | undefined,
+): Record<string, Primitive> | undefined {
+	if (config === undefined) return undefined;
+	const result: Record<string, Primitive> = {};
+	for (const [key, value] of Object.entries(config)) {
+		if (
+			value === null ||
+			typeof value === "string" ||
+			typeof value === "number" ||
+			typeof value === "boolean"
+		) {
+			result[key] = value;
+		} else {
+			result[key] = JSON.stringify(value);
+		}
+	}
+	return result;
+}
+
+/**
  * Configuration for experiment execution.
  */
 export interface ExecutorConfig {
@@ -680,7 +704,7 @@ export class Executor<TInput = unknown, TInputs = unknown, TResult = unknown> {
 		}
 
 		// Get algorithm inputs for this case
-		let inputs = caseDef.getInputs();
+		const inputs = caseDef.getInputs();
 
 		// Handle case where inputs.expander is null but input is loaded separately
 		// This happens for expansion SUTs that expect expander in inputs but PPEF loads it as input
@@ -688,10 +712,12 @@ export class Executor<TInput = unknown, TInputs = unknown, TResult = unknown> {
 			typeof inputs === "object" &&
 			inputs !== null &&
 			"expander" in inputs &&
-			(inputs as Record<string, unknown>).expander === null &&
 			input !== undefined
 		) {
-			inputs = { ...inputs, expander: input } as TInputs;
+			const inputsObj: { expander: unknown } = inputs;
+			if (inputsObj.expander === null) {
+				Object.assign(inputs, { expander: input });
+			}
 		}
 
 		// Validate inputs against schema (per-case override → experiment-level)
@@ -710,7 +736,7 @@ export class Executor<TInput = unknown, TInputs = unknown, TResult = unknown> {
 						sutVersion: sutDef.registration.version,
 						caseId: run.caseId,
 						caseClass: caseDef.case.caseClass,
-						config: run.config as Record<string, Primitive> | undefined,
+						config: toPrimitiveRecord(run.config),
 						seed: run.seed,
 						repetition: run.repetition,
 					},
@@ -733,17 +759,25 @@ export class Executor<TInput = unknown, TInputs = unknown, TResult = unknown> {
 		// Create SUT instance (factory now takes only config)
 		const sut = sutDef.factory(run.config);
 
+		// Combine algorithm inputs with loaded resource
+		// Object.assign merges input property into the TInputs structure
+		const runInputs = Object.assign<Record<string, unknown>, TInputs, { input: TInput }>(
+			{},
+			inputs,
+			{ input },
+		);
+
 		// Execute with timeout if configured
 		const sutResult = await (this.config.timeoutMs > 0
 			? Promise.race([
-					sut.run({ ...inputs, input } as TInputs),
+					sut.run(runInputs),
 					new Promise<never>((_, reject) =>
 						setTimeout(() => {
 							reject(new Error(`Timeout after ${this.config.timeoutMs}ms`));
 						}, this.config.timeoutMs),
 					),
 				])
-			: sut.run({ ...inputs, input }));
+			: sut.run(runInputs));
 
 		// Validate output against schema (per-SUT override → experiment-level)
 		const outputValidator = this.outputValidators.get(run.sutId) ?? this.defaultOutputValidator;
@@ -761,7 +795,7 @@ export class Executor<TInput = unknown, TInputs = unknown, TResult = unknown> {
 						sutVersion: sutDef.registration.version,
 						caseId: run.caseId,
 						caseClass: caseDef.case.caseClass,
-						config: run.config as Record<string, Primitive> | undefined,
+						config: toPrimitiveRecord(run.config),
 						seed: run.seed,
 						repetition: run.repetition,
 					},
@@ -820,7 +854,7 @@ export class Executor<TInput = unknown, TInputs = unknown, TResult = unknown> {
 				sutVersion: sutDef.registration.version,
 				caseId: run.caseId,
 				caseClass: caseDef.case.caseClass,
-				config: run.config as Record<string, Primitive> | undefined,
+				config: toPrimitiveRecord(run.config),
 				seed: run.seed,
 				repetition: run.repetition,
 			},

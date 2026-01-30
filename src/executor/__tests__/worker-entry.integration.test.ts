@@ -42,8 +42,17 @@ describe("worker-entry integration", { skip: !isBuilt }, () => {
 					}
 				});
 
-				// Send a test message
-				worker.postMessage({ type: "test" });
+				// Send a valid WorkerMessage (empty runs triggers "done" response)
+				worker.postMessage({
+					runs: [],
+					config: {
+						repetitions: 1,
+						continueOnError: true,
+						collectProvenance: false,
+						seedBase: 42,
+						timeoutMs: 0,
+					},
+				});
 			});
 
 			assert.ok(response);
@@ -63,10 +72,16 @@ describe("worker-entry integration", { skip: !isBuilt }, () => {
 				worker.on("message", resolve);
 				worker.on("error", reject);
 
-				// Send an executeBatch message with mock data
+				// Send a valid WorkerMessage with empty runs
 				worker.postMessage({
-					type: "executeBatch",
 					runs: [],
+					config: {
+						repetitions: 1,
+						continueOnError: true,
+						collectProvenance: false,
+						seedBase: 42,
+						timeoutMs: 0,
+					},
 				});
 			});
 
