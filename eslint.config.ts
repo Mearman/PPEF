@@ -58,6 +58,7 @@ export default [
 		rules: {
 			indent: ["error", "tab"],
 			quotes: ["error", "double", { avoidEscape: true }],
+			"@typescript-eslint/consistent-type-assertions": ["error", { assertionStyle: "never" }],
 			"@typescript-eslint/restrict-template-expressions": ["error", { allowNumber: true }],
 			"eslint-comments/no-use": ["error", { allow: [] }],
 		},
@@ -98,6 +99,7 @@ export default [
 			"eslint-comments": eslintComments,
 		},
 		rules: {
+			"@typescript-eslint/consistent-type-assertions": "off",
 			"@typescript-eslint/no-floating-promises": "off",
 			"@typescript-eslint/require-await": "off",
 			"@typescript-eslint/no-explicit-any": "off",
@@ -119,6 +121,15 @@ export default [
 		rules: {
 			"eslint-comments/no-use": "off",
 			"@typescript-eslint/use-unknown-in-catch-callback-variable": "off",
+		},
+	},
+
+	// Executor files - allow eslint-disable for dynamic imports and deserialization
+	{
+		files: ["src/executor/**/*.ts"],
+		ignores: ["src/executor/**/*.test.ts"],
+		rules: {
+			"eslint-comments/no-use": "off",
 		},
 	},
 ];
