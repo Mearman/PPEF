@@ -1,3 +1,18 @@
+## 1.5.0 (2026-02-01)
+
+* ci: add python lint, typecheck, conformance, and test jobs ([a6a8a4e](https://github.com/Mearman/ppef/commit/a6a8a4e))
+* chore: add python artifacts to gitignore ([cababea](https://github.com/Mearman/ppef/commit/cababea))
+* feat(python): add aggregation pipeline with conformance tests ([f2fe625](https://github.com/Mearman/ppef/commit/f2fe625))
+* feat(python): add executor, checkpoint manager, and binary sut ([37e232b](https://github.com/Mearman/ppef/commit/37e232b))
+* feat(python): add four evaluators and evaluator registry ([e67fe54](https://github.com/Mearman/ppef/commit/e67fe54))
+* feat(python): add latex renderer and json schema export ([8209b71](https://github.com/Mearman/ppef/commit/8209b71))
+* feat(python): add pydantic type models for all ppef interfaces ([3850099](https://github.com/Mearman/ppef/commit/3850099))
+* feat(python): add rfc 8785 canonicalization and run id generation ([876f1ae](https://github.com/Mearman/ppef/commit/876f1ae))
+* feat(python): add statistical functions with conformance tests ([0443ad8](https://github.com/Mearman/ppef/commit/0443ad8))
+* feat(python): add sut/case registries and result collector ([3e9d790](https://github.com/Mearman/ppef/commit/3e9d790))
+* feat(python): add typer cli with five commands ([28917d8](https://github.com/Mearman/ppef/commit/28917d8))
+* feat(python): scaffold project with uv, ruff, pyright, and pytest ([e144f12](https://github.com/Mearman/ppef/commit/e144f12))
+
 ## 1.4.0 (2026-02-01)
 
 * docs: add cross-language specification section to readme ([ce8ac60](https://github.com/Mearman/ppef/commit/ce8ac60))
