@@ -1,3 +1,19 @@
+## 1.4.0 (2026-02-01)
+
+* docs: add cross-language specification section to readme ([ce8ac60](https://github.com/Mearman/ppef/commit/ce8ac60))
+* feat(executor): adopt rfc 8785 jcs for run-id canonicalization ([bbec81f](https://github.com/Mearman/ppef/commit/bbec81f))
+* feat(schemas): add zod schemas for all output types ([7d49f35](https://github.com/Mearman/ppef/commit/7d49f35))
+* feat(schemas): generate output type $defs in ppef.schema.json ([456dace](https://github.com/Mearman/ppef/commit/456dace))
+* feat(spec): add conformance test vectors for cross-language portability ([15653fa](https://github.com/Mearman/ppef/commit/15653fa))
+* feat(spec): add cross-language prose specification ([b3a40fc](https://github.com/Mearman/ppef/commit/b3a40fc))
+* feat(types): make provenance.runtime open-ended for cross-language support ([71ff5c4](https://github.com/Mearman/ppef/commit/71ff5c4))
+
+
+### BREAKING CHANGE
+
+* Provenance.runtime.nodeVersion is no longer a required field.
+* runId values change due to new canonicalization algorithm.
+
 ## <small>1.3.1 (2026-01-30)</small>
 
 * ci: expand test matrix to node 18 through 25 ([0660697](https://github.com/Mearman/ppef/commit/0660697))
