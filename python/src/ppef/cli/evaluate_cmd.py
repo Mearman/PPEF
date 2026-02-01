@@ -27,6 +27,28 @@ def _to_evaluation_type(value: str) -> EvaluationType:
     return value  # type: ignore[return-value]
 
 
+def _parse_evaluator_config(evaluation_type: str, raw_config: dict[str, Any]) -> Any:
+    """Parse a raw config dict into the appropriate Pydantic model."""
+    from ppef.types.evaluator import (
+        ClaimsEvaluatorConfig,
+        ExploratoryEvaluatorConfig,
+        MetricsEvaluatorConfig,
+        RobustnessEvaluatorConfig,
+    )
+
+    config_types: dict[str, type[Any]] = {
+        "claims": ClaimsEvaluatorConfig,
+        "robustness": RobustnessEvaluatorConfig,
+        "metrics": MetricsEvaluatorConfig,
+        "exploratory": ExploratoryEvaluatorConfig,
+    }
+
+    model_class = config_types.get(evaluation_type)
+    if model_class is not None:
+        return model_class.model_validate(raw_config)
+    return raw_config
+
+
 def evaluate(
     aggregates_file: Annotated[str, typer.Argument(help="Path to aggregates JSON file")],
     eval_type: Annotated[
@@ -108,9 +130,12 @@ def evaluate(
             typer.echo(f"Error: Evaluator not found for type: {evaluation_type}", err=True)
             raise SystemExit(1)
 
+        # Parse raw config dict into the appropriate Pydantic model
+        parsed_config: Any = _parse_evaluator_config(evaluation_type, raw_config)
+
         # Validate config
         typer.echo("\nValidating evaluator configuration...")
-        validation = evaluator.validate_config(raw_config)
+        validation = evaluator.validate_config(parsed_config)
         if not validation.valid:
             typer.echo("Error: Evaluator configuration validation failed:", err=True)
             for err in validation.errors or []:
@@ -122,9 +147,16 @@ def evaluate(
                 typer.echo(f"  - {warning}")
         typer.echo("Configuration valid")
 
+        # Parse aggregates into Pydantic models for evaluators
+        from ppef.types.aggregate import AggregatedResult
+
+        parsed_aggregates: list[Any] = [
+            AggregatedResult.model_validate(a) for a in aggregates
+        ]
+
         # Prepare context
         context: dict[str, Any] = {
-            "aggregates": aggregates,
+            "aggregates": parsed_aggregates,
             "rawResults": raw_results,
             "metadata": {"source": aggregates_file},
         }
@@ -137,9 +169,9 @@ def evaluate(
                     "Error: Robustness evaluation requires raw results, but none found", err=True
                 )
                 raise SystemExit(1)
-            eval_output = evaluator.evaluate(raw_config, raw_results)
+            eval_output = evaluator.evaluate(parsed_config, raw_results)
         else:
-            eval_output = evaluator.evaluate(raw_config, context)
+            eval_output = evaluator.evaluate(parsed_config, context)
 
         summary = evaluator.summarize(eval_output)
         typer.echo(f"Evaluation complete: {evaluation_type}")
