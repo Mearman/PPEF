@@ -9,12 +9,62 @@ import { describe, it } from "node:test";
 import { strict as assert } from "node:assert";
 
 import {
+	canonicalize,
 	generateRunId,
 	generateConfigHash,
 	validateRunId,
 	parseRunId,
 	type RunIdInputs,
 } from "../run-id.js";
+
+describe("canonicalize (RFC 8785 JCS)", () => {
+	it("should sort object keys lexicographically", () => {
+		assert.strictEqual(canonicalize({ z: 1, a: 2 }), '{"a":2,"z":1}');
+	});
+
+	it("should omit undefined values", () => {
+		assert.strictEqual(canonicalize({ a: 1, b: undefined, c: 3 }), '{"a":1,"c":3}');
+	});
+
+	it("should handle nested objects with sorted keys", () => {
+		assert.strictEqual(canonicalize({ b: { d: 1, c: 2 }, a: 3 }), '{"a":3,"b":{"c":2,"d":1}}');
+	});
+
+	it("should handle arrays", () => {
+		assert.strictEqual(canonicalize([3, 1, 2]), "[3,1,2]");
+	});
+
+	it("should handle strings with JSON escaping", () => {
+		assert.strictEqual(canonicalize("hello"), '"hello"');
+		assert.strictEqual(canonicalize('a"b'), '"a\\"b"');
+	});
+
+	it("should handle numbers per RFC 8785", () => {
+		assert.strictEqual(canonicalize(42), "42");
+		assert.strictEqual(canonicalize(0.5), "0.5");
+		assert.strictEqual(canonicalize(-0), "0");
+		assert.strictEqual(canonicalize(Infinity), "null");
+		assert.strictEqual(canonicalize(NaN), "null");
+	});
+
+	it("should handle booleans and null", () => {
+		assert.strictEqual(canonicalize(true), "true");
+		assert.strictEqual(canonicalize(false), "false");
+		assert.strictEqual(canonicalize(null), "null");
+	});
+
+	it("should handle empty objects and arrays", () => {
+		assert.strictEqual(canonicalize({}), "{}");
+		assert.strictEqual(canonicalize([]), "[]");
+	});
+
+	it("should produce no whitespace", () => {
+		const result = canonicalize({ a: [1, 2], b: { c: 3 } });
+		assert.ok(!result.includes(" "));
+		assert.ok(!result.includes("\n"));
+		assert.ok(!result.includes("\t"));
+	});
+});
 
 describe("generateRunId", () => {
 	it("should generate consistent IDs for same inputs", () => {

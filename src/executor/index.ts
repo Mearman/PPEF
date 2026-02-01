@@ -39,6 +39,7 @@ export {
 } from "./resource-calculator.js";
 export { executeParallel, type ParallelExecutorOptions, shardPath } from "./parallel-executor.js";
 export {
+	canonicalize,
 	generateConfigHash,
 	generateRunId,
 	parseRunId,
