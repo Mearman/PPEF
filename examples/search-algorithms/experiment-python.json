@@ -1,0 +1,91 @@
+{
+	"$schema": "../../ppef.schema.json",
+	"experiment": {
+		"name": "search-algorithms",
+		"description": "Compare search algorithm performance across array sizes and target positions (Python)"
+	},
+	"executor": {
+		"repetitions": 10
+	},
+	"suts": [
+		{
+			"id": "linear-search",
+			"module": "./sut_linear_search.py",
+			"exportName": "create_sut",
+			"registration": {
+				"name": "Linear Search",
+				"version": "1.0.0",
+				"role": "baseline"
+			}
+		},
+		{
+			"id": "binary-search",
+			"module": "./sut_binary_search.py",
+			"exportName": "create_sut",
+			"registration": {
+				"name": "Binary Search",
+				"version": "1.0.0",
+				"role": "primary"
+			}
+		},
+		{
+			"id": "map-search",
+			"module": "./sut_map_search.py",
+			"exportName": "create_sut",
+			"registration": {
+				"name": "Map Search",
+				"version": "1.0.0",
+				"role": "primary"
+			}
+		},
+		{
+			"id": "set-search",
+			"module": "./sut_set_search.py",
+			"exportName": "create_sut",
+			"registration": {
+				"name": "Set Search",
+				"version": "1.0.0",
+				"role": "primary"
+			}
+		}
+	],
+	"cases": [
+		{
+			"id": "small-found",
+			"module": "./case_small_found.py",
+			"exportName": "create_case"
+		},
+		{
+			"id": "small-not-found",
+			"module": "./case_small_not_found.py",
+			"exportName": "create_case"
+		},
+		{
+			"id": "large-found-start",
+			"module": "./case_large_found_start.py",
+			"exportName": "create_case"
+		},
+		{
+			"id": "large-found-middle",
+			"module": "./case_large_found_middle.py",
+			"exportName": "create_case"
+		},
+		{
+			"id": "large-found-end",
+			"module": "./case_large_found_end.py",
+			"exportName": "create_case"
+		},
+		{
+			"id": "large-not-found",
+			"module": "./case_large_not_found.py",
+			"exportName": "create_case"
+		}
+	],
+	"metricsExtractor": {
+		"module": "./metrics.py",
+		"exportName": "extract"
+	},
+	"output": {
+		"path": "./results"
+	}
+}
