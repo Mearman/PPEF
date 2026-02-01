@@ -8,7 +8,7 @@
 import { describe, it, before, after } from "node:test";
 import { strict as assert } from "node:assert";
 import { execFile } from "node:child_process";
-import { mkdtemp, rm, readdir, readFile, access } from "node:fs/promises";
+import { mkdtemp, rm, readdir, readFile, access, writeFile, copyFile } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { promisify } from "node:util";
@@ -28,6 +28,97 @@ async function assertDistExists(): Promise<void> {
 	} catch {
 		throw new Error("dist/ not found — run `pnpm build` before running integration tests");
 	}
+}
+
+/**
+ * Copy all files matching extensions from a source directory to a destination.
+ */
+async function copyExampleFiles(
+	srcDir: string,
+	destDir: string,
+	extensions: string[],
+): Promise<void> {
+	const files = await readdir(srcDir);
+	for (const file of files) {
+		if (extensions.some((ext) => file.endsWith(ext))) {
+			await copyFile(join(srcDir, file), join(destDir, file));
+		}
+	}
+}
+
+/**
+ * Run an experiment and return the output directory contents.
+ */
+async function runExperiment(
+	configPath: string,
+	outputDir: string,
+	cwd: string,
+	timeout = 60000,
+): Promise<{ files: string[]; jsonFiles: string[] }> {
+	const configContent = JSON.parse(await readFile(configPath, "utf-8"));
+	configContent.output.path = outputDir;
+
+	const tempConfig = join(cwd, `experiment-${Date.now()}.json`);
+	await writeFile(tempConfig, JSON.stringify(configContent));
+
+	const { stdout } = await execFileAsync(
+		"node",
+		[BIN_PATH, "run", tempConfig, "--unsafe-in-process"],
+		{ cwd, timeout },
+	);
+
+	assert.ok(stdout.length > 0, "Expected CLI output");
+
+	const files = await readdir(outputDir);
+	assert.ok(files.length > 0, `Expected result files in ${outputDir}`);
+
+	const jsonFiles = files.filter((f) => f.endsWith(".json"));
+	assert.ok(jsonFiles.length > 0, "Expected at least one JSON result file");
+
+	return { files, jsonFiles };
+}
+
+/**
+ * Find the aggregates file in an output directory.
+ */
+async function findAggregatesPath(outputDir: string): Promise<string> {
+	const files = await readdir(outputDir);
+	const aggregatesFiles = files.filter((f) => f.includes("aggregates"));
+	assert.ok(aggregatesFiles.length > 0, "Expected aggregates file");
+	return join(outputDir, aggregatesFiles[0]);
+}
+
+/**
+ * Run an evaluator against aggregates and return the parsed output.
+ */
+async function runEvaluator(
+	aggregatesPath: string,
+	evalType: string,
+	evalConfigPath: string,
+	outputPath: string,
+	cwd: string,
+	timeout = 15000,
+): Promise<Record<string, unknown>> {
+	const { stdout } = await execFileAsync(
+		"node",
+		[
+			BIN_PATH,
+			"evaluate",
+			aggregatesPath,
+			"-t",
+			evalType,
+			"-c",
+			evalConfigPath,
+			"-o",
+			outputPath,
+			"-v",
+		],
+		{ cwd, timeout },
+	);
+
+	assert.ok(stdout.length > 0, "Expected CLI output");
+
+	return JSON.parse(await readFile(outputPath, "utf-8")) as Record<string, unknown>;
 }
 
 describe("Example Integration Tests", () => {
@@ -55,11 +146,9 @@ describe("Example Integration Tests", () => {
 
 			// Write modified config to temp dir
 			const tempConfig = join(tempDir, "experiment.json");
-			const { writeFile: writeFileFs } = await import("node:fs/promises");
-			await writeFileFs(tempConfig, JSON.stringify(configContent));
+			await writeFile(tempConfig, JSON.stringify(configContent));
 
 			// Copy example modules to temp dir so relative paths resolve
-			const { copyFile } = await import("node:fs/promises");
 			await copyFile(join(EXAMPLES_DIR, "string-length", "sut.mjs"), join(tempDir, "sut.mjs"));
 			await copyFile(join(EXAMPLES_DIR, "string-length", "case.mjs"), join(tempDir, "case.mjs"));
 			await copyFile(
@@ -115,12 +204,10 @@ describe("Example Integration Tests", () => {
 			configContent.output.path = outputDir;
 
 			const tempConfig = join(tempDir, "dry-run-experiment.json");
-			const { writeFile: writeFileFs } = await import("node:fs/promises");
-			await writeFileFs(tempConfig, JSON.stringify(configContent));
+			await writeFile(tempConfig, JSON.stringify(configContent));
 
 			// Copy modules
 			// (already copied from previous test, but be explicit)
-			const { copyFile } = await import("node:fs/promises");
 			for (const file of ["sut.mjs", "case.mjs", "metrics.mjs"]) {
 				await copyFile(join(EXAMPLES_DIR, "string-length", file), join(tempDir, file));
 			}
@@ -153,8 +240,7 @@ describe("Example Integration Tests", () => {
 			configContent.output.path = twoSutOutputDir;
 
 			const tempConfig = join(tempDir, "experiment-two-suts.json");
-			const { writeFile: writeFileFs, copyFile } = await import("node:fs/promises");
-			await writeFileFs(tempConfig, JSON.stringify(configContent));
+			await writeFile(tempConfig, JSON.stringify(configContent));
 
 			// Copy all required modules
 			for (const file of [
@@ -292,11 +378,180 @@ describe("Example Integration Tests", () => {
 		});
 	});
 
+	describe("sorting-algorithms example", () => {
+		let sortingOutputDir: string;
+		let sortingAggregatesPath: string;
+		let sortingTempDir: string;
+
+		it("runs end-to-end and produces results", async () => {
+			sortingTempDir = join(tempDir, "sorting-work");
+			const { mkdir } = await import("node:fs/promises");
+			await mkdir(sortingTempDir, { recursive: true });
+
+			sortingOutputDir = join(tempDir, "sorting-results");
+			const srcDir = join(EXAMPLES_DIR, "sorting-algorithms");
+
+			// Copy all example files
+			await copyExampleFiles(srcDir, sortingTempDir, [".ts", ".json"]);
+
+			const { jsonFiles } = await runExperiment(
+				join(srcDir, "experiment.json"),
+				sortingOutputDir,
+				sortingTempDir,
+				120000,
+			);
+
+			// Verify results structure
+			const resultContent = JSON.parse(
+				await readFile(join(sortingOutputDir, jsonFiles[0]), "utf-8"),
+			);
+			assert.ok(
+				resultContent.results ?? resultContent.aggregates,
+				"Expected results or aggregates in output",
+			);
+
+			// Find aggregates
+			sortingAggregatesPath = await findAggregatesPath(sortingOutputDir);
+			const aggContent = JSON.parse(await readFile(sortingAggregatesPath, "utf-8"));
+			assert.ok(Array.isArray(aggContent.aggregates), "Expected aggregates array");
+			assert.ok(aggContent.aggregates.length >= 4, "Expected at least 4 SUT aggregates");
+		});
+
+		it("evaluates claims", async () => {
+			assert.ok(sortingAggregatesPath, "Aggregates path must be set by previous test");
+
+			const output = await runEvaluator(
+				sortingAggregatesPath,
+				"claims",
+				join(EXAMPLES_DIR, "sorting-algorithms", "eval-claims.json"),
+				join(tempDir, "sorting-claims-output.json"),
+				sortingTempDir,
+			);
+
+			assert.strictEqual(output.type, "claims", "Expected claims evaluation type");
+		});
+
+		it("evaluates metrics", async () => {
+			assert.ok(sortingAggregatesPath, "Aggregates path must be set by previous test");
+
+			const output = await runEvaluator(
+				sortingAggregatesPath,
+				"metrics",
+				join(EXAMPLES_DIR, "sorting-algorithms", "eval-metrics.json"),
+				join(tempDir, "sorting-metrics-output.json"),
+				sortingTempDir,
+			);
+
+			assert.strictEqual(output.type, "metrics", "Expected metrics evaluation type");
+		});
+
+		it("evaluates exploratory analysis", async () => {
+			assert.ok(sortingAggregatesPath, "Aggregates path must be set by previous test");
+
+			const output = await runEvaluator(
+				sortingAggregatesPath,
+				"exploratory",
+				join(EXAMPLES_DIR, "sorting-algorithms", "eval-exploratory.json"),
+				join(tempDir, "sorting-exploratory-output.json"),
+				sortingTempDir,
+			);
+
+			assert.strictEqual(output.type, "exploratory", "Expected exploratory evaluation type");
+			const data = output.data as Record<string, unknown>;
+			assert.ok(data.rankings, "Expected rankings in exploratory output");
+			assert.ok(Array.isArray(data.pairwiseComparisons), "Expected pairwiseComparisons array");
+		});
+	});
+
+	describe("search-algorithms example", () => {
+		let searchOutputDir: string;
+		let searchAggregatesPath: string;
+		let searchTempDir: string;
+
+		it("runs end-to-end and produces results", async () => {
+			searchTempDir = join(tempDir, "search-work");
+			const { mkdir } = await import("node:fs/promises");
+			await mkdir(searchTempDir, { recursive: true });
+
+			searchOutputDir = join(tempDir, "search-results");
+			const srcDir = join(EXAMPLES_DIR, "search-algorithms");
+
+			// Copy all example files
+			await copyExampleFiles(srcDir, searchTempDir, [".ts", ".json"]);
+
+			const { jsonFiles } = await runExperiment(
+				join(srcDir, "experiment.json"),
+				searchOutputDir,
+				searchTempDir,
+				120000,
+			);
+
+			// Verify results structure
+			const resultContent = JSON.parse(
+				await readFile(join(searchOutputDir, jsonFiles[0]), "utf-8"),
+			);
+			assert.ok(
+				resultContent.results ?? resultContent.aggregates,
+				"Expected results or aggregates in output",
+			);
+
+			// Find aggregates
+			searchAggregatesPath = await findAggregatesPath(searchOutputDir);
+			const aggContent = JSON.parse(await readFile(searchAggregatesPath, "utf-8"));
+			assert.ok(Array.isArray(aggContent.aggregates), "Expected aggregates array");
+			assert.ok(aggContent.aggregates.length >= 4, "Expected at least 4 SUT aggregates");
+		});
+
+		it("evaluates claims", async () => {
+			assert.ok(searchAggregatesPath, "Aggregates path must be set by previous test");
+
+			const output = await runEvaluator(
+				searchAggregatesPath,
+				"claims",
+				join(EXAMPLES_DIR, "search-algorithms", "eval-claims.json"),
+				join(tempDir, "search-claims-output.json"),
+				searchTempDir,
+			);
+
+			assert.strictEqual(output.type, "claims", "Expected claims evaluation type");
+		});
+
+		it("evaluates metrics", async () => {
+			assert.ok(searchAggregatesPath, "Aggregates path must be set by previous test");
+
+			const output = await runEvaluator(
+				searchAggregatesPath,
+				"metrics",
+				join(EXAMPLES_DIR, "search-algorithms", "eval-metrics.json"),
+				join(tempDir, "search-metrics-output.json"),
+				searchTempDir,
+			);
+
+			assert.strictEqual(output.type, "metrics", "Expected metrics evaluation type");
+		});
+
+		it("evaluates exploratory analysis", async () => {
+			assert.ok(searchAggregatesPath, "Aggregates path must be set by previous test");
+
+			const output = await runEvaluator(
+				searchAggregatesPath,
+				"exploratory",
+				join(EXAMPLES_DIR, "search-algorithms", "eval-exploratory.json"),
+				join(tempDir, "search-exploratory-output.json"),
+				searchTempDir,
+			);
+
+			assert.strictEqual(output.type, "exploratory", "Expected exploratory evaluation type");
+			const data = output.data as Record<string, unknown>;
+			assert.ok(data.rankings, "Expected rankings in exploratory output");
+			assert.ok(Array.isArray(data.pairwiseComparisons), "Expected pairwiseComparisons array");
+		});
+	});
+
 	describe("invalid config", () => {
 		it("rejects malformed config with non-zero exit code", async () => {
 			const invalidConfig = join(tempDir, "invalid.json");
-			const { writeFile: writeFileFs } = await import("node:fs/promises");
-			await writeFileFs(invalidConfig, JSON.stringify({ invalid: true }));
+			await writeFile(invalidConfig, JSON.stringify({ invalid: true }));
 
 			try {
 				await execFileAsync("node", [BIN_PATH, invalidConfig], {
