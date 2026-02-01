@@ -1,0 +1,163 @@
+{
+  "$schema": "../ppef.schema.json",
+  "description": "Pinned runId and configHash test vectors. Any conforming implementation must produce identical outputs for these inputs.",
+  "canonicalizationRules": [
+    "RFC 8785 (JSON Canonicalization Scheme / JCS)",
+    "Object keys sorted lexicographically by UTF-16 code units",
+    "Undefined fields omitted entirely",
+    "No whitespace between tokens",
+    "Numbers use ECMAScript Number.toString() representation",
+    "Strings use standard JSON escaping",
+    "Hash: SHA-256 of UTF-8 encoded canonical string, hex-encoded, truncated to 16 characters"
+  ],
+  "runIdVectors": [
+    {
+      "description": "sutId=sut-a, caseId=case-1",
+      "inputs": {
+        "sutId": "sut-a",
+        "caseId": "case-1"
+      },
+      "canonicalized": "{\"caseId\":\"case-1\",\"sutId\":\"sut-a\"}",
+      "runId": "0728aed005d1fc42"
+    },
+    {
+      "description": "sutId=sut-a, caseId=case-1, seed=42",
+      "inputs": {
+        "sutId": "sut-a",
+        "caseId": "case-1",
+        "seed": 42
+      },
+      "canonicalized": "{\"caseId\":\"case-1\",\"seed\":42,\"sutId\":\"sut-a\"}",
+      "runId": "25c905a65e7a7225"
+    },
+    {
+      "description": "sutId=sut-a, caseId=case-1, seed=42, rep=0",
+      "inputs": {
+        "sutId": "sut-a",
+        "caseId": "case-1",
+        "seed": 42,
+        "repetition": 0
+      },
+      "canonicalized": "{\"caseId\":\"case-1\",\"repetition\":0,\"seed\":42,\"sutId\":\"sut-a\"}",
+      "runId": "b7301445f17a0349"
+    },
+    {
+      "description": "sutId=sut-a, caseId=case-1, seed=42, rep=1",
+      "inputs": {
+        "sutId": "sut-a",
+        "caseId": "case-1",
+        "seed": 42,
+        "repetition": 1
+      },
+      "canonicalized": "{\"caseId\":\"case-1\",\"repetition\":1,\"seed\":42,\"sutId\":\"sut-a\"}",
+      "runId": "d6ef7afec9f88376"
+    },
+    {
+      "description": "sutId=sut-a, caseId=case-1, seed=42, rep=0, configHash=abcd1234",
+      "inputs": {
+        "sutId": "sut-a",
+        "caseId": "case-1",
+        "seed": 42,
+        "configHash": "abcd1234",
+        "repetition": 0
+      },
+      "canonicalized": "{\"caseId\":\"case-1\",\"configHash\":\"abcd1234\",\"repetition\":0,\"seed\":42,\"sutId\":\"sut-a\"}",
+      "runId": "c0e80cc815c3bb77"
+    },
+    {
+      "description": "sutId=degree-prioritised-v1.0.0, caseId=karate-v1, seed=42, rep=1",
+      "inputs": {
+        "sutId": "degree-prioritised-v1.0.0",
+        "caseId": "karate-v1",
+        "seed": 42,
+        "repetition": 1
+      },
+      "canonicalized": "{\"caseId\":\"karate-v1\",\"repetition\":1,\"seed\":42,\"sutId\":\"degree-prioritised-v1.0.0\"}",
+      "runId": "3cc4422d4cabad1c"
+    },
+    {
+      "description": "sutId=bfs-baseline, caseId=erdos-renyi-1000, seed=0, rep=0",
+      "inputs": {
+        "sutId": "bfs-baseline",
+        "caseId": "erdos-renyi-1000",
+        "seed": 0,
+        "repetition": 0
+      },
+      "canonicalized": "{\"caseId\":\"erdos-renyi-1000\",\"repetition\":0,\"seed\":0,\"sutId\":\"bfs-baseline\"}",
+      "runId": "5b5f61b57bb0dd39"
+    },
+    {
+      "description": "sutId=x, caseId=y",
+      "inputs": {
+        "sutId": "x",
+        "caseId": "y"
+      },
+      "canonicalized": "{\"caseId\":\"y\",\"sutId\":\"x\"}",
+      "runId": "36a12b780479962b"
+    }
+  ],
+  "configHashVectors": [
+    {
+      "description": "empty config",
+      "config": {},
+      "canonicalized": "{}",
+      "configHash": "44136fa3"
+    },
+    {
+      "description": "single numeric",
+      "config": {
+        "threshold": 0.9
+      },
+      "canonicalized": "{\"threshold\":0.9}",
+      "configHash": "c0408b88"
+    },
+    {
+      "description": "multiple keys (tests sorting)",
+      "config": {
+        "z": 3,
+        "a": 1,
+        "m": 2
+      },
+      "canonicalized": "{\"a\":1,\"m\":2,\"z\":3}",
+      "configHash": "70d1ebc7"
+    },
+    {
+      "description": "nested object",
+      "config": {
+        "nested": {
+          "inner": 42
+        }
+      },
+      "canonicalized": "{\"nested\":{\"inner\":42}}",
+      "configHash": "a583ea04"
+    },
+    {
+      "description": "array value",
+      "config": {
+        "items": [
+          1,
+          2,
+          3
+        ]
+      },
+      "canonicalized": "{\"items\":[1,2,3]}",
+      "configHash": "7aff5dcb"
+    },
+    {
+      "description": "boolean value",
+      "config": {
+        "enabled": true
+      },
+      "canonicalized": "{\"enabled\":true}",
+      "configHash": "26b3426b"
+    },
+    {
+      "description": "null value",
+      "config": {
+        "value": null
+      },
+      "canonicalized": "{\"value\":null}",
+      "configHash": "1c197dae"
+    }
+  ]
+}

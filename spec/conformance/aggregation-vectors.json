@@ -1,0 +1,173 @@
+{
+  "description": "Aggregation pipeline test vectors. computeSummaryStats should produce identical results for these inputs.",
+  "vectors": [
+    {
+      "description": "computeSummaryStats: 5 integer values",
+      "inputs": [
+        10,
+        20,
+        30,
+        40,
+        50
+      ],
+      "expected": {
+        "n": 5,
+        "mean": 30,
+        "median": 30,
+        "min": 10,
+        "max": 50,
+        "std": 15.811388300841896,
+        "confidence95": [
+          10.370715754261443,
+          49.62928424573856
+        ],
+        "sum": 150,
+        "p25": 20,
+        "p75": 40
+      },
+      "tolerance": 1e-10
+    },
+    {
+      "description": "computeSummaryStats: 10 values",
+      "inputs": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "expected": {
+        "n": 10,
+        "mean": 5.5,
+        "median": 5.5,
+        "min": 1,
+        "max": 10,
+        "std": 3.0276503540974917,
+        "confidence95": [
+          3.3342998822551633,
+          7.665700117744837
+        ],
+        "sum": 55,
+        "p25": 3,
+        "p75": 8
+      },
+      "tolerance": 1e-10
+    },
+    {
+      "description": "computeSummaryStats: single value",
+      "inputs": [
+        42
+      ],
+      "expected": {
+        "n": 1,
+        "mean": 42,
+        "median": 42,
+        "min": 42,
+        "max": 42,
+        "std": null,
+        "confidence95": null,
+        "sum": 42,
+        "p25": 42,
+        "p75": 42
+      },
+      "tolerance": 1e-10
+    },
+    {
+      "description": "computeSummaryStats: two values",
+      "inputs": [
+        10,
+        20
+      ],
+      "expected": {
+        "n": 2,
+        "mean": 15,
+        "median": 15,
+        "min": 10,
+        "max": 20,
+        "std": 7.0710678118654755,
+        "confidence95": [
+          -48.53,
+          78.53
+        ],
+        "sum": 30,
+        "p25": 10,
+        "p75": 20
+      },
+      "tolerance": 1e-10
+    },
+    {
+      "description": "computeSummaryStats: identical values",
+      "inputs": [
+        5,
+        5,
+        5,
+        5,
+        5
+      ],
+      "expected": {
+        "n": 5,
+        "mean": 5,
+        "median": 5,
+        "min": 5,
+        "max": 5,
+        "std": 0,
+        "confidence95": [
+          5,
+          5
+        ],
+        "sum": 25,
+        "p25": 5,
+        "p75": 5
+      },
+      "tolerance": 1e-10
+    },
+    {
+      "description": "computeSummaryStats: empty array",
+      "inputs": [],
+      "expected": {
+        "n": 0,
+        "mean": null,
+        "median": null,
+        "min": null,
+        "max": null,
+        "std": null,
+        "confidence95": null,
+        "sum": null,
+        "p25": null,
+        "p75": null
+      },
+      "tolerance": 1e-10
+    },
+    {
+      "description": "computeSummaryStats: decimal values",
+      "inputs": [
+        0.1,
+        0.2,
+        0.3,
+        0.4,
+        0.5
+      ],
+      "expected": {
+        "n": 5,
+        "mean": 0.3,
+        "median": 0.3,
+        "min": 0.1,
+        "max": 0.5,
+        "std": 0.15811388300841897,
+        "confidence95": [
+          0.10370715754261442,
+          0.4962928424573856
+        ],
+        "sum": 1.5,
+        "p25": 0.2,
+        "p75": 0.4
+      },
+      "tolerance": 1e-10
+    }
+  ]
+}
