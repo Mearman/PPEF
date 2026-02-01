@@ -316,6 +316,32 @@ Standalone evaluator configs reference schema `$defs`:
 }
 ```
 
+## Cross-Language Specification
+
+PPEF is designed for cross-language interoperability. A Python runner can produce results consumable by the TypeScript aggregator, and vice versa.
+
+The specification lives in [`spec/`](spec/) and comprises three layers:
+
+| Layer | Location | Purpose |
+|-------|----------|---------|
+| JSON Schema | [`ppef.schema.json`](ppef.schema.json) | Machine-readable type definitions for all input and output types |
+| Conformance Vectors | [`spec/conformance/`](spec/conformance/) | Pinned input/output pairs that any implementation must reproduce |
+| Prose Specification | [`spec/README.md`](spec/README.md) | Execution semantics, module contracts, statistical algorithms |
+
+All output types are available as `$defs` in the schema, enabling validation from any language:
+
+```
+ppef.schema.json#/$defs/EvaluationResult
+ppef.schema.json#/$defs/ResultBatch
+ppef.schema.json#/$defs/AggregationOutput
+ppef.schema.json#/$defs/ClaimEvaluationSummary
+ppef.schema.json#/$defs/MetricsEvaluationSummary
+ppef.schema.json#/$defs/RobustnessAnalysisOutput
+ppef.schema.json#/$defs/ExploratoryEvaluationSummary
+```
+
+Run ID generation uses [RFC 8785 (JSON Canonicalization Scheme)](https://www.rfc-editor.org/rfc/rfc8785) for deterministic cross-language hashing. Libraries exist for Python (`jcs`), Rust (`serde_jcs`), Go (`go-jcs`), and others.
+
 ## Architecture
 
 ### Data Flow Pipeline
@@ -380,7 +406,7 @@ Available subpaths: `ppef/types`, `ppef/registry`, `ppef/executor`, `ppef/collec
 - Conventional commits enforced via commitlint + husky
 - Semantic release from main branch
 - No `any` types — use `unknown` with type guards
-- Executor produces deterministic `runId` via SHA-256 hash of inputs
+- Executor produces deterministic `runId` via SHA-256 hash of RFC 8785 (JCS) canonicalized inputs
 
 ## License
 
