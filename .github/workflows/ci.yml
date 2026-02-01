@@ -84,6 +84,70 @@ jobs:
           PR_NUMBER: ${{ github.event.pull_request.number }}
           GH_TOKEN: ${{ github.token }}
 
+  python-lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    defaults:
+      run:
+        working-directory: python
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v5
+      - run: uv python install 3.14
+      - run: uv sync --dev
+      - name: Lint
+        run: uv run ruff check src/ tests/
+      - name: Format check
+        run: uv run ruff format --check src/ tests/
+
+  python-typecheck:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    defaults:
+      run:
+        working-directory: python
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v5
+      - run: uv python install 3.14
+      - run: uv sync --dev
+      - name: Type check
+        run: uv run pyright src/
+
+  python-conformance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    strategy:
+      matrix:
+        python-version: ["3.14"]
+    defaults:
+      run:
+        working-directory: python
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v5
+      - run: uv python install ${{ matrix.python-version }}
+      - run: uv sync --dev
+      - name: Conformance tests
+        run: uv run pytest tests/conformance/ -v
+
+  python-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      matrix:
+        python-version: ["3.14"]
+    defaults:
+      run:
+        working-directory: python
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v5
+      - run: uv python install ${{ matrix.python-version }}
+      - run: uv sync --dev
+      - name: Test with coverage
+        run: uv run pytest --cov=ppef --cov-report=term-missing
+
   release:
     needs: test
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
