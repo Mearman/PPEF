@@ -130,11 +130,11 @@ export interface ResultMetrics {
  * Provenance information for reproducibility.
  */
 export interface Provenance {
-	/** Execution environment */
+	/** Execution environment (platform and arch required; additional fields are language-specific) */
 	runtime: {
 		platform: string;
 		arch: string;
-		nodeVersion: string;
+		[key: string]: string;
 	};
 
 	/** Git commit hash */
