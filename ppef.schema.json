@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://ppef.dev/schemas/v1.3.1/ppef.schema.json",
+  "$id": "https://ppef.dev/schemas/v1.5.0/ppef.schema.json",
   "title": "ExperimentConfig",
   "description": "PPEF experiment configuration",
   "type": "object",
