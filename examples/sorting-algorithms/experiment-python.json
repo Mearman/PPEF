@@ -1,0 +1,91 @@
+{
+	"$schema": "../../ppef.schema.json",
+	"experiment": {
+		"name": "sorting-algorithms",
+		"description": "Compare sorting algorithm performance across input sizes and distributions (Python)"
+	},
+	"executor": {
+		"repetitions": 10
+	},
+	"suts": [
+		{
+			"id": "bubble-sort",
+			"module": "./sut_bubble_sort.py",
+			"exportName": "create_sut",
+			"registration": {
+				"name": "Bubble Sort",
+				"version": "1.0.0",
+				"role": "baseline"
+			}
+		},
+		{
+			"id": "insertion-sort",
+			"module": "./sut_insertion_sort.py",
+			"exportName": "create_sut",
+			"registration": {
+				"name": "Insertion Sort",
+				"version": "1.0.0",
+				"role": "baseline"
+			}
+		},
+		{
+			"id": "merge-sort",
+			"module": "./sut_merge_sort.py",
+			"exportName": "create_sut",
+			"registration": {
+				"name": "Merge Sort",
+				"version": "1.0.0",
+				"role": "primary"
+			}
+		},
+		{
+			"id": "quick-sort",
+			"module": "./sut_quick_sort.py",
+			"exportName": "create_sut",
+			"registration": {
+				"name": "Quick Sort",
+				"version": "1.0.0",
+				"role": "primary"
+			}
+		}
+	],
+	"cases": [
+		{
+			"id": "small-random",
+			"module": "./case_small_random.py",
+			"exportName": "create_case"
+		},
+		{
+			"id": "medium-random",
+			"module": "./case_medium_random.py",
+			"exportName": "create_case"
+		},
+		{
+			"id": "large-random",
+			"module": "./case_large_random.py",
+			"exportName": "create_case"
+		},
+		{
+			"id": "already-sorted",
+			"module": "./case_already_sorted.py",
+			"exportName": "create_case"
+		},
+		{
+			"id": "reverse-sorted",
+			"module": "./case_reverse_sorted.py",
+			"exportName": "create_case"
+		},
+		{
+			"id": "nearly-sorted",
+			"module": "./case_nearly_sorted.py",
+			"exportName": "create_case"
+		}
+	],
+	"metricsExtractor": {
+		"module": "./metrics.py",
+		"exportName": "extract"
+	},
+	"output": {
+		"path": "./results"
+	}
+}
