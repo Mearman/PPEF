@@ -1,3 +1,14 @@
+## 1.6.0 (2026-02-01)
+
+* chore: update schema version to 1.5.0 ([17820a6](https://github.com/Mearman/ppef/commit/17820a6))
+* chore(python): register integration pytest marker ([30374c4](https://github.com/Mearman/ppef/commit/30374c4))
+* test: add sorting and search algorithm integration tests ([e485629](https://github.com/Mearman/ppef/commit/e485629))
+* test(python): add integration tests for all example experiments ([54532ad](https://github.com/Mearman/ppef/commit/54532ad))
+* fix(python): parse raw dicts into pydantic models in evaluate command ([fe86f93](https://github.com/Mearman/ppef/commit/fe86f93))
+* feat(examples): add python modules for search-algorithms example ([eedddd8](https://github.com/Mearman/ppef/commit/eedddd8))
+* feat(examples): add python modules for sorting-algorithms example ([5fca4a1](https://github.com/Mearman/ppef/commit/5fca4a1))
+* feat(examples): add python modules for string-length example ([2728cef](https://github.com/Mearman/ppef/commit/2728cef))
+
 ## <small>1.5.1 (2026-02-01)</small>
 
 * ci: migrate from npm to pnpm in workflow ([a3343ae](https://github.com/Mearman/ppef/commit/a3343ae))
