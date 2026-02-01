@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://ppef.dev/schemas/v1.2.1/ppef.schema.json",
+  "$id": "https://ppef.dev/schemas/v1.3.1/ppef.schema.json",
   "title": "ExperimentConfig",
   "description": "PPEF experiment configuration",
   "type": "object",
@@ -439,6 +439,935 @@
     }
   ],
   "$defs": {
+    "AggregatedResult": {
+      "title": "AggregatedResult",
+      "description": "Aggregated result for a SUT",
+      "type": "object",
+      "properties": {
+        "caseClass": {
+          "description": "Case class (if grouped)",
+          "type": "string"
+        },
+        "comparisons": {
+          "description": "Comparisons with baselines",
+          "type": "object",
+          "additionalProperties": {
+            "title": "ComparisonMetrics",
+            "description": "Comparison metrics between primary and baseline SUTs",
+            "type": "object",
+            "properties": {
+              "betterRate": {
+                "description": "Win rate (% of cases where primary beats baseline)",
+                "type": "number"
+              },
+              "deltas": {
+                "description": "Absolute deltas (primary - baseline)",
+                "type": "object",
+                "additionalProperties": {
+                  "type": "number"
+                },
+                "propertyNames": {
+                  "type": "string"
+                }
+              },
+              "effectSize": {
+                "description": "Effect size (Cohen's d)",
+                "type": "number"
+              },
+              "pValue": {
+                "description": "Statistical significance (p-value)",
+                "type": "number"
+              },
+              "ratios": {
+                "description": "Ratios (primary / baseline)",
+                "type": "object",
+                "additionalProperties": {
+                  "type": "number"
+                },
+                "propertyNames": {
+                  "type": "string"
+                }
+              },
+              "uStatistic": {
+                "description": "Mann-Whitney U statistic",
+                "type": "number"
+              }
+            },
+            "required": [
+              "deltas",
+              "ratios"
+            ],
+            "additionalProperties": false
+          },
+          "propertyNames": {
+            "type": "string"
+          }
+        },
+        "correctness": {
+          "type": "object",
+          "properties": {
+            "failureBreakdown": {
+              "description": "Breakdown of failure types",
+              "type": "object",
+              "additionalProperties": {
+                "type": "number"
+              },
+              "propertyNames": {
+                "type": "string"
+              }
+            },
+            "matchesExpectedRate": {
+              "description": "Fraction of runs matching expected",
+              "type": "number"
+            },
+            "producedOutputRate": {
+              "description": "Fraction of runs that produced any output",
+              "type": "number"
+            },
+            "validRate": {
+              "description": "Fraction of runs that produced valid output",
+              "type": "number"
+            }
+          },
+          "required": [
+            "producedOutputRate",
+            "validRate"
+          ],
+          "additionalProperties": false
+        },
+        "coverage": {
+          "title": "CoverageMetrics",
+          "description": "Coverage information",
+          "type": "object",
+          "properties": {
+            "caseCoverage": {
+              "description": "Fraction of cases covered",
+              "type": "number"
+            },
+            "metricCoverage": {
+              "description": "Metric availability (metric name -> coverage fraction)",
+              "type": "object",
+              "additionalProperties": {
+                "type": "number"
+              },
+              "propertyNames": {
+                "type": "string"
+              }
+            },
+            "missingCases": {
+              "description": "Missing case IDs",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "caseCoverage",
+            "metricCoverage"
+          ],
+          "additionalProperties": false
+        },
+        "group": {
+          "type": "object",
+          "properties": {
+            "caseCount": {
+              "description": "Number of unique cases",
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 2147483647
+            },
+            "configHash": {
+              "description": "Hash of configuration",
+              "type": "string"
+            },
+            "runCount": {
+              "description": "Number of runs in this aggregate",
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 2147483647
+            }
+          },
+          "required": [
+            "caseCount",
+            "runCount"
+          ],
+          "additionalProperties": false
+        },
+        "metadata": {
+          "description": "Additional metadata",
+          "type": "object",
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "propertyNames": {
+            "type": "string"
+          }
+        },
+        "metrics": {
+          "description": "Aggregated metrics (metric name -> summary stats)",
+          "type": "object",
+          "additionalProperties": {
+            "title": "SummaryStats",
+            "description": "Summary statistics for a numeric metric",
+            "type": "object",
+            "properties": {
+              "confidence95": {
+                "description": "95% confidence interval [lower, upper]",
+                "type": "array",
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ]
+              },
+              "max": {
+                "description": "Maximum value",
+                "type": "number"
+              },
+              "mean": {
+                "description": "Arithmetic mean",
+                "type": "number"
+              },
+              "median": {
+                "description": "Median (50th percentile)",
+                "type": "number"
+              },
+              "min": {
+                "description": "Minimum value",
+                "type": "number"
+              },
+              "n": {
+                "description": "Number of observations",
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 2147483647
+              },
+              "p25": {
+                "description": "25th percentile",
+                "type": "number"
+              },
+              "p75": {
+                "description": "75th percentile",
+                "type": "number"
+              },
+              "std": {
+                "description": "Standard deviation (sample)",
+                "type": "number"
+              },
+              "sum": {
+                "description": "Sum of all values",
+                "type": "number"
+              }
+            },
+            "required": [
+              "max",
+              "mean",
+              "median",
+              "min",
+              "n"
+            ],
+            "additionalProperties": false
+          },
+          "propertyNames": {
+            "type": "string"
+          }
+        },
+        "sut": {
+          "description": "SUT identifier",
+          "type": "string"
+        },
+        "sutRole": {
+          "description": "Role of the SUT in evaluation",
+          "type": "string",
+          "oneOf": [
+            {
+              "description": "The system being evaluated; the novel algorithm or implementation",
+              "const": "primary"
+            },
+            {
+              "description": "A reference implementation for comparison",
+              "const": "baseline"
+            },
+            {
+              "description": "Ground truth provider; defines correct answers",
+              "const": "oracle"
+            }
+          ]
+        }
+      },
+      "required": [
+        "correctness",
+        "group",
+        "metrics",
+        "sut",
+        "sutRole"
+      ],
+      "additionalProperties": false
+    },
+    "AggregationOutput": {
+      "title": "AggregationOutput",
+      "description": "Complete aggregation output",
+      "type": "object",
+      "properties": {
+        "aggregates": {
+          "description": "Aggregated results",
+          "type": "array",
+          "items": {
+            "title": "AggregatedResult",
+            "description": "Aggregated result for a SUT",
+            "type": "object",
+            "properties": {
+              "caseClass": {
+                "description": "Case class (if grouped)",
+                "type": "string"
+              },
+              "comparisons": {
+                "description": "Comparisons with baselines",
+                "type": "object",
+                "additionalProperties": {
+                  "title": "ComparisonMetrics",
+                  "description": "Comparison metrics between primary and baseline SUTs",
+                  "type": "object",
+                  "properties": {
+                    "betterRate": {
+                      "description": "Win rate (% of cases where primary beats baseline)",
+                      "type": "number"
+                    },
+                    "deltas": {
+                      "description": "Absolute deltas (primary - baseline)",
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "number"
+                      },
+                      "propertyNames": {
+                        "type": "string"
+                      }
+                    },
+                    "effectSize": {
+                      "description": "Effect size (Cohen's d)",
+                      "type": "number"
+                    },
+                    "pValue": {
+                      "description": "Statistical significance (p-value)",
+                      "type": "number"
+                    },
+                    "ratios": {
+                      "description": "Ratios (primary / baseline)",
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "number"
+                      },
+                      "propertyNames": {
+                        "type": "string"
+                      }
+                    },
+                    "uStatistic": {
+                      "description": "Mann-Whitney U statistic",
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "deltas",
+                    "ratios"
+                  ],
+                  "additionalProperties": false
+                },
+                "propertyNames": {
+                  "type": "string"
+                }
+              },
+              "correctness": {
+                "type": "object",
+                "properties": {
+                  "failureBreakdown": {
+                    "description": "Breakdown of failure types",
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "number"
+                    },
+                    "propertyNames": {
+                      "type": "string"
+                    }
+                  },
+                  "matchesExpectedRate": {
+                    "description": "Fraction of runs matching expected",
+                    "type": "number"
+                  },
+                  "producedOutputRate": {
+                    "description": "Fraction of runs that produced any output",
+                    "type": "number"
+                  },
+                  "validRate": {
+                    "description": "Fraction of runs that produced valid output",
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "producedOutputRate",
+                  "validRate"
+                ],
+                "additionalProperties": false
+              },
+              "coverage": {
+                "title": "CoverageMetrics",
+                "description": "Coverage information",
+                "type": "object",
+                "properties": {
+                  "caseCoverage": {
+                    "description": "Fraction of cases covered",
+                    "type": "number"
+                  },
+                  "metricCoverage": {
+                    "description": "Metric availability (metric name -> coverage fraction)",
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "number"
+                    },
+                    "propertyNames": {
+                      "type": "string"
+                    }
+                  },
+                  "missingCases": {
+                    "description": "Missing case IDs",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "required": [
+                  "caseCoverage",
+                  "metricCoverage"
+                ],
+                "additionalProperties": false
+              },
+              "group": {
+                "type": "object",
+                "properties": {
+                  "caseCount": {
+                    "description": "Number of unique cases",
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 2147483647
+                  },
+                  "configHash": {
+                    "description": "Hash of configuration",
+                    "type": "string"
+                  },
+                  "runCount": {
+                    "description": "Number of runs in this aggregate",
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 2147483647
+                  }
+                },
+                "required": [
+                  "caseCount",
+                  "runCount"
+                ],
+                "additionalProperties": false
+              },
+              "metadata": {
+                "description": "Additional metadata",
+                "type": "object",
+                "additionalProperties": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "propertyNames": {
+                  "type": "string"
+                }
+              },
+              "metrics": {
+                "description": "Aggregated metrics (metric name -> summary stats)",
+                "type": "object",
+                "additionalProperties": {
+                  "title": "SummaryStats",
+                  "description": "Summary statistics for a numeric metric",
+                  "type": "object",
+                  "properties": {
+                    "confidence95": {
+                      "description": "95% confidence interval [lower, upper]",
+                      "type": "array",
+                      "prefixItems": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "number"
+                        }
+                      ]
+                    },
+                    "max": {
+                      "description": "Maximum value",
+                      "type": "number"
+                    },
+                    "mean": {
+                      "description": "Arithmetic mean",
+                      "type": "number"
+                    },
+                    "median": {
+                      "description": "Median (50th percentile)",
+                      "type": "number"
+                    },
+                    "min": {
+                      "description": "Minimum value",
+                      "type": "number"
+                    },
+                    "n": {
+                      "description": "Number of observations",
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 2147483647
+                    },
+                    "p25": {
+                      "description": "25th percentile",
+                      "type": "number"
+                    },
+                    "p75": {
+                      "description": "75th percentile",
+                      "type": "number"
+                    },
+                    "std": {
+                      "description": "Standard deviation (sample)",
+                      "type": "number"
+                    },
+                    "sum": {
+                      "description": "Sum of all values",
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "max",
+                    "mean",
+                    "median",
+                    "min",
+                    "n"
+                  ],
+                  "additionalProperties": false
+                },
+                "propertyNames": {
+                  "type": "string"
+                }
+              },
+              "sut": {
+                "description": "SUT identifier",
+                "type": "string"
+              },
+              "sutRole": {
+                "description": "Role of the SUT in evaluation",
+                "type": "string",
+                "oneOf": [
+                  {
+                    "description": "The system being evaluated; the novel algorithm or implementation",
+                    "const": "primary"
+                  },
+                  {
+                    "description": "A reference implementation for comparison",
+                    "const": "baseline"
+                  },
+                  {
+                    "description": "Ground truth provider; defines correct answers",
+                    "const": "oracle"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "correctness",
+              "group",
+              "metrics",
+              "sut",
+              "sutRole"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "metadata": {
+          "description": "Global metadata",
+          "type": "object",
+          "properties": {
+            "caseClassesIncluded": {
+              "description": "Case classes included",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "sutsIncluded": {
+              "description": "SUTs included",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "totalCases": {
+              "description": "Total unique cases",
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 2147483647
+            },
+            "totalRuns": {
+              "description": "Total runs processed",
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 2147483647
+            }
+          },
+          "required": [
+            "sutsIncluded",
+            "totalCases",
+            "totalRuns"
+          ],
+          "additionalProperties": false
+        },
+        "timestamp": {
+          "description": "Generation timestamp",
+          "type": "string"
+        },
+        "version": {
+          "description": "Schema version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "aggregates",
+        "timestamp",
+        "version"
+      ],
+      "additionalProperties": false
+    },
+    "ClaimEvaluationSummary": {
+      "title": "ClaimEvaluationSummary",
+      "description": "Summary of all claim evaluations",
+      "type": "object",
+      "properties": {
+        "evaluations": {
+          "description": "Individual claim evaluations",
+          "type": "array",
+          "items": {
+            "title": "ClaimEvaluation",
+            "description": "Result of evaluating a single claim",
+            "type": "object",
+            "properties": {
+              "claim": {
+                "title": "EvaluationClaimOutput",
+                "description": "The claim being evaluated",
+                "type": "object",
+                "properties": {
+                  "baseline": {
+                    "description": "Baseline SUT for comparison",
+                    "type": "string"
+                  },
+                  "citation": {
+                    "description": "Citation/reference for the claim",
+                    "type": "string"
+                  },
+                  "claimId": {
+                    "description": "Unique identifier for this claim",
+                    "type": "string"
+                  },
+                  "description": {
+                    "description": "Human-readable description",
+                    "type": "string"
+                  },
+                  "direction": {
+                    "description": "Expected direction of difference",
+                    "type": "string",
+                    "oneOf": [
+                      {
+                        "description": "Primary SUT metric should be greater than baseline",
+                        "const": "greater"
+                      },
+                      {
+                        "description": "Primary SUT metric should be less than baseline",
+                        "const": "less"
+                      },
+                      {
+                        "description": "Primary SUT metric should be equal to baseline",
+                        "const": "equal"
+                      }
+                    ]
+                  },
+                  "metric": {
+                    "description": "Metric being compared",
+                    "type": "string"
+                  },
+                  "minEffectSize": {
+                    "description": "Minimum effect size",
+                    "type": "number"
+                  },
+                  "scope": {
+                    "description": "Scope of claim validity",
+                    "type": "string",
+                    "oneOf": [
+                      {
+                        "description": "Claim applies across all cases and conditions",
+                        "const": "global"
+                      },
+                      {
+                        "description": "Claim applies within a specific case class",
+                        "const": "caseClass"
+                      },
+                      {
+                        "description": "Claim applies within a parameter range",
+                        "const": "parameterRange"
+                      },
+                      {
+                        "description": "Claim applies to local structural properties",
+                        "const": "localStructure"
+                      }
+                    ]
+                  },
+                  "scopeConstraints": {
+                    "description": "Scope constraints",
+                    "type": "object",
+                    "additionalProperties": {
+                      "anyOf": [
+                        {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "number"
+                            },
+                            {
+                              "type": "boolean"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "array",
+                          "items": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "number"
+                              },
+                              {
+                                "type": "boolean"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    },
+                    "propertyNames": {
+                      "type": "string"
+                    }
+                  },
+                  "significanceLevel": {
+                    "description": "Required significance level",
+                    "type": "number"
+                  },
+                  "sut": {
+                    "description": "Primary SUT being evaluated",
+                    "type": "string"
+                  },
+                  "tags": {
+                    "description": "Tags for filtering",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "threshold": {
+                    "description": "Optional threshold for the difference",
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "baseline",
+                  "claimId",
+                  "description",
+                  "direction",
+                  "metric",
+                  "scope",
+                  "sut"
+                ],
+                "additionalProperties": false
+              },
+              "evidence": {
+                "title": "ClaimEvidence",
+                "description": "Supporting evidence",
+                "type": "object",
+                "properties": {
+                  "baselineValue": {
+                    "description": "Baseline SUT metric value",
+                    "type": "number"
+                  },
+                  "delta": {
+                    "description": "Absolute delta (primary - baseline)",
+                    "type": "number"
+                  },
+                  "deltaCI95": {
+                    "description": "95% confidence interval for delta",
+                    "type": "array",
+                    "prefixItems": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "number"
+                      }
+                    ]
+                  },
+                  "effectSize": {
+                    "description": "Effect size (Cohen's d)",
+                    "type": "number"
+                  },
+                  "n": {
+                    "description": "Number of observations",
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 2147483647
+                  },
+                  "primaryValue": {
+                    "description": "Primary SUT metric value",
+                    "type": "number"
+                  },
+                  "pValue": {
+                    "description": "P-value from statistical test",
+                    "type": "number"
+                  },
+                  "ratio": {
+                    "description": "Ratio (primary / baseline)",
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "baselineValue",
+                  "delta",
+                  "primaryValue",
+                  "ratio"
+                ],
+                "additionalProperties": false
+              },
+              "inconclusiveReason": {
+                "description": "Reason for inconclusive status",
+                "type": "string"
+              },
+              "notes": {
+                "description": "Additional notes",
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "status": {
+                "description": "Status of a claim evaluation",
+                "type": "string",
+                "enum": [
+                  "satisfied",
+                  "violated",
+                  "inconclusive"
+                ]
+              }
+            },
+            "required": [
+              "claim",
+              "evidence",
+              "status"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "summary": {
+          "type": "object",
+          "properties": {
+            "inconclusive": {
+              "description": "Claims inconclusive",
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 2147483647
+            },
+            "satisfactionRate": {
+              "description": "Satisfaction rate (satisfied / (satisfied + violated))",
+              "type": "number"
+            },
+            "satisfied": {
+              "description": "Claims satisfied",
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 2147483647
+            },
+            "total": {
+              "description": "Total claims evaluated",
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 2147483647
+            },
+            "violated": {
+              "description": "Claims violated",
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 2147483647
+            }
+          },
+          "required": [
+            "inconclusive",
+            "satisfactionRate",
+            "satisfied",
+            "total",
+            "violated"
+          ],
+          "additionalProperties": false
+        },
+        "timestamp": {
+          "description": "Generation timestamp",
+          "type": "string"
+        },
+        "version": {
+          "description": "Schema version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "evaluations",
+        "summary",
+        "timestamp",
+        "version"
+      ],
+      "additionalProperties": false
+    },
     "ClaimsEvaluatorConfig": {
       "title": "ClaimsEvaluatorConfig",
       "description": "Configuration for the claims evaluator",
@@ -652,6 +1581,62 @@
         }
       ]
     },
+    "CorrectnessResult": {
+      "title": "CorrectnessResult",
+      "description": "Correctness assessment",
+      "type": "object",
+      "properties": {
+        "expectedExists": {
+          "description": "Whether expected output exists (oracle available)",
+          "type": "boolean"
+        },
+        "failureType": {
+          "description": "Failure classification if applicable",
+          "type": "string",
+          "enum": [
+            "no_output",
+            "invalid_structure",
+            "constraint_violation",
+            "exception",
+            "oracle_mismatch",
+            "timeout"
+          ]
+        },
+        "matchesExpected": {
+          "description": "Whether output matches expected (null if no oracle)",
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "notes": {
+          "description": "Human-readable failure notes",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "producedOutput": {
+          "description": "Whether the SUT produced any output",
+          "type": "boolean"
+        },
+        "valid": {
+          "description": "Whether output is structurally valid",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "expectedExists",
+        "matchesExpected",
+        "producedOutput",
+        "valid"
+      ],
+      "additionalProperties": false
+    },
     "CustomEvaluatorConfig": {
       "title": "CustomEvaluatorConfig",
       "description": "Configuration for a custom evaluator",
@@ -683,6 +1668,696 @@
         "customType"
       ],
       "additionalProperties": {}
+    },
+    "EvaluationResult": {
+      "title": "EvaluationResult",
+      "description": "Complete evaluation result",
+      "type": "object",
+      "properties": {
+        "correctness": {
+          "title": "CorrectnessResult",
+          "description": "Correctness assessment",
+          "type": "object",
+          "properties": {
+            "expectedExists": {
+              "description": "Whether expected output exists (oracle available)",
+              "type": "boolean"
+            },
+            "failureType": {
+              "description": "Failure classification if applicable",
+              "type": "string",
+              "enum": [
+                "no_output",
+                "invalid_structure",
+                "constraint_violation",
+                "exception",
+                "oracle_mismatch",
+                "timeout"
+              ]
+            },
+            "matchesExpected": {
+              "description": "Whether output matches expected (null if no oracle)",
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "notes": {
+              "description": "Human-readable failure notes",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "producedOutput": {
+              "description": "Whether the SUT produced any output",
+              "type": "boolean"
+            },
+            "valid": {
+              "description": "Whether output is structurally valid",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "expectedExists",
+            "matchesExpected",
+            "producedOutput",
+            "valid"
+          ],
+          "additionalProperties": false
+        },
+        "error": {
+          "description": "Error message if the run failed",
+          "type": "string"
+        },
+        "metrics": {
+          "title": "ResultMetrics",
+          "description": "Numeric metrics",
+          "type": "object",
+          "properties": {
+            "extra": {
+              "description": "Additional metrics (overflow)",
+              "type": "object",
+              "additionalProperties": {
+                "type": "number"
+              },
+              "propertyNames": {
+                "type": "string"
+              }
+            },
+            "numeric": {
+              "description": "Primary numeric metrics",
+              "type": "object",
+              "additionalProperties": {
+                "type": "number"
+              },
+              "propertyNames": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "numeric"
+          ],
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "number"
+                },
+                "propertyNames": {
+                  "type": "string"
+                }
+              }
+            ]
+          }
+        },
+        "outputs": {
+          "title": "ResultOutputs",
+          "description": "Output artefacts and summaries",
+          "type": "object",
+          "properties": {
+            "artefacts": {
+              "description": "References to generated artefacts",
+              "type": "array",
+              "items": {
+                "title": "ArtefactReference",
+                "description": "Reference to an external artefact",
+                "type": "object",
+                "properties": {
+                  "hash": {
+                    "type": "string"
+                  },
+                  "metadata": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "boolean"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "propertyNames": {
+                      "type": "string"
+                    }
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "graph",
+                      "path-set",
+                      "subgraph",
+                      "embedding",
+                      "other"
+                    ]
+                  },
+                  "uri": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "uri"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "extra": {
+              "description": "Additional untyped outputs",
+              "type": "object",
+              "additionalProperties": {},
+              "propertyNames": {
+                "type": "string"
+              }
+            },
+            "labels": {
+              "description": "Classification labels",
+              "type": "object",
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "propertyNames": {
+                "type": "string"
+              }
+            },
+            "ranking": {
+              "description": "Ranking results",
+              "type": "array",
+              "items": {
+                "title": "RankedItem",
+                "description": "A ranked item for ranking tasks",
+                "type": "object",
+                "properties": {
+                  "itemId": {
+                    "description": "Item identifier",
+                    "type": "string"
+                  },
+                  "metadata": {
+                    "description": "Optional additional metadata",
+                    "type": "object",
+                    "additionalProperties": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "boolean"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "propertyNames": {
+                      "type": "string"
+                    }
+                  },
+                  "score": {
+                    "description": "Score or rank value",
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "itemId",
+                  "score"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "summary": {
+              "description": "Scalar summary values",
+              "type": "object",
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "array",
+                    "items": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "boolean"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              },
+              "propertyNames": {
+                "type": "string"
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "provenance": {
+          "title": "Provenance",
+          "description": "Provenance for reproducibility",
+          "type": "object",
+          "properties": {
+            "dependencyLockHash": {
+              "description": "Hash of package-lock.json for dependency pinning",
+              "type": "string"
+            },
+            "dirty": {
+              "description": "Whether working directory had uncommitted changes",
+              "type": "boolean"
+            },
+            "executionTimeMs": {
+              "description": "Wall-clock execution time in milliseconds",
+              "type": "number"
+            },
+            "finalMemoryBytes": {
+              "description": "Memory usage at completion (bytes)",
+              "type": "number"
+            },
+            "gitCommit": {
+              "description": "Git commit hash",
+              "type": "string"
+            },
+            "parentRunIds": {
+              "description": "Parent run IDs (for derived results)",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "peakMemoryBytes": {
+              "description": "Peak memory usage during execution (bytes)",
+              "type": "number"
+            },
+            "runtime": {
+              "description": "Execution environment (platform and arch required; additional fields are language-specific)",
+              "type": "object",
+              "properties": {
+                "arch": {
+                  "description": "CPU architecture",
+                  "type": "string"
+                },
+                "platform": {
+                  "description": "Operating system platform",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "arch",
+                "platform"
+              ],
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "timestamp": {
+              "description": "Execution timestamp",
+              "type": "string"
+            }
+          },
+          "required": [
+            "runtime"
+          ],
+          "additionalProperties": false
+        },
+        "run": {
+          "title": "RunContext",
+          "description": "Run identity and context",
+          "type": "object",
+          "properties": {
+            "caseClass": {
+              "description": "Case class for grouping",
+              "type": "string"
+            },
+            "caseId": {
+              "description": "Case identifier",
+              "type": "string"
+            },
+            "config": {
+              "description": "Configuration overrides for this run",
+              "type": "object",
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "propertyNames": {
+                "type": "string"
+              }
+            },
+            "repetition": {
+              "description": "Repetition number for statistical runs",
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 2147483647
+            },
+            "runId": {
+              "description": "Deterministic run ID (hash of inputs)",
+              "type": "string"
+            },
+            "seed": {
+              "description": "Random seed if applicable",
+              "type": "number"
+            },
+            "sut": {
+              "description": "SUT identifier",
+              "type": "string"
+            },
+            "sutRole": {
+              "description": "Role of the SUT in evaluation",
+              "type": "string",
+              "oneOf": [
+                {
+                  "description": "The system being evaluated; the novel algorithm or implementation",
+                  "const": "primary"
+                },
+                {
+                  "description": "A reference implementation for comparison",
+                  "const": "baseline"
+                },
+                {
+                  "description": "Ground truth provider; defines correct answers",
+                  "const": "oracle"
+                }
+              ]
+            },
+            "sutVersion": {
+              "description": "SUT version for reproducibility",
+              "type": "string"
+            }
+          },
+          "required": [
+            "caseId",
+            "runId",
+            "sut",
+            "sutRole"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "correctness",
+        "metrics",
+        "outputs",
+        "provenance",
+        "run"
+      ],
+      "additionalProperties": false
+    },
+    "ExploratoryEvaluationSummary": {
+      "title": "ExploratoryEvaluationSummary",
+      "description": "Summary of exploratory evaluation results",
+      "type": "object",
+      "properties": {
+        "caseClassEffects": {
+          "description": "Case-class effects",
+          "type": "array",
+          "items": {
+            "title": "CaseClassEffect",
+            "description": "Effect of a case class on SUT performance",
+            "type": "object",
+            "properties": {
+              "caseClass": {
+                "type": "string"
+              },
+              "deviationFromMean": {
+                "type": "number"
+              },
+              "metric": {
+                "type": "string"
+              },
+              "percentageDeviation": {
+                "type": "number"
+              },
+              "significant": {
+                "type": "boolean"
+              },
+              "sut": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "caseClass",
+              "deviationFromMean",
+              "metric",
+              "significant",
+              "sut"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "metricCorrelations": {
+          "description": "Metric correlations",
+          "type": "array",
+          "items": {
+            "title": "MetricCorrelation",
+            "description": "Correlation between two metrics",
+            "type": "object",
+            "properties": {
+              "interpretation": {
+                "type": "string"
+              },
+              "metricA": {
+                "type": "string"
+              },
+              "metricB": {
+                "type": "string"
+              },
+              "pearsonR": {
+                "type": "number"
+              },
+              "spearmanRho": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "interpretation",
+              "metricA",
+              "metricB",
+              "pearsonR"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "pairwiseComparisons": {
+          "description": "Pairwise comparisons between SUTs",
+          "type": "array",
+          "items": {
+            "title": "PairwiseComparison",
+            "description": "Pairwise comparison between two SUTs",
+            "type": "object",
+            "properties": {
+              "delta": {
+                "type": "number"
+              },
+              "effectSize": {
+                "type": "number"
+              },
+              "metric": {
+                "type": "string"
+              },
+              "pValue": {
+                "type": "number"
+              },
+              "ratio": {
+                "type": "number"
+              },
+              "significant": {
+                "type": "boolean"
+              },
+              "sutA": {
+                "type": "string"
+              },
+              "sutB": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "delta",
+              "metric",
+              "ratio",
+              "significant",
+              "sutA",
+              "sutB"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "rankings": {
+          "description": "SUT rankings per metric",
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "title": "SutMetricRanking",
+              "description": "Ranking of a SUT for a specific metric",
+              "type": "object",
+              "properties": {
+                "mean": {
+                  "type": "number"
+                },
+                "median": {
+                  "type": "number"
+                },
+                "n": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 2147483647
+                },
+                "rank": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 2147483647
+                },
+                "std": {
+                  "type": "number"
+                },
+                "sut": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "mean",
+                "median",
+                "n",
+                "rank",
+                "sut"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "propertyNames": {
+            "type": "string"
+          }
+        },
+        "summary": {
+          "type": "object",
+          "properties": {
+            "bestSutPerMetric": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              },
+              "propertyNames": {
+                "type": "string"
+              }
+            },
+            "caseClassesAnalyzed": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 2147483647
+            },
+            "metricsAnalyzed": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 2147483647
+            },
+            "pairwiseComparisonsCount": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 2147483647
+            },
+            "significantDifferences": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 2147483647
+            },
+            "sutsAnalyzed": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 2147483647
+            }
+          },
+          "required": [
+            "bestSutPerMetric",
+            "metricsAnalyzed",
+            "pairwiseComparisonsCount",
+            "significantDifferences",
+            "sutsAnalyzed"
+          ],
+          "additionalProperties": false
+        },
+        "timestamp": {
+          "description": "Generation timestamp",
+          "type": "string"
+        },
+        "version": {
+          "description": "Schema version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "pairwiseComparisons",
+        "rankings",
+        "summary",
+        "timestamp",
+        "version"
+      ],
+      "additionalProperties": false
     },
     "ExploratoryEvaluatorConfig": {
       "title": "ExploratoryEvaluatorConfig",
@@ -775,6 +2450,343 @@
           ]
         }
       ]
+    },
+    "MetricsEvaluationSummary": {
+      "title": "MetricsEvaluationSummary",
+      "description": "Summary of metrics evaluation",
+      "type": "object",
+      "properties": {
+        "results": {
+          "description": "Individual criterion results",
+          "type": "array",
+          "items": {
+            "title": "MetricsCriterionResult",
+            "description": "Result of evaluating a single metrics criterion",
+            "type": "object",
+            "properties": {
+              "criterion": {
+                "title": "MetricsCriterionOutput",
+                "description": "A metrics evaluation criterion",
+                "type": "object",
+                "properties": {
+                  "baseline": {
+                    "type": "object",
+                    "properties": {
+                      "operator": {
+                        "description": "Comparison operator",
+                        "type": "string",
+                        "oneOf": [
+                          {
+                            "description": "Greater than",
+                            "const": "gt"
+                          },
+                          {
+                            "description": "Greater than or equal to",
+                            "const": "gte"
+                          },
+                          {
+                            "description": "Less than",
+                            "const": "lt"
+                          },
+                          {
+                            "description": "Less than or equal to",
+                            "const": "lte"
+                          },
+                          {
+                            "description": "Equal to",
+                            "const": "eq"
+                          }
+                        ]
+                      },
+                      "sut": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "operator",
+                      "sut"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "criterionId": {
+                    "description": "Unique identifier",
+                    "type": "string"
+                  },
+                  "description": {
+                    "description": "Human-readable description",
+                    "type": "string"
+                  },
+                  "metric": {
+                    "description": "Metric to evaluate",
+                    "type": "string"
+                  },
+                  "scopeConstraints": {
+                    "type": "object",
+                    "properties": {
+                      "caseClass": {
+                        "anyOf": [
+                          {
+                            "type": "string"
+                          },
+                          {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "sut": {
+                    "description": "SUT to evaluate (or \"*\" for all SUTs)",
+                    "type": "string"
+                  },
+                  "tags": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "targetRange": {
+                    "type": "object",
+                    "properties": {
+                      "max": {
+                        "type": "number"
+                      },
+                      "maxInclusive": {
+                        "type": "boolean"
+                      },
+                      "min": {
+                        "type": "number"
+                      },
+                      "minInclusive": {
+                        "type": "boolean"
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "threshold": {
+                    "type": "object",
+                    "properties": {
+                      "operator": {
+                        "description": "Comparison operator",
+                        "type": "string",
+                        "oneOf": [
+                          {
+                            "description": "Greater than",
+                            "const": "gt"
+                          },
+                          {
+                            "description": "Greater than or equal to",
+                            "const": "gte"
+                          },
+                          {
+                            "description": "Less than",
+                            "const": "lt"
+                          },
+                          {
+                            "description": "Less than or equal to",
+                            "const": "lte"
+                          },
+                          {
+                            "description": "Equal to",
+                            "const": "eq"
+                          }
+                        ]
+                      },
+                      "value": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "operator",
+                      "value"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "type": {
+                    "description": "Type of metrics criterion",
+                    "type": "string",
+                    "oneOf": [
+                      {
+                        "description": "Compare a metric against a fixed threshold value",
+                        "const": "threshold"
+                      },
+                      {
+                        "description": "Compare a metric against a baseline SUT",
+                        "const": "baseline"
+                      },
+                      {
+                        "description": "Check that a metric falls within a target range",
+                        "const": "target-range"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "criterionId",
+                  "description",
+                  "metric",
+                  "sut",
+                  "type"
+                ],
+                "additionalProperties": false
+              },
+              "expected": {
+                "type": "object",
+                "properties": {
+                  "baselineValue": {
+                    "type": "number"
+                  },
+                  "targetRange": {
+                    "type": "object",
+                    "properties": {
+                      "max": {
+                        "type": "number"
+                      },
+                      "min": {
+                        "type": "number"
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "threshold": {
+                    "type": "number"
+                  },
+                  "type": {
+                    "description": "Type of metrics criterion",
+                    "type": "string",
+                    "oneOf": [
+                      {
+                        "description": "Compare a metric against a fixed threshold value",
+                        "const": "threshold"
+                      },
+                      {
+                        "description": "Compare a metric against a baseline SUT",
+                        "const": "baseline"
+                      },
+                      {
+                        "description": "Check that a metric falls within a target range",
+                        "const": "target-range"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "type"
+                ],
+                "additionalProperties": false
+              },
+              "inconclusiveReason": {
+                "type": "string"
+              },
+              "observed": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "sut": {
+                      "type": "string"
+                    },
+                    "value": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "sut",
+                    "value"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "pass",
+                  "fail",
+                  "inconclusive"
+                ]
+              }
+            },
+            "required": [
+              "criterion",
+              "expected",
+              "observed",
+              "status"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "summary": {
+          "type": "object",
+          "properties": {
+            "failed": {
+              "description": "Criteria failed",
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 2147483647
+            },
+            "inconclusive": {
+              "description": "Criteria inconclusive",
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 2147483647
+            },
+            "passed": {
+              "description": "Criteria passed",
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 2147483647
+            },
+            "passRate": {
+              "description": "Overall pass rate",
+              "type": "number"
+            },
+            "passRateBySut": {
+              "description": "Pass rate by SUT",
+              "type": "object",
+              "additionalProperties": {
+                "type": "number"
+              },
+              "propertyNames": {
+                "type": "string"
+              }
+            },
+            "total": {
+              "description": "Total criteria evaluated",
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 2147483647
+            }
+          },
+          "required": [
+            "failed",
+            "inconclusive",
+            "passed",
+            "passRate",
+            "passRateBySut",
+            "total"
+          ],
+          "additionalProperties": false
+        },
+        "timestamp": {
+          "description": "Generation timestamp",
+          "type": "string"
+        },
+        "version": {
+          "description": "Schema version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "results",
+        "summary",
+        "timestamp",
+        "version"
+      ],
+      "additionalProperties": false
     },
     "MetricsEvaluatorConfig": {
       "title": "MetricsEvaluatorConfig",
@@ -1091,6 +3103,730 @@
         }
       ]
     },
+    "Provenance": {
+      "title": "Provenance",
+      "description": "Provenance information for reproducibility",
+      "type": "object",
+      "properties": {
+        "dependencyLockHash": {
+          "description": "Hash of package-lock.json for dependency pinning",
+          "type": "string"
+        },
+        "dirty": {
+          "description": "Whether working directory had uncommitted changes",
+          "type": "boolean"
+        },
+        "executionTimeMs": {
+          "description": "Wall-clock execution time in milliseconds",
+          "type": "number"
+        },
+        "finalMemoryBytes": {
+          "description": "Memory usage at completion (bytes)",
+          "type": "number"
+        },
+        "gitCommit": {
+          "description": "Git commit hash",
+          "type": "string"
+        },
+        "parentRunIds": {
+          "description": "Parent run IDs (for derived results)",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "peakMemoryBytes": {
+          "description": "Peak memory usage during execution (bytes)",
+          "type": "number"
+        },
+        "runtime": {
+          "description": "Execution environment (platform and arch required; additional fields are language-specific)",
+          "type": "object",
+          "properties": {
+            "arch": {
+              "description": "CPU architecture",
+              "type": "string"
+            },
+            "platform": {
+              "description": "Operating system platform",
+              "type": "string"
+            }
+          },
+          "required": [
+            "arch",
+            "platform"
+          ],
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "timestamp": {
+          "description": "Execution timestamp",
+          "type": "string"
+        }
+      },
+      "required": [
+        "runtime"
+      ],
+      "additionalProperties": false
+    },
+    "ResultBatch": {
+      "title": "ResultBatch",
+      "description": "Batch of evaluation results",
+      "type": "object",
+      "properties": {
+        "metadata": {
+          "description": "Optional batch-level metadata",
+          "type": "object",
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "propertyNames": {
+            "type": "string"
+          }
+        },
+        "results": {
+          "description": "All results in this batch",
+          "type": "array",
+          "items": {
+            "title": "EvaluationResult",
+            "description": "Complete evaluation result",
+            "type": "object",
+            "properties": {
+              "correctness": {
+                "title": "CorrectnessResult",
+                "description": "Correctness assessment",
+                "type": "object",
+                "properties": {
+                  "expectedExists": {
+                    "description": "Whether expected output exists (oracle available)",
+                    "type": "boolean"
+                  },
+                  "failureType": {
+                    "description": "Failure classification if applicable",
+                    "type": "string",
+                    "enum": [
+                      "no_output",
+                      "invalid_structure",
+                      "constraint_violation",
+                      "exception",
+                      "oracle_mismatch",
+                      "timeout"
+                    ]
+                  },
+                  "matchesExpected": {
+                    "description": "Whether output matches expected (null if no oracle)",
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "notes": {
+                    "description": "Human-readable failure notes",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "producedOutput": {
+                    "description": "Whether the SUT produced any output",
+                    "type": "boolean"
+                  },
+                  "valid": {
+                    "description": "Whether output is structurally valid",
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "expectedExists",
+                  "matchesExpected",
+                  "producedOutput",
+                  "valid"
+                ],
+                "additionalProperties": false
+              },
+              "error": {
+                "description": "Error message if the run failed",
+                "type": "string"
+              },
+              "metrics": {
+                "title": "ResultMetrics",
+                "description": "Numeric metrics",
+                "type": "object",
+                "properties": {
+                  "extra": {
+                    "description": "Additional metrics (overflow)",
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "number"
+                    },
+                    "propertyNames": {
+                      "type": "string"
+                    }
+                  },
+                  "numeric": {
+                    "description": "Primary numeric metrics",
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "number"
+                    },
+                    "propertyNames": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "required": [
+                  "numeric"
+                ],
+                "additionalProperties": {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "number"
+                      },
+                      "propertyNames": {
+                        "type": "string"
+                      }
+                    }
+                  ]
+                }
+              },
+              "outputs": {
+                "title": "ResultOutputs",
+                "description": "Output artefacts and summaries",
+                "type": "object",
+                "properties": {
+                  "artefacts": {
+                    "description": "References to generated artefacts",
+                    "type": "array",
+                    "items": {
+                      "title": "ArtefactReference",
+                      "description": "Reference to an external artefact",
+                      "type": "object",
+                      "properties": {
+                        "hash": {
+                          "type": "string"
+                        },
+                        "metadata": {
+                          "type": "object",
+                          "additionalProperties": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "number"
+                              },
+                              {
+                                "type": "boolean"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "propertyNames": {
+                            "type": "string"
+                          }
+                        },
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "graph",
+                            "path-set",
+                            "subgraph",
+                            "embedding",
+                            "other"
+                          ]
+                        },
+                        "uri": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "uri"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "extra": {
+                    "description": "Additional untyped outputs",
+                    "type": "object",
+                    "additionalProperties": {},
+                    "propertyNames": {
+                      "type": "string"
+                    }
+                  },
+                  "labels": {
+                    "description": "Classification labels",
+                    "type": "object",
+                    "additionalProperties": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "boolean"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "propertyNames": {
+                      "type": "string"
+                    }
+                  },
+                  "ranking": {
+                    "description": "Ranking results",
+                    "type": "array",
+                    "items": {
+                      "title": "RankedItem",
+                      "description": "A ranked item for ranking tasks",
+                      "type": "object",
+                      "properties": {
+                        "itemId": {
+                          "description": "Item identifier",
+                          "type": "string"
+                        },
+                        "metadata": {
+                          "description": "Optional additional metadata",
+                          "type": "object",
+                          "additionalProperties": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "number"
+                              },
+                              {
+                                "type": "boolean"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "propertyNames": {
+                            "type": "string"
+                          }
+                        },
+                        "score": {
+                          "description": "Score or rank value",
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "itemId",
+                        "score"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "summary": {
+                    "description": "Scalar summary values",
+                    "type": "object",
+                    "additionalProperties": {
+                      "anyOf": [
+                        {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "number"
+                            },
+                            {
+                              "type": "boolean"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "array",
+                          "items": {
+                            "anyOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "number"
+                              },
+                              {
+                                "type": "boolean"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    },
+                    "propertyNames": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "additionalProperties": false
+              },
+              "provenance": {
+                "title": "Provenance",
+                "description": "Provenance for reproducibility",
+                "type": "object",
+                "properties": {
+                  "dependencyLockHash": {
+                    "description": "Hash of package-lock.json for dependency pinning",
+                    "type": "string"
+                  },
+                  "dirty": {
+                    "description": "Whether working directory had uncommitted changes",
+                    "type": "boolean"
+                  },
+                  "executionTimeMs": {
+                    "description": "Wall-clock execution time in milliseconds",
+                    "type": "number"
+                  },
+                  "finalMemoryBytes": {
+                    "description": "Memory usage at completion (bytes)",
+                    "type": "number"
+                  },
+                  "gitCommit": {
+                    "description": "Git commit hash",
+                    "type": "string"
+                  },
+                  "parentRunIds": {
+                    "description": "Parent run IDs (for derived results)",
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "peakMemoryBytes": {
+                    "description": "Peak memory usage during execution (bytes)",
+                    "type": "number"
+                  },
+                  "runtime": {
+                    "description": "Execution environment (platform and arch required; additional fields are language-specific)",
+                    "type": "object",
+                    "properties": {
+                      "arch": {
+                        "description": "CPU architecture",
+                        "type": "string"
+                      },
+                      "platform": {
+                        "description": "Operating system platform",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "arch",
+                      "platform"
+                    ],
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  },
+                  "timestamp": {
+                    "description": "Execution timestamp",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "runtime"
+                ],
+                "additionalProperties": false
+              },
+              "run": {
+                "title": "RunContext",
+                "description": "Run identity and context",
+                "type": "object",
+                "properties": {
+                  "caseClass": {
+                    "description": "Case class for grouping",
+                    "type": "string"
+                  },
+                  "caseId": {
+                    "description": "Case identifier",
+                    "type": "string"
+                  },
+                  "config": {
+                    "description": "Configuration overrides for this run",
+                    "type": "object",
+                    "additionalProperties": {
+                      "anyOf": [
+                        {
+                          "type": "string"
+                        },
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "boolean"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "propertyNames": {
+                      "type": "string"
+                    }
+                  },
+                  "repetition": {
+                    "description": "Repetition number for statistical runs",
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 2147483647
+                  },
+                  "runId": {
+                    "description": "Deterministic run ID (hash of inputs)",
+                    "type": "string"
+                  },
+                  "seed": {
+                    "description": "Random seed if applicable",
+                    "type": "number"
+                  },
+                  "sut": {
+                    "description": "SUT identifier",
+                    "type": "string"
+                  },
+                  "sutRole": {
+                    "description": "Role of the SUT in evaluation",
+                    "type": "string",
+                    "oneOf": [
+                      {
+                        "description": "The system being evaluated; the novel algorithm or implementation",
+                        "const": "primary"
+                      },
+                      {
+                        "description": "A reference implementation for comparison",
+                        "const": "baseline"
+                      },
+                      {
+                        "description": "Ground truth provider; defines correct answers",
+                        "const": "oracle"
+                      }
+                    ]
+                  },
+                  "sutVersion": {
+                    "description": "SUT version for reproducibility",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "caseId",
+                  "runId",
+                  "sut",
+                  "sutRole"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "correctness",
+              "metrics",
+              "outputs",
+              "provenance",
+              "run"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "timestamp": {
+          "description": "Generation timestamp",
+          "type": "string"
+        },
+        "version": {
+          "description": "Schema version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "results",
+        "timestamp",
+        "version"
+      ],
+      "additionalProperties": false
+    },
+    "RobustnessAnalysisOutput": {
+      "title": "RobustnessAnalysisOutput",
+      "description": "Complete robustness analysis output",
+      "type": "object",
+      "properties": {
+        "config": {
+          "type": "object",
+          "properties": {
+            "intensityLevels": {
+              "description": "Intensity levels tested",
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            },
+            "metrics": {
+              "description": "Metrics analyzed",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "perturbations": {
+              "description": "Perturbations applied",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "runsPerLevel": {
+              "description": "Runs per perturbation level",
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 10000
+            }
+          },
+          "required": [
+            "metrics",
+            "perturbations",
+            "runsPerLevel"
+          ],
+          "additionalProperties": false
+        },
+        "results": {
+          "description": "Individual analysis results",
+          "type": "array",
+          "items": {
+            "title": "RobustnessAnalysisResult",
+            "description": "Result of robustness analysis for a single SUT",
+            "type": "object",
+            "properties": {
+              "baselineValue": {
+                "type": "number"
+              },
+              "caseClass": {
+                "type": "string"
+              },
+              "metric": {
+                "type": "string"
+              },
+              "perturbation": {
+                "type": "string"
+              },
+              "robustness": {
+                "title": "RobustnessMetrics",
+                "description": "Robustness analysis metrics",
+                "type": "object",
+                "properties": {
+                  "breakpoint": {
+                    "type": "number"
+                  },
+                  "coefficientOfVariation": {
+                    "type": "number"
+                  },
+                  "degradationCurve": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "metricValue": {
+                          "type": "number"
+                        },
+                        "perturbationLevel": {
+                          "type": "number"
+                        },
+                        "stdDev": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "metricValue",
+                        "perturbationLevel"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "rankingStability": {
+                    "type": "number"
+                  },
+                  "stdUnderPerturbation": {
+                    "type": "number"
+                  },
+                  "varianceUnderPerturbation": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "coefficientOfVariation",
+                  "stdUnderPerturbation",
+                  "varianceUnderPerturbation"
+                ],
+                "additionalProperties": false
+              },
+              "runCount": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 2147483647
+              },
+              "sut": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "baselineValue",
+              "metric",
+              "perturbation",
+              "robustness",
+              "runCount",
+              "sut"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "timestamp": {
+          "description": "Generation timestamp",
+          "type": "string"
+        },
+        "version": {
+          "description": "Schema version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "config",
+        "results",
+        "timestamp",
+        "version"
+      ],
+      "additionalProperties": false
+    },
     "RobustnessEvaluatorConfig": {
       "title": "RobustnessEvaluatorConfig",
       "description": "Configuration for the robustness evaluator",
@@ -1173,6 +3909,156 @@
           "runsPerLevel": 10
         }
       ]
+    },
+    "RunContext": {
+      "title": "RunContext",
+      "description": "Run identity and context",
+      "type": "object",
+      "properties": {
+        "caseClass": {
+          "description": "Case class for grouping",
+          "type": "string"
+        },
+        "caseId": {
+          "description": "Case identifier",
+          "type": "string"
+        },
+        "config": {
+          "description": "Configuration overrides for this run",
+          "type": "object",
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "propertyNames": {
+            "type": "string"
+          }
+        },
+        "repetition": {
+          "description": "Repetition number for statistical runs",
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 2147483647
+        },
+        "runId": {
+          "description": "Deterministic run ID (hash of inputs)",
+          "type": "string"
+        },
+        "seed": {
+          "description": "Random seed if applicable",
+          "type": "number"
+        },
+        "sut": {
+          "description": "SUT identifier",
+          "type": "string"
+        },
+        "sutRole": {
+          "description": "Role of the SUT in evaluation",
+          "type": "string",
+          "oneOf": [
+            {
+              "description": "The system being evaluated; the novel algorithm or implementation",
+              "const": "primary"
+            },
+            {
+              "description": "A reference implementation for comparison",
+              "const": "baseline"
+            },
+            {
+              "description": "Ground truth provider; defines correct answers",
+              "const": "oracle"
+            }
+          ]
+        },
+        "sutVersion": {
+          "description": "SUT version for reproducibility",
+          "type": "string"
+        }
+      },
+      "required": [
+        "caseId",
+        "runId",
+        "sut",
+        "sutRole"
+      ],
+      "additionalProperties": false
+    },
+    "SummaryStats": {
+      "title": "SummaryStats",
+      "description": "Summary statistics for a numeric metric",
+      "type": "object",
+      "properties": {
+        "confidence95": {
+          "description": "95% confidence interval [lower, upper]",
+          "type": "array",
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ]
+        },
+        "max": {
+          "description": "Maximum value",
+          "type": "number"
+        },
+        "mean": {
+          "description": "Arithmetic mean",
+          "type": "number"
+        },
+        "median": {
+          "description": "Median (50th percentile)",
+          "type": "number"
+        },
+        "min": {
+          "description": "Minimum value",
+          "type": "number"
+        },
+        "n": {
+          "description": "Number of observations",
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 2147483647
+        },
+        "p25": {
+          "description": "25th percentile",
+          "type": "number"
+        },
+        "p75": {
+          "description": "75th percentile",
+          "type": "number"
+        },
+        "std": {
+          "description": "Standard deviation (sample)",
+          "type": "number"
+        },
+        "sum": {
+          "description": "Sum of all values",
+          "type": "number"
+        }
+      },
+      "required": [
+        "max",
+        "mean",
+        "median",
+        "min",
+        "n"
+      ],
+      "additionalProperties": false
     }
   }
 }

@@ -26,6 +26,20 @@ import {
 	ExploratoryEvaluatorConfigSchema,
 	CustomEvaluatorConfigSchema,
 } from "../src/cli/evaluator-schemas.js";
+import {
+	EvaluationResultSchema,
+	ResultBatchSchema,
+	RunContextSchema,
+	CorrectnessResultSchema,
+	ProvenanceSchema,
+	AggregatedResultSchema,
+	SummaryStatsSchema,
+	AggregationOutputSchema,
+	ClaimEvaluationSummarySchema,
+	MetricsEvaluationSummarySchema,
+	RobustnessAnalysisOutputSchema,
+	ExploratoryEvaluationSummarySchema,
+} from "../src/schemas/output-schemas.js";
 
 // ============================================================================
 // Types
@@ -565,11 +579,35 @@ const evaluatorDefs: Record<string, unknown> = {
 	}),
 };
 
+// Generate output type schemas for cross-language interoperability
+const outputDefs: Record<string, unknown> = {
+	EvaluationResult: z.toJSONSchema(EvaluationResultSchema, { target: "draft-2020-12" }),
+	ResultBatch: z.toJSONSchema(ResultBatchSchema, { target: "draft-2020-12" }),
+	RunContext: z.toJSONSchema(RunContextSchema, { target: "draft-2020-12" }),
+	CorrectnessResult: z.toJSONSchema(CorrectnessResultSchema, { target: "draft-2020-12" }),
+	Provenance: z.toJSONSchema(ProvenanceSchema, { target: "draft-2020-12" }),
+	AggregatedResult: z.toJSONSchema(AggregatedResultSchema, { target: "draft-2020-12" }),
+	SummaryStats: z.toJSONSchema(SummaryStatsSchema, { target: "draft-2020-12" }),
+	AggregationOutput: z.toJSONSchema(AggregationOutputSchema, { target: "draft-2020-12" }),
+	ClaimEvaluationSummary: z.toJSONSchema(ClaimEvaluationSummarySchema, {
+		target: "draft-2020-12",
+	}),
+	MetricsEvaluationSummary: z.toJSONSchema(MetricsEvaluationSummarySchema, {
+		target: "draft-2020-12",
+	}),
+	RobustnessAnalysisOutput: z.toJSONSchema(RobustnessAnalysisOutputSchema, {
+		target: "draft-2020-12",
+	}),
+	ExploratoryEvaluationSummary: z.toJSONSchema(ExploratoryEvaluationSummarySchema, {
+		target: "draft-2020-12",
+	}),
+};
+
 // Merge $defs into the root schema
 const existingDefs: Record<string, unknown> | undefined = isJsonSchema(jsonSchema.$defs)
 	? jsonSchema.$defs
 	: undefined;
-jsonSchema.$defs = { ...existingDefs, ...evaluatorDefs };
+jsonSchema.$defs = { ...existingDefs, ...evaluatorDefs, ...outputDefs };
 
 // Run pipeline
 let result = jsonSchema;
