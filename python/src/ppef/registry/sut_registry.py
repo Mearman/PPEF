@@ -8,30 +8,27 @@ experiment execution.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Protocol, TypeVar
+from typing import Any, Protocol
 
 from ppef.types.sut import SutRegistration, SutRole
 
-TInputs = TypeVar("TInputs")
-TResult = TypeVar("TResult")
 
-
-class SUT(Protocol[TInputs, TResult]):
+class SUT[TInputs_contra, TResult_co](Protocol):
     """Protocol for a System Under Test instance."""
 
     @property
     def id(self) -> str: ...
 
     @property
-    def config(self) -> dict[str, object]: ...
+    def config(self) -> dict[str, Any]: ...
 
-    async def run(self, inputs: TInputs) -> TResult: ...
+    async def run(self, inputs: TInputs_contra) -> TResult_co: ...
 
 
-class SutFactory(Protocol[TInputs, TResult]):
+class SutFactory[TInputs, TResult](Protocol):
     """Protocol for a SUT factory callable."""
 
-    def __call__(self, config: dict[str, object] | None = None) -> SUT[TInputs, TResult]: ...
+    def __call__(self, config: dict[str, Any] | None = None) -> SUT[TInputs, TResult]: ...
 
 
 @dataclass(frozen=True)
@@ -168,7 +165,7 @@ class SUTRegistry[TInputs, TResult]:
     def create(
         self,
         id: str,
-        config: dict[str, object] | None = None,
+        config: dict[str, Any] | None = None,
     ) -> SUT[TInputs, TResult]:
         """Create a new SUT instance.
 

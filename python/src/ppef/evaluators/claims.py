@@ -45,7 +45,7 @@ class ClaimsEvaluator:
         errors: list[str] = []
         warnings: list[str] = []
 
-        if not isinstance(config.claims, list):
+        if not isinstance(config.claims, list):  # type: ignore[unnecessary-isinstance]
             errors.append("claims must be a list")
             return ValidationResult(valid=False, errors=errors, warnings=warnings or None)
 
@@ -65,19 +65,19 @@ class ClaimsEvaluator:
         errors: list[str] = []
         prefix = f"Claim[{index}]"
 
-        if not claim.claim_id or not isinstance(claim.claim_id, str):
+        if not claim.claim_id or not isinstance(claim.claim_id, str):  # type: ignore[unnecessary-isinstance]
             errors.append(f"{prefix}: claimId is required")
-        if not claim.description or not isinstance(claim.description, str):
+        if not claim.description or not isinstance(claim.description, str):  # type: ignore[unnecessary-isinstance]
             errors.append(f"{prefix}: description is required")
-        if not claim.sut or not isinstance(claim.sut, str):
+        if not claim.sut or not isinstance(claim.sut, str):  # type: ignore[unnecessary-isinstance]
             errors.append(f"{prefix}: sut is required")
-        if not claim.baseline or not isinstance(claim.baseline, str):
+        if not claim.baseline or not isinstance(claim.baseline, str):  # type: ignore[unnecessary-isinstance]
             errors.append(f"{prefix}: baseline is required")
-        if not claim.metric or not isinstance(claim.metric, str):
+        if not claim.metric or not isinstance(claim.metric, str):  # type: ignore[unnecessary-isinstance]
             errors.append(f"{prefix}: metric is required")
         if claim.direction not in ("greater", "less", "equal"):
             errors.append(f"{prefix}: direction must be 'greater', 'less', or 'equal'")
-        if claim.threshold is not None and not isinstance(claim.threshold, (int, float)):
+        if claim.threshold is not None and not isinstance(claim.threshold, (int, float)):  # type: ignore[unnecessary-isinstance]
             errors.append(f"{prefix}: threshold must be a number")
         if claim.scope not in ("global", "caseClass", "parameterRange", "localStructure"):
             errors.append(f"{prefix}: scope must be a valid ValidityScope")
@@ -126,7 +126,7 @@ class ClaimsEvaluator:
             passed=summary["satisfied"],
             failed=summary["violated"],
             inconclusive=summary["inconclusive"],
-            pass_rate=summary["satisfactionRate"],
+            passRate=summary["satisfactionRate"],
             additional={"satisfactionRate": summary["satisfactionRate"]},
         ).model_dump(by_alias=True)
 
@@ -176,12 +176,12 @@ class ClaimsEvaluator:
             effect_size = comparison.effect_size
 
         evidence = ClaimEvidence(
-            primary_value=primary_value,
-            baseline_value=baseline_value,
+            primaryValue=primary_value,
+            baselineValue=baseline_value,
             delta=delta,
             ratio=ratio,
-            p_value=p_value,
-            effect_size=effect_size,
+            pValue=p_value,
+            effectSize=effect_size,
             n=primary_stats.n + baseline_stats.n,
         )
 
@@ -219,12 +219,12 @@ class ClaimsEvaluator:
             claim=claim,
             status="inconclusive",
             evidence=ClaimEvidence(
-                primary_value=float("nan"),
-                baseline_value=float("nan"),
+                primaryValue=float("nan"),
+                baselineValue=float("nan"),
                 delta=float("nan"),
                 ratio=float("nan"),
             ),
-            inconclusive_reason="; ".join(r for r in reasons if r),
+            inconclusiveReason="; ".join(r for r in reasons if r),
         )
 
     def _determine_status(

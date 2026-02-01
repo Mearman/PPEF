@@ -9,7 +9,7 @@ import json
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 
 @dataclass
@@ -26,8 +26,8 @@ class ValidationResult:
     """Validation result with errors and warnings."""
 
     valid: bool
-    errors: list[str] = field(default_factory=list)
-    warnings: list[str] = field(default_factory=list)
+    errors: list[str] = field(default_factory=lambda: list[str]())
+    warnings: list[str] = field(default_factory=lambda: list[str]())
 
 
 def load_config(config_path: str | Path) -> LoadedConfig:
@@ -97,52 +97,64 @@ def validate_config(config: dict[str, Any]) -> ValidationResult:
         warnings.append("No output configuration specified - using defaults")
 
     # Check for empty SUTs/cases
-    if isinstance(config.get("suts"), list) and len(config["suts"]) == 0:
+    suts_val: Any = config.get("suts")
+    cases_val: Any = config.get("cases")
+    suts_raw: list[Any] = cast(list[Any], suts_val) if isinstance(suts_val, list) else []
+    cases_raw: list[Any] = cast(list[Any], cases_val) if isinstance(cases_val, list) else []
+    if len(suts_raw) == 0 and isinstance(suts_val, list):
         warnings.append("No SUTs configured - experiment will have nothing to execute")
-    if isinstance(config.get("cases"), list) and len(config["cases"]) == 0:
+    if len(cases_raw) == 0 and isinstance(cases_val, list):
         warnings.append("No cases configured - experiment will have nothing to execute")
 
     # Check for duplicate SUT IDs
-    if isinstance(config.get("suts"), list):
+    if suts_raw:
         sut_ids: set[str] = set()
-        for sut in config["suts"]:
-            if isinstance(sut, dict) and "id" in sut:
-                if sut["id"] in sut_ids:
-                    errors.append(f"Duplicate SUT ID: {sut['id']}")
-                sut_ids.add(sut["id"])
+        for sut_item in suts_raw:
+            if isinstance(sut_item, dict):
+                sut_dict: dict[str, Any] = cast(dict[str, Any], sut_item)
+                if "id" in sut_dict:
+                    sut_id_val: str = str(sut_dict["id"])
+                    if sut_id_val in sut_ids:
+                        errors.append(f"Duplicate SUT ID: {sut_id_val}")
+                    sut_ids.add(sut_id_val)
 
     # Check for duplicate case IDs
-    if isinstance(config.get("cases"), list):
+    if cases_raw:
         case_ids: set[str] = set()
-        for case in config["cases"]:
-            if isinstance(case, dict) and "id" in case:
-                if case["id"] in case_ids:
-                    errors.append(f"Duplicate case ID: {case['id']}")
-                case_ids.add(case["id"])
+        for case_item in cases_raw:
+            if isinstance(case_item, dict):
+                case_dict_item: dict[str, Any] = cast(dict[str, Any], case_item)
+                if "id" in case_dict_item:
+                    case_id_val: str = str(case_dict_item["id"])
+                    if case_id_val in case_ids:
+                        errors.append(f"Duplicate case ID: {case_id_val}")
+                    case_ids.add(case_id_val)
 
     # Validate SUT structure
-    if isinstance(config.get("suts"), list):
-        for i, sut in enumerate(config["suts"]):
-            if not isinstance(sut, dict):
-                errors.append(f"suts[{i}]: must be an object")
-                continue
-            for required in ("id", "module", "exportName", "registration"):
-                if required not in sut:
-                    errors.append(f"suts[{i}].{required}: Required")
-            if isinstance(sut.get("registration"), dict):
-                for required in ("name", "version", "role"):
-                    if required not in sut["registration"]:
-                        errors.append(f"suts[{i}].registration.{required}: Required")
+    for i, sut_raw in enumerate(suts_raw):
+        if not isinstance(sut_raw, dict):
+            errors.append(f"suts[{i}]: must be an object")
+            continue
+        sut_entry: dict[str, Any] = cast(dict[str, Any], sut_raw)
+        for required in ("id", "module", "exportName", "registration"):
+            if required not in sut_entry:
+                errors.append(f"suts[{i}].{required}: Required")
+        registration_val: Any = sut_entry.get("registration")
+        if isinstance(registration_val, dict):
+            reg_dict: dict[str, Any] = cast(dict[str, Any], registration_val)
+            for required in ("name", "version", "role"):
+                if required not in reg_dict:
+                    errors.append(f"suts[{i}].registration.{required}: Required")
 
     # Validate case structure
-    if isinstance(config.get("cases"), list):
-        for i, case in enumerate(config["cases"]):
-            if not isinstance(case, dict):
-                errors.append(f"cases[{i}]: must be an object")
-                continue
-            for required in ("id", "module", "exportName"):
-                if required not in case:
-                    errors.append(f"cases[{i}].{required}: Required")
+    for i, case_raw in enumerate(cases_raw):
+        if not isinstance(case_raw, dict):
+            errors.append(f"cases[{i}]: must be an object")
+            continue
+        case_entry: dict[str, Any] = cast(dict[str, Any], case_raw)
+        for required in ("id", "module", "exportName"):
+            if required not in case_entry:
+                errors.append(f"cases[{i}].{required}: Required")
 
     return ValidationResult(
         valid=len(errors) == 0,

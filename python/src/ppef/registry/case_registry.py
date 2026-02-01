@@ -8,23 +8,20 @@ experiment execution.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Protocol, TypeVar
+from typing import Any, Protocol
 
 from ppef.types.case import EvaluationCase
 
-TInput = TypeVar("TInput")
-TInputs = TypeVar("TInputs")
 
-
-class CaseDefinition(Protocol[TInput, TInputs]):
+class CaseDefinition[TInput_co, TInputs_co](Protocol):
     """Protocol for a case definition with metadata and resource factories."""
 
     @property
     def case(self) -> EvaluationCase: ...
 
-    async def get_input(self) -> TInput: ...
+    async def get_input(self) -> TInput_co: ...
 
-    def get_inputs(self) -> TInputs: ...
+    def get_inputs(self) -> TInputs_co: ...
 
 
 @dataclass(frozen=True)
@@ -32,24 +29,24 @@ class CaseDefinitionEntry[TInput, TInputs]:
     """A concrete case definition entry stored in the registry."""
 
     case: EvaluationCase
-    _get_input: object  # Callable[[], Awaitable[TInput]]
-    _get_inputs: object  # Callable[[], TInputs]
+    _get_input: Any  # Callable[[], Awaitable[TInput]]
+    _get_inputs: Any  # Callable[[], TInputs]
 
     async def get_input(self) -> TInput:
         """Load the input resource for this case."""
         from collections.abc import Awaitable
 
-        fn = self._get_input
+        fn: Any = self._get_input
         if callable(fn):
-            result = fn()
+            result: Any = fn()
             if isinstance(result, Awaitable):
-                return await result
+                return await result  # type: ignore[return-value]
             return result  # type: ignore[return-value]
         raise TypeError("get_input is not callable")
 
     def get_inputs(self) -> TInputs:
         """Get the algorithm inputs for this case."""
-        fn = self._get_inputs
+        fn: Any = self._get_inputs
         if callable(fn):
             return fn()  # type: ignore[return-value]
         raise TypeError("get_inputs is not callable")

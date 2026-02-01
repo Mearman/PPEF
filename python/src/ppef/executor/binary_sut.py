@@ -18,8 +18,9 @@ from __future__ import annotations
 import json
 import os
 import subprocess
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, Literal
+from typing import Any, Literal, cast
 
 # ---------------------------------------------------------------------------
 # Configuration
@@ -34,9 +35,9 @@ class BinarySUTConfig:
     """Configuration for binary SUT execution."""
 
     command: str
-    args: list[str] = field(default_factory=list)
+    args: list[str] = field(default_factory=list[str])
     cwd: str | None = None
-    env: dict[str, str] = field(default_factory=dict)
+    env: dict[str, str] = field(default_factory=dict[str, str])
     input_format: InputFormat = "json"
     output_format: OutputFormat = "json"
     timeout: float = 30.0
@@ -116,7 +117,8 @@ class BinarySUT:
                 return str(inputs)
             case "lines":
                 if isinstance(inputs, list):
-                    return "\n".join(str(item) for item in inputs) + "\n"
+                    items = cast(list[object], inputs)
+                    return "\n".join(str(item) for item in items) + "\n"
                 return str(inputs) + "\n"
 
     def _deserialize_output(self, stdout: str) -> Any:
@@ -144,9 +146,9 @@ class CreateBinarySUTOptions:
 
     command: str
     id: str | None = None
-    args: list[str] = field(default_factory=list)
+    args: list[str] = field(default_factory=list[str])
     cwd: str | None = None
-    env: dict[str, str] = field(default_factory=dict)
+    env: dict[str, str] = field(default_factory=dict[str, str])
     input_format: InputFormat = "json"
     output_format: OutputFormat = "json"
     timeout: float = 30.0
@@ -155,7 +157,7 @@ class CreateBinarySUTOptions:
 
 def create_binary_sut(
     options: CreateBinarySUTOptions,
-) -> Any:
+) -> Callable[[dict[str, Any] | None], BinarySUT]:
     """Create a binary SUT factory function.
 
     The returned callable matches the SUT factory signature and can be
@@ -177,7 +179,7 @@ def create_binary_sut(
     """
 
     def factory(config: dict[str, Any] | None = None) -> BinarySUT:
-        merged = {
+        merged: dict[str, str | list[str] | dict[str, str] | float | int | None] = {
             "command": options.command,
             "args": list(options.args),
             "cwd": options.cwd,
@@ -201,17 +203,26 @@ def create_binary_sut(
             or f"binary-{options.command}"
         )
 
+        command = merged["command"]
+        args = merged["args"]
+        cwd = merged["cwd"]
+        env = merged["env"]
+        input_format = merged["input_format"]
+        output_format = merged["output_format"]
+        timeout = merged["timeout"]
+        success_exit_code = merged["success_exit_code"]
+
         return BinarySUT(
             id=sut_id,
             config=BinarySUTConfig(
-                command=merged["command"],
-                args=merged["args"],
-                cwd=merged["cwd"],
-                env=merged["env"],
-                input_format=merged["input_format"],
-                output_format=merged["output_format"],
-                timeout=merged["timeout"],
-                success_exit_code=merged["success_exit_code"],
+                command=cast(str, command),
+                args=cast(list[str], args),
+                cwd=cast(str | None, cwd),
+                env=cast(dict[str, str], env),
+                input_format=cast(InputFormat, input_format),
+                output_format=cast(OutputFormat, output_format),
+                timeout=cast(float, timeout),
+                success_exit_code=cast(int, success_exit_code),
             ),
         )
 

@@ -13,10 +13,10 @@ import subprocess
 import sys
 import time
 from collections.abc import Callable
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import Future, ProcessPoolExecutor
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
-from typing import Any, Protocol
+from typing import Any, Protocol, cast
 
 from ppef.executor.run_id import generate_run_id
 from ppef.types.result import (
@@ -163,8 +163,8 @@ class ExecutionSummary:
     successful_runs: int
     failed_runs: int
     elapsed_ms: float
-    results: list[EvaluationResult] = field(default_factory=list)
-    errors: list[dict[str, str]] = field(default_factory=list)
+    results: list[EvaluationResult] = field(default_factory=list[EvaluationResult])
+    errors: list[dict[str, str]] = field(default_factory=list[dict[str, str]])
 
 
 @dataclass
@@ -217,7 +217,7 @@ def _get_provenance(collect_provenance: bool) -> Provenance:
 
     return Provenance(
         runtime=runtime,
-        git_commit=git_commit,
+        gitCommit=git_commit,
         dirty=dirty,
         timestamp=datetime.now(UTC).isoformat(),
     )
@@ -433,7 +433,7 @@ class Executor:
         failed = 0
 
         with ProcessPoolExecutor(max_workers=max_workers) as pool:
-            futures = {}
+            futures: dict[Future[EvaluationResult], PlannedRun] = {}
             for run in planned_runs:
                 sut_def = sut_map.get(run.sut_id)
                 case_def = case_map.get(run.case_id)
@@ -530,7 +530,11 @@ class Executor:
         sut = sut_def.factory(run.config)
 
         # Combine inputs with loaded resource
-        run_inputs = {**inputs, "input": resource_input} if isinstance(inputs, dict) else inputs
+        run_inputs: Any
+        if isinstance(inputs, dict):
+            run_inputs = {**cast(dict[str, Any], inputs), "input": resource_input}
+        else:
+            run_inputs = inputs
 
         # Execute SUT
         sut_result = sut.run(run_inputs)
@@ -548,28 +552,28 @@ class Executor:
 
         # Build correctness
         correctness = CorrectnessResult(
-            expected_exists=case_def.case.expected_output is not None,
-            produced_output=True,
+            expectedExists=case_def.case.expected_output is not None,
+            producedOutput=True,
             valid=True,
-            matches_expected=None,
+            matchesExpected=None,
         )
 
         # Build provenance
         provenance = _get_provenance(self._config.collect_provenance)
-        provenance.execution_time_ms = execution_time_ms
+        provenance.execution_time_ms = execution_time_ms  # pyright: ignore[reportAttributeAccessIssue]
 
         if self._config.monitor_memory and self._config.collect_provenance:
-            provenance.peak_memory_bytes = peak_memory_bytes
-            provenance.final_memory_bytes = final_memory_bytes
+            provenance.peak_memory_bytes = peak_memory_bytes  # pyright: ignore[reportAttributeAccessIssue]
+            provenance.final_memory_bytes = final_memory_bytes  # pyright: ignore[reportAttributeAccessIssue]
 
         return EvaluationResult(
             run=RunContext(
-                run_id=run.run_id,
+                runId=run.run_id,
                 sut=run.sut_id,
-                sut_role=sut_def.registration.role,
-                sut_version=sut_def.registration.version,
-                case_id=run.case_id,
-                case_class=case_def.case.case_class,
+                sutRole=sut_def.registration.role,
+                sutVersion=sut_def.registration.version,
+                caseId=run.case_id,
+                caseClass=case_def.case.case_class,
                 config=_to_primitive_record(run.config),
                 seed=run.seed,
                 repetition=run.repetition,

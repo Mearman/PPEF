@@ -5,10 +5,13 @@ Executes experiments based on JSON configuration.
 
 from __future__ import annotations
 
+import asyncio
+import inspect
 import sys
 import time
+from collections.abc import Callable
 from datetime import UTC
-from typing import Annotated, Any
+from typing import Annotated, Any, cast
 
 import typer
 
@@ -23,6 +26,16 @@ from ppef.cli.output_writer import (
     write_aggregates,
     write_results,
 )
+
+
+def _get_case_id_from_def(case_def: dict[str, Any]) -> str:
+    """Extract caseId from a case definition dict."""
+    case_data: Any = case_def.get("case", {})
+    if isinstance(case_data, dict):
+        typed_case: dict[str, Any] = cast(dict[str, Any], case_data)
+        case_id: str = typed_case.get("caseId", "")
+        return case_id
+    return str(getattr(case_data, "caseId", ""))
 
 
 def run(
@@ -41,7 +54,7 @@ def run(
 ) -> None:
     """Run experiments from a configuration file."""
     try:
-        _print = (lambda *_a, **_kw: None) if quiet else typer.echo
+        _print: Callable[..., None] = (lambda *_a: None) if quiet else typer.echo
 
         _print(f"{'=' * 60}")
         _print(f"Experiment: {'Dry Run' if dry_run else 'Execution'}")
@@ -118,17 +131,12 @@ def run(
 
         # Plan runs
         _print("\nPlanning execution...")
-        repetitions = executor_config.get("repetitions", 1)
-        seed_base = executor_config.get("seedBase", 0)
+        repetitions: int = executor_config.get("repetitions", 1)
+        seed_base: int = executor_config.get("seedBase", 0)
         planned_runs: list[dict[str, Any]] = []
         for sut_def in sut_definitions:
             for case_def in case_definitions:
-                case_data = case_def.get("case", {}) if isinstance(case_def, dict) else case_def
-                case_id = (
-                    case_data.get("caseId", "")
-                    if isinstance(case_data, dict)
-                    else getattr(case_data, "caseId", "")
-                )
+                case_id: str = _get_case_id_from_def(case_def)
                 for rep in range(repetitions):
                     planned_runs.append(
                         {
@@ -144,13 +152,8 @@ def run(
         if dry_run:
             _print("\nDry run - not executing")
             _print(f"SUTs: {', '.join(s['id'] for s in sut_definitions)}")
-            case_ids = []
-            for c in case_definitions:
-                cd = c.get("case", {}) if isinstance(c, dict) else c
-                case_ids.append(
-                    cd.get("caseId", "") if isinstance(cd, dict) else getattr(cd, "caseId", "")
-                )
-            _print(f"Cases: {', '.join(case_ids)}")
+            dry_run_case_ids: list[str] = [_get_case_id_from_def(c) for c in case_definitions]
+            _print(f"Cases: {', '.join(dry_run_case_ids)}")
             _print(f"Total runs: {len(planned_runs)}")
             return
 
@@ -167,48 +170,45 @@ def run(
             try:
                 # Find the SUT and case
                 sut_def = next(s for s in sut_definitions if s["id"] == run_plan["sutId"])
-                sut_instance = sut_def["factory"]()
+                sut_instance: Any = sut_def["factory"]()
 
-                case_def = next(
-                    c
-                    for c in case_definitions
-                    if (c.get("case", {}) if isinstance(c, dict) else c).get("caseId", "")
-                    == run_plan["caseId"]
-                    or getattr((c.get("case", {}) if isinstance(c, dict) else c), "caseId", "")
-                    == run_plan["caseId"]
+                found_case_def: dict[str, Any] = next(
+                    c for c in case_definitions if _get_case_id_from_def(c) == run_plan["caseId"]
                 )
 
-                get_inputs_fn = (
-                    case_def.get("getInputs")
-                    if isinstance(case_def, dict)
-                    else getattr(case_def, "getInputs", None)
-                )
-                if get_inputs_fn is None:
+                get_inputs_fn: Any = found_case_def.get("getInputs")
+                if get_inputs_fn is None or not callable(get_inputs_fn):
                     msg = f"Case {run_plan['caseId']} missing getInputs"
                     raise ValueError(msg)
 
-                inputs = get_inputs_fn()
-                run_fn = (
-                    sut_instance.get("run") if isinstance(sut_instance, dict) else sut_instance.run
-                )
+                inputs: Any = get_inputs_fn()
+                run_fn: Any
+                sut_config_for_id: dict[str, Any]
+                if isinstance(sut_instance, dict):
+                    sut_as_dict: dict[str, Any] = cast(dict[str, Any], sut_instance)
+                    run_fn = sut_as_dict.get("run")
+                    sut_config_for_id = sut_as_dict.get("config", {})
+                else:
+                    run_fn = sut_instance.run
+                    sut_config_for_id = getattr(sut_instance, "config", {})
 
-                import asyncio
-
-                if asyncio.iscoroutinefunction(run_fn):
-                    result_output = asyncio.run(run_fn(inputs))
+                if inspect.iscoroutinefunction(run_fn):
+                    result_output: Any = asyncio.run(run_fn(inputs))
                 else:
                     result_output = run_fn(inputs)
 
-                metrics = metrics_extractor(result_output)
+                metrics: Any = metrics_extractor(result_output)
 
                 from ppef.executor.run_id import generate_run_id
 
-                run_id = generate_run_id(
-                    sut_id=run_plan["sutId"],
-                    case_id=run_plan["caseId"],
-                    config=sut_instance.get("config", {}),
-                    seed=run_plan["seed"],
-                    repetition=run_plan["repetition"],
+                run_id: str = generate_run_id(
+                    {
+                        "sut_id": run_plan["sutId"],
+                        "case_id": run_plan["caseId"],
+                        "config": sut_config_for_id,
+                        "seed": run_plan["seed"],
+                        "repetition": run_plan["repetition"],
+                    }
                 )
 
                 result_entry: dict[str, Any] = {
@@ -264,10 +264,10 @@ def run(
                 _print(f"  ... and {len(errors_list) - 5} more")
 
         # Write results
-        output_config = config.get("output", {})
-        output_path = output or output_config.get("path", "./results")
-        output_format = fmt or output_config.get("format", "json-pretty")
-        should_aggregate = output_config.get("aggregate", True)
+        output_config: dict[str, Any] = config.get("output", {})
+        output_path: str = output or output_config.get("path", "./results")
+        output_format: str = fmt or output_config.get("format", "json-pretty")
+        should_aggregate: Any = output_config.get("aggregate", True)
 
         _print("\nWriting results...")
         results_filename = generate_output_filename(config["experiment"]["name"], "results")

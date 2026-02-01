@@ -6,12 +6,22 @@ Shows execution plan without running experiments.
 from __future__ import annotations
 
 from collections import defaultdict
-from typing import Annotated, Any
+from typing import Annotated, Any, cast
 
 import typer
 
 from ppef.cli.config_loader import load_and_validate_config
 from ppef.cli.module_loader import load_case_definition, load_sut_factory
+
+
+def _get_case_id(case_def: dict[str, Any]) -> str:
+    """Extract caseId from a case definition dict."""
+    case_data: Any = case_def.get("case", {})
+    if isinstance(case_data, dict):
+        typed_case: dict[str, Any] = cast(dict[str, Any], case_data)
+        case_id: str = typed_case.get("caseId", "")
+        return case_id
+    return str(getattr(case_data, "caseId", ""))
 
 
 def plan(
@@ -61,18 +71,14 @@ def plan(
 
         # Plan runs
         typer.echo("Planning runs...")
-        repetitions = config.get("executor", {}).get("repetitions", 1)
-        seed_base = config.get("executor", {}).get("seedBase", 0)
+        executor_config: dict[str, Any] = config.get("executor", {})
+        repetitions: int = executor_config.get("repetitions", 1)
+        seed_base: int = executor_config.get("seedBase", 0)
 
         planned_runs: list[dict[str, Any]] = []
         for sut_def in sut_definitions:
             for case_def in case_definitions:
-                case_data = case_def.get("case", {}) if isinstance(case_def, dict) else case_def
-                case_id = (
-                    case_data.get("caseId", "")
-                    if isinstance(case_data, dict)
-                    else getattr(case_data, "caseId", "")
-                )
+                case_id: str = _get_case_id(case_def)
                 for rep in range(repetitions):
                     planned_runs.append(
                         {
@@ -97,47 +103,52 @@ def plan(
             # Group by case class
             by_case_class: dict[str, list[dict[str, Any]]] = defaultdict(list)
             for run_info in runs:
-                case_def = next(
-                    (
-                        c
-                        for c in case_definitions
-                        if (c.get("case", {}) if isinstance(c, dict) else c).get("caseId", "")
-                        == run_info["caseId"]
-                        or getattr((c.get("case", {}) if isinstance(c, dict) else c), "caseId", "")
-                        == run_info["caseId"]
-                    ),
+                case_def: dict[str, Any] | None = next(
+                    (c for c in case_definitions if _get_case_id(c) == run_info["caseId"]),
                     None,
                 )
-                case_class = "uncategorized"
+                case_class: str = "uncategorized"
                 if case_def is not None:
-                    cd = case_def.get("case", {}) if isinstance(case_def, dict) else case_def
-                    case_class = (
-                        cd.get("caseClass")
-                        if isinstance(cd, dict)
-                        else getattr(cd, "caseClass", None)
-                    ) or "uncategorized"
+                    cd: Any = case_def.get("case", {})
+                    if isinstance(cd, dict):
+                        cd_typed: dict[str, Any] = cast(dict[str, Any], cd)
+                        case_class = cd_typed.get("caseClass", "uncategorized") or "uncategorized"
+                    else:
+                        case_class = getattr(cd, "caseClass", "uncategorized") or "uncategorized"
                 by_case_class[case_class].append(run_info)
 
             for case_class, class_runs in by_case_class.items():
                 typer.echo(f"  {case_class}: {len(class_runs)} runs")
 
         # Schema validation status
-        schemas = config.get("schemas", {})
+        schemas: dict[str, Any] = config.get("schemas", {})
         has_input_schema = bool(schemas.get("input"))
         has_output_schema = bool(schemas.get("output"))
-        sut_overrides = sum(1 for s in config.get("suts", []) if s.get("outputSchema"))
-        case_overrides = sum(1 for c in config.get("cases", []) if c.get("inputSchema"))
+        suts_for_schema: list[Any] = config.get("suts", [])
+        cases_for_schema: list[Any] = config.get("cases", [])
+        sut_overrides = sum(
+            1
+            for s in suts_for_schema
+            if isinstance(s, dict) and cast(dict[str, Any], s).get("outputSchema")
+        )
+        case_overrides = sum(
+            1
+            for c in cases_for_schema
+            if isinstance(c, dict) and cast(dict[str, Any], c).get("inputSchema")
+        )
 
         if has_input_schema or has_output_schema or sut_overrides > 0 or case_overrides > 0:
             typer.echo("\nSchema Validation")
             typer.echo("-" * 40)
             parts: list[str] = []
             if has_input_schema:
-                props = schemas.get("input", {}).get("properties", {})
-                parts.append(f"input ({len(props)} properties)")
+                input_schema: dict[str, Any] = schemas.get("input", {})
+                input_props: dict[str, Any] = input_schema.get("properties", {})
+                parts.append(f"input ({len(input_props)} properties)")
             if has_output_schema:
-                props = schemas.get("output", {}).get("properties", {})
-                parts.append(f"output ({len(props)} properties)")
+                output_schema: dict[str, Any] = schemas.get("output", {})
+                output_props: dict[str, Any] = output_schema.get("properties", {})
+                parts.append(f"output ({len(output_props)} properties)")
             if parts:
                 typer.echo(f"  Experiment-level: {', '.join(parts)}")
             if sut_overrides > 0:

@@ -8,7 +8,7 @@ from __future__ import annotations
 import json
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Annotated, Any
+from typing import Annotated, Any, cast
 
 import typer
 
@@ -41,7 +41,7 @@ def aggregate(
             typer.echo("Error: Invalid results file: missing or invalid 'results' array", err=True)
             raise SystemExit(1)
 
-        results: list[dict[str, Any]] = data["results"]
+        results: list[dict[str, Any]] = cast(list[dict[str, Any]], data["results"])
         typer.echo(f"Found {len(results)} results")
 
         # Aggregate: group by SUT

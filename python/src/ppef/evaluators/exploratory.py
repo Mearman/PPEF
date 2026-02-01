@@ -364,13 +364,13 @@ class ExploratoryEvaluator:
         )
 
         return PairwiseComparison(
-            sut_a=sut_a,
-            sut_b=sut_b,
+            sutA=sut_a,
+            sutB=sut_b,
             metric=metric,
             delta=delta,
             ratio=ratio,
-            p_value=p_value,
-            effect_size=effect_size,
+            pValue=p_value,
+            effectSize=effect_size,
             significant=significant,
         )
 
@@ -418,11 +418,11 @@ class ExploratoryEvaluator:
 
                     effects.append(
                         CaseClassEffect(
-                            case_class=str(case_class),
+                            caseClass=str(case_class),
                             sut=sut,
                             metric=metric,
-                            deviation_from_mean=deviation,
-                            percentage_deviation=pct_deviation,
+                            deviationFromMean=deviation,
+                            percentageDeviation=pct_deviation,
                             significant=significant,
                         )
                     )
@@ -467,10 +467,10 @@ class ExploratoryEvaluator:
         interpretation = self._interpret_correlation(pearson_r)
 
         return MetricCorrelation(
-            metric_a=metric_a,
-            metric_b=metric_b,
-            pearson_r=pearson_r,
-            spearman_rho=spearman_rho,
+            metricA=metric_a,
+            metricB=metric_b,
+            pearsonR=pearson_r,
+            spearmanRho=spearman_rho,
             interpretation=interpretation,
         )
 

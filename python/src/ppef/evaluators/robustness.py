@@ -38,23 +38,23 @@ class RobustnessEvaluator:
         errors: list[str] = []
         warnings: list[str] = []
 
-        if not isinstance(config.metrics, list):
+        if not isinstance(config.metrics, list):  # type: ignore[unnecessary-isinstance]
             errors.append("metrics must be a list")
         elif len(config.metrics) == 0:
             errors.append("metrics cannot be empty")
 
-        if not isinstance(config.perturbations, list):
+        if not isinstance(config.perturbations, list):  # type: ignore[unnecessary-isinstance]
             errors.append("perturbations must be a list")
         elif len(config.perturbations) == 0:
             errors.append("perturbations cannot be empty")
 
         if config.intensity_levels is not None:
-            if not isinstance(config.intensity_levels, list):
+            if not isinstance(config.intensity_levels, list):  # type: ignore[unnecessary-isinstance]
                 errors.append("intensityLevels must be a list")
-            elif not all(isinstance(level, (int, float)) for level in config.intensity_levels):
+            elif not all(isinstance(level, (int, float)) for level in config.intensity_levels):  # type: ignore[unnecessary-isinstance]
                 errors.append("intensityLevels must contain only numbers")
 
-        if config.runs_per_level is not None and not isinstance(config.runs_per_level, int):
+        if config.runs_per_level is not None and not isinstance(config.runs_per_level, int):  # type: ignore[unnecessary-isinstance]
             errors.append("runsPerLevel must be a number")
 
         return ValidationResult(
@@ -190,9 +190,9 @@ class RobustnessEvaluator:
 
         if not values:
             return RobustnessMetrics(
-                variance_under_perturbation=float("nan"),
-                std_under_perturbation=float("nan"),
-                coefficient_of_variation=float("nan"),
+                varianceUnderPerturbation=float("nan"),
+                stdUnderPerturbation=float("nan"),
+                coefficientOfVariation=float("nan"),
             )
 
         n = len(values)
@@ -202,7 +202,7 @@ class RobustnessEvaluator:
         cv = std / abs(mean) if mean != 0 else float("nan")
 
         return RobustnessMetrics(
-            variance_under_perturbation=variance,
-            std_under_perturbation=std,
-            coefficient_of_variation=cv,
+            varianceUnderPerturbation=variance,
+            stdUnderPerturbation=std,
+            coefficientOfVariation=cv,
         )

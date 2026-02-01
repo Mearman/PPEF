@@ -56,7 +56,7 @@ class TableRenderSpec:
     filter_fn: Callable[[dict[str, Any]], bool] | None = None
     sort_fn: Callable[[dict[str, Any], dict[str, Any]], int] | None = None
     caption_placeholders: dict[str, Callable[[list[dict[str, Any]]], str]] = field(
-        default_factory=dict
+        default_factory=lambda: dict[str, Callable[[list[dict[str, Any]]], str]]()
     )
 
 
@@ -234,7 +234,7 @@ class LaTeXRenderer:
                 max_str = self.format_number(max_val) if max_val is not None else "inf"
                 expected_str = f"[{min_str}, {max_str}]"
 
-            observed_parts = []
+            observed_parts: list[str] = []
             for obs in result.get("observed", []):
                 sut_name = escape_latex(str(obs.get("sut", "")))
                 obs_val = self.format_number(obs.get("value", 0))

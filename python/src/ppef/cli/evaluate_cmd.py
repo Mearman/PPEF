@@ -177,8 +177,8 @@ def evaluate(
 
             renderer = LaTeXRenderer()
             rendered = renderer.render_evaluation(eval_output)
-            output_filename = output or rendered["filename"]
-            Path(output_filename).write_text(rendered["content"], encoding="utf-8")
+            output_filename = output or rendered.filename
+            Path(output_filename).write_text(rendered.content, encoding="utf-8")
         else:
             indent = 2 if output_format == "json-pretty" else None
             output_content = json.dumps(eval_output, indent=indent, default=str)

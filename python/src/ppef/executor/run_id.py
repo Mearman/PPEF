@@ -13,7 +13,7 @@ from __future__ import annotations
 import hashlib
 import json
 import math
-from typing import Any
+from typing import Any, cast
 
 
 def canonicalize(value: Any) -> str:
@@ -52,14 +52,16 @@ def canonicalize(value: Any) -> str:
         return json.dumps(value)
 
     if isinstance(value, list):
-        items = [canonicalize(item) for item in value]
+        typed_list = cast(list[object], value)
+        items: list[str] = [canonicalize(item) for item in typed_list]
         return f"[{','.join(items)}]"
 
     if isinstance(value, dict):
         # Include all keys present in the dict (None serializes as "null").
         # In JS, undefined values are omitted but null is preserved.
         # In Python, absent keys are simply not in the dict, so we include everything.
-        keys = sorted(value.keys())
+        typed_dict = cast(dict[str, object], value)
+        keys: list[str] = sorted(typed_dict.keys())
         pairs = [f"{json.dumps(k)}:{canonicalize(value[k])}" for k in keys]
         return f"{{{','.join(pairs)}}}"
 

@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
+from typing import Any
 
 from ppef.statistical.mann_whitney import mann_whitney_u_test
 
@@ -139,10 +140,10 @@ def compute_max_speedup(pairs: list[tuple[float, float]]) -> float:
 
 
 def compute_comparison(
-    primary_results: list[dict],
-    baseline_results: list[dict],
+    primary_results: list[dict[str, Any]],
+    baseline_results: list[dict[str, Any]],
     metric_name: str,
-) -> dict:
+) -> dict[str, Any]:
     """Compute comparison metrics between primary and baseline results.
 
     Results are dicts with at minimum: run.caseId and metrics.numeric[metric_name]
@@ -152,12 +153,18 @@ def compute_comparison(
     baseline_by_case: dict[str, float | None] = {}
 
     for result in primary_results:
-        value = result.get("metrics", {}).get("numeric", {}).get(metric_name)
-        primary_by_case[result["run"]["caseId"]] = value
+        metrics: dict[str, Any] = result.get("metrics", {})
+        numeric: dict[str, Any] = metrics.get("numeric", {})
+        value: float | None = numeric.get(metric_name)
+        run: dict[str, Any] = result["run"]
+        primary_by_case[run["caseId"]] = value
 
     for result in baseline_results:
-        value = result.get("metrics", {}).get("numeric", {}).get(metric_name)
-        baseline_by_case[result["run"]["caseId"]] = value
+        metrics_b: dict[str, Any] = result.get("metrics", {})
+        numeric_b: dict[str, Any] = metrics_b.get("numeric", {})
+        value_b: float | None = numeric_b.get(metric_name)
+        run_b: dict[str, Any] = result["run"]
+        baseline_by_case[run_b["caseId"]] = value_b
 
     # Get matching case IDs
     common_case_ids = [cid for cid in primary_by_case if cid in baseline_by_case]
@@ -216,17 +223,19 @@ def compute_comparison(
 
 
 def compute_rankings(
-    results: list[dict],
+    results: list[dict[str, Any]],
     metric_name: str,
     ascending: bool = False,
-) -> list[dict]:
+) -> list[dict[str, Any]]:
     """Compute rankings from results."""
-    with_values = []
+    with_values: list[dict[str, Any]] = []
     for result in results:
-        value = result.get("metrics", {}).get("numeric", {}).get(metric_name)
+        metrics_r: dict[str, Any] = result.get("metrics", {})
+        numeric_r: dict[str, Any] = metrics_r.get("numeric", {})
+        value: float | None = numeric_r.get(metric_name)
         if value is not None and not math.isnan(value):
             with_values.append({"result": result, "value": value})
 
-    with_values.sort(key=lambda x: x["value"], reverse=not ascending)
+    with_values.sort(key=lambda x: float(x["value"]), reverse=not ascending)
 
     return [{**item, "rank": index + 1} for index, item in enumerate(with_values)]

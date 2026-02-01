@@ -36,8 +36,8 @@ class CheckpointData:
     config_hash: str
     created_at: str
     updated_at: str
-    completed_run_ids: list[str] = field(default_factory=list)
-    results: dict[str, dict[str, Any]] = field(default_factory=dict)
+    completed_run_ids: list[str] = field(default_factory=list[str])
+    results: dict[str, dict[str, Any]] = field(default_factory=dict[str, dict[str, Any]])
     total_planned: int = 0
     git_commit: str | None = None
     worker_index: int | None = None
@@ -50,7 +50,7 @@ class CheckpointData:
 
 
 @dataclass
-class _ConfigSignature:
+class _ConfigSignature:  # pyright: ignore[reportUnusedClass]
     """Configuration signature for staleness hashing."""
 
     suts: list[dict[str, str]]
@@ -64,7 +64,7 @@ class _ConfigSignature:
 # ---------------------------------------------------------------------------
 
 
-class _HasRegistration:
+class _HasRegistration:  # pyright: ignore[reportUnusedClass]
     """Duck-type for objects with a registration attribute."""
 
     class _Reg:
@@ -74,7 +74,7 @@ class _HasRegistration:
     registration: _Reg
 
 
-class _HasCase:
+class _HasCase:  # pyright: ignore[reportUnusedClass]
     """Duck-type for objects with a case attribute."""
 
     class _CaseInfo:

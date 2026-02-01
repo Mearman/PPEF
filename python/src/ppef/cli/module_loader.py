@@ -10,7 +10,7 @@ import importlib
 import importlib.util
 import sys
 from pathlib import Path
-from typing import Any, Protocol
+from typing import Any, Protocol, cast
 
 
 class SutInstance(Protocol):
@@ -157,14 +157,24 @@ def load_case_definition(
     module = _load_module(module_path, base_dir)
     case_fn = _get_exported_function(module, export_name, module_path)
 
-    definition = case_fn()
+    definition: Any = case_fn()
+
+    # Normalize to dict for type safety
+    def_dict: dict[str, Any] = (
+        cast(dict[str, Any], definition)
+        if isinstance(definition, dict)
+        else cast(
+            dict[str, Any],
+            {
+                "case": getattr(definition, "case", None),
+                "getInput": getattr(definition, "getInput", None),
+                "getInputs": getattr(definition, "getInputs", None),
+            },
+        )
+    )
 
     # Validate structure
-    case_data = (
-        definition.get("case")
-        if isinstance(definition, dict)
-        else getattr(definition, "case", None)
-    )
+    case_data: Any = def_dict.get("case")
     if case_data is None:
         msg = (
             f'Export "{export_name}" in {module_path} does not return'
@@ -172,8 +182,8 @@ def load_case_definition(
         )
         raise ValueError(msg)
 
-    case_id = (
-        case_data.get("caseId")
+    case_id: Any = (
+        cast(dict[str, Any], case_data).get("caseId")
         if isinstance(case_data, dict)
         else getattr(case_data, "caseId", None)
     )
@@ -184,11 +194,7 @@ def load_case_definition(
         )
         raise ValueError(msg)
 
-    get_input = (
-        definition.get("getInput")
-        if isinstance(definition, dict)
-        else getattr(definition, "getInput", None)
-    )
+    get_input: Any = def_dict.get("getInput")
     if not callable(get_input):
         msg = (
             f'Export "{export_name}" in {module_path} does not return'
@@ -196,11 +202,7 @@ def load_case_definition(
         )
         raise ValueError(msg)
 
-    get_inputs = (
-        definition.get("getInputs")
-        if isinstance(definition, dict)
-        else getattr(definition, "getInputs", None)
-    )
+    get_inputs: Any = def_dict.get("getInputs")
     if not callable(get_inputs):
         msg = (
             f'Export "{export_name}" in {module_path} does not return'
@@ -208,10 +210,9 @@ def load_case_definition(
         )
         raise ValueError(msg)
 
-    result = dict(definition) if isinstance(definition, dict) else definition
-    if isinstance(result, dict):
-        result["source_module"] = module_path
-        result["source_export_name"] = export_name
+    result: dict[str, Any] = dict(def_dict)
+    result["source_module"] = module_path
+    result["source_export_name"] = export_name
 
     return result
 

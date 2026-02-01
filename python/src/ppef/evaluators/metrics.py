@@ -40,7 +40,7 @@ class MetricsEvaluator:
         errors: list[str] = []
         warnings: list[str] = []
 
-        if not isinstance(config.criteria, list):
+        if not isinstance(config.criteria, list):  # type: ignore[unnecessary-isinstance]
             errors.append("criteria must be a list")
         elif len(config.criteria) == 0:
             warnings.append("No criteria provided - evaluation will produce empty results")
@@ -58,13 +58,13 @@ class MetricsEvaluator:
         errors: list[str] = []
         prefix = f"Criterion[{index}]"
 
-        if not criterion.criterion_id or not isinstance(criterion.criterion_id, str):
+        if not criterion.criterion_id or not isinstance(criterion.criterion_id, str):  # type: ignore[unnecessary-isinstance]
             errors.append(f"{prefix}: criterionId is required")
-        if not criterion.description or not isinstance(criterion.description, str):
+        if not criterion.description or not isinstance(criterion.description, str):  # type: ignore[unnecessary-isinstance]
             errors.append(f"{prefix}: description is required")
-        if not criterion.metric or not isinstance(criterion.metric, str):
+        if not criterion.metric or not isinstance(criterion.metric, str):  # type: ignore[unnecessary-isinstance]
             errors.append(f"{prefix}: metric is required")
-        if not criterion.sut or not isinstance(criterion.sut, str):
+        if not criterion.sut or not isinstance(criterion.sut, str):  # type: ignore[unnecessary-isinstance]
             errors.append(f"{prefix}: sut is required")
 
         match criterion.type:
@@ -96,7 +96,11 @@ class MetricsEvaluator:
                     tr_max = criterion.target_range.get("max")
                     if tr_min is None and tr_max is None:
                         errors.append(f"{prefix}: targetRange must have min or max")
-                    if tr_min is not None and tr_max is not None and float(tr_min) > float(tr_max):
+                    if (
+                        tr_min is not None
+                        and tr_max is not None
+                        and float(str(tr_min)) > float(str(tr_max))
+                    ):
                         errors.append(f"{prefix}: targetRange.min must be <= targetRange.max")
 
         return errors
@@ -149,7 +153,7 @@ class MetricsEvaluator:
             passed=summary["passed"],
             failed=summary["failed"],
             inconclusive=summary["inconclusive"],
-            pass_rate=summary["passRate"],
+            passRate=summary["passRate"],
             additional={"passRateBySut": json.dumps(summary.get("passRateBySut", {}))},
         ).model_dump(by_alias=True)
 
@@ -170,14 +174,14 @@ class MetricsEvaluator:
                 status="inconclusive",
                 observed=[],
                 expected={"type": criterion.type},
-                inconclusive_reason=f"No aggregates found for SUT: {criterion.sut}",
+                inconclusiveReason=f"No aggregates found for SUT: {criterion.sut}",
             )
 
         observed: list[dict[str, object]] = []
         for agg in relevant:
             if criterion.metric in agg.metrics:
                 stats = agg.metrics[criterion.metric]
-                if isinstance(stats.mean, (int, float)):
+                if isinstance(stats.mean, (int, float)):  # type: ignore[unnecessary-isinstance]
                     observed.append({"sut": agg.sut, "value": stats.mean})
 
         if not observed:
@@ -186,7 +190,7 @@ class MetricsEvaluator:
                 status="inconclusive",
                 observed=[],
                 expected={"type": criterion.type},
-                inconclusive_reason=f"Metric {criterion.metric} not found in aggregates",
+                inconclusiveReason=f"Metric {criterion.metric} not found in aggregates",
             )
 
         return self._evaluate_by_type(criterion, observed, aggregates)
@@ -264,7 +268,7 @@ class MetricsEvaluator:
                 status="inconclusive",
                 observed=observed,
                 expected={"type": "baseline"},
-                inconclusive_reason=f"Baseline SUT not found: {baseline_sut}",
+                inconclusiveReason=f"Baseline SUT not found: {baseline_sut}",
             )
 
         if criterion.metric not in baseline_agg.metrics:
@@ -273,17 +277,17 @@ class MetricsEvaluator:
                 status="inconclusive",
                 observed=observed,
                 expected={"type": "baseline"},
-                inconclusive_reason=f"Baseline metric not found: {criterion.metric}",
+                inconclusiveReason=f"Baseline metric not found: {criterion.metric}",
             )
 
         baseline_stats = baseline_agg.metrics[criterion.metric]
-        if not isinstance(baseline_stats.mean, (int, float)):
+        if not isinstance(baseline_stats.mean, (int, float)):  # type: ignore[unnecessary-isinstance]
             return MetricsCriterionResult(
                 criterion=criterion,
                 status="inconclusive",
                 observed=observed,
                 expected={"type": "baseline"},
-                inconclusive_reason=f"Baseline metric not found: {criterion.metric}",
+                inconclusiveReason=f"Baseline metric not found: {criterion.metric}",
             )
 
         baseline_value = baseline_stats.mean
@@ -319,11 +323,11 @@ class MetricsEvaluator:
 
         def in_range(value: float) -> bool:
             if tr_min is not None:
-                above = value >= float(tr_min) if min_inclusive else value > float(tr_min)  # type: ignore[arg-type]
+                above = value >= float(str(tr_min)) if min_inclusive else value > float(str(tr_min))
                 if not above:
                     return False
             if tr_max is not None:
-                below = value <= float(tr_max) if max_inclusive else value < float(tr_max)  # type: ignore[arg-type]
+                below = value <= float(str(tr_max)) if max_inclusive else value < float(str(tr_max))
                 if not below:
                     return False
             return True
