@@ -1,3 +1,10 @@
+## <small>1.5.1 (2026-02-01)</small>
+
+* ci: migrate from npm to pnpm in workflow ([a3343ae](https://github.com/Mearman/ppef/commit/a3343ae))
+* fix(deps): update dependencies to resolve security vulnerabilities ([288d214](https://github.com/Mearman/ppef/commit/288d214))
+* fix(python): resolve all pyright strict mode errors ([f660cd1](https://github.com/Mearman/ppef/commit/f660cd1))
+* chore: remove stale package-lock.json ([a2f58e8](https://github.com/Mearman/ppef/commit/a2f58e8))
+
 ## 1.5.0 (2026-02-01)
 
 * ci: add python lint, typecheck, conformance, and test jobs ([a6a8a4e](https://github.com/Mearman/ppef/commit/a6a8a4e))
