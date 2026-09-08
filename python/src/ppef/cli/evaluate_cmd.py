@@ -150,9 +150,7 @@ def evaluate(
         # Parse aggregates into Pydantic models for evaluators
         from ppef.types.aggregate import AggregatedResult
 
-        parsed_aggregates: list[Any] = [
-            AggregatedResult.model_validate(a) for a in aggregates
-        ]
+        parsed_aggregates: list[Any] = [AggregatedResult.model_validate(a) for a in aggregates]
 
         # Prepare context
         context: dict[str, Any] = {
