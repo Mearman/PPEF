@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://ppef.dev/schemas/v1.5.0/ppef.schema.json",
+  "$id": "https://ppef.dev/schemas/v1.6.1/ppef.schema.json",
   "title": "ExperimentConfig",
   "description": "PPEF experiment configuration",
   "type": "object",
@@ -598,19 +598,11 @@
           "description": "Additional metadata",
           "type": "object",
           "additionalProperties": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "number"
-              },
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "null"
-              }
+            "type": [
+              "string",
+              "number",
+              "boolean",
+              "null"
             ]
           },
           "propertyNames": {
@@ -628,6 +620,9 @@
               "confidence95": {
                 "description": "95% confidence interval [lower, upper]",
                 "type": "array",
+                "items": false,
+                "minItems": 2,
+                "maxItems": 2,
                 "prefixItems": [
                   {
                     "type": "number"
@@ -888,19 +883,11 @@
                 "description": "Additional metadata",
                 "type": "object",
                 "additionalProperties": {
-                  "anyOf": [
-                    {
-                      "type": "string"
-                    },
-                    {
-                      "type": "number"
-                    },
-                    {
-                      "type": "boolean"
-                    },
-                    {
-                      "type": "null"
-                    }
+                  "type": [
+                    "string",
+                    "number",
+                    "boolean",
+                    "null"
                   ]
                 },
                 "propertyNames": {
@@ -918,6 +905,9 @@
                     "confidence95": {
                       "description": "95% confidence interval [lower, upper]",
                       "type": "array",
+                      "items": false,
+                      "minItems": 2,
+                      "maxItems": 2,
                       "prefixItems": [
                         {
                           "type": "number"
@@ -1154,37 +1144,21 @@
                     "additionalProperties": {
                       "anyOf": [
                         {
-                          "anyOf": [
-                            {
-                              "type": "string"
-                            },
-                            {
-                              "type": "number"
-                            },
-                            {
-                              "type": "boolean"
-                            },
-                            {
-                              "type": "null"
-                            }
+                          "type": [
+                            "string",
+                            "number",
+                            "boolean",
+                            "null"
                           ]
                         },
                         {
                           "type": "array",
                           "items": {
-                            "anyOf": [
-                              {
-                                "type": "string"
-                              },
-                              {
-                                "type": "number"
-                              },
-                              {
-                                "type": "boolean"
-                              },
-                              {
-                                "type": "null"
-                              }
+                            "type": [
+                              "string",
+                              "number",
+                              "boolean",
+                              "null"
                             ]
                           }
                         }
@@ -1241,6 +1215,9 @@
                   "deltaCI95": {
                     "description": "95% confidence interval for delta",
                     "type": "array",
+                    "items": false,
+                    "minItems": 2,
+                    "maxItems": 2,
                     "prefixItems": [
                       {
                         "type": "number"
@@ -1456,37 +1433,21 @@
                 "additionalProperties": {
                   "anyOf": [
                     {
-                      "anyOf": [
-                        {
-                          "type": "string"
-                        },
-                        {
-                          "type": "number"
-                        },
-                        {
-                          "type": "boolean"
-                        },
-                        {
-                          "type": "null"
-                        }
+                      "type": [
+                        "string",
+                        "number",
+                        "boolean",
+                        "null"
                       ]
                     },
                     {
                       "type": "array",
                       "items": {
-                        "anyOf": [
-                          {
-                            "type": "string"
-                          },
-                          {
-                            "type": "number"
-                          },
-                          {
-                            "type": "boolean"
-                          },
-                          {
-                            "type": "null"
-                          }
+                        "type": [
+                          "string",
+                          "number",
+                          "boolean",
+                          "null"
                         ]
                       }
                     }
@@ -1604,13 +1565,9 @@
         },
         "matchesExpected": {
           "description": "Whether output matches expected (null if no oracle)",
-          "anyOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "null"
-            }
+          "type": [
+            "boolean",
+            "null"
           ]
         },
         "notes": {
@@ -1697,13 +1654,9 @@
             },
             "matchesExpected": {
               "description": "Whether output matches expected (null if no oracle)",
-              "anyOf": [
-                {
-                  "type": "boolean"
-                },
-                {
-                  "type": "null"
-                }
+              "type": [
+                "boolean",
+                "null"
               ]
             },
             "notes": {
@@ -1799,19 +1752,11 @@
                   "metadata": {
                     "type": "object",
                     "additionalProperties": {
-                      "anyOf": [
-                        {
-                          "type": "string"
-                        },
-                        {
-                          "type": "number"
-                        },
-                        {
-                          "type": "boolean"
-                        },
-                        {
-                          "type": "null"
-                        }
+                      "type": [
+                        "string",
+                        "number",
+                        "boolean",
+                        "null"
                       ]
                     },
                     "propertyNames": {
@@ -1851,19 +1796,11 @@
               "description": "Classification labels",
               "type": "object",
               "additionalProperties": {
-                "anyOf": [
-                  {
-                    "type": "string"
-                  },
-                  {
-                    "type": "number"
-                  },
-                  {
-                    "type": "boolean"
-                  },
-                  {
-                    "type": "null"
-                  }
+                "type": [
+                  "string",
+                  "number",
+                  "boolean",
+                  "null"
                 ]
               },
               "propertyNames": {
@@ -1886,19 +1823,11 @@
                     "description": "Optional additional metadata",
                     "type": "object",
                     "additionalProperties": {
-                      "anyOf": [
-                        {
-                          "type": "string"
-                        },
-                        {
-                          "type": "number"
-                        },
-                        {
-                          "type": "boolean"
-                        },
-                        {
-                          "type": "null"
-                        }
+                      "type": [
+                        "string",
+                        "number",
+                        "boolean",
+                        "null"
                       ]
                     },
                     "propertyNames": {
@@ -1923,37 +1852,21 @@
               "additionalProperties": {
                 "anyOf": [
                   {
-                    "anyOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "number"
-                      },
-                      {
-                        "type": "boolean"
-                      },
-                      {
-                        "type": "null"
-                      }
+                    "type": [
+                      "string",
+                      "number",
+                      "boolean",
+                      "null"
                     ]
                   },
                   {
                     "type": "array",
                     "items": {
-                      "anyOf": [
-                        {
-                          "type": "string"
-                        },
-                        {
-                          "type": "number"
-                        },
-                        {
-                          "type": "boolean"
-                        },
-                        {
-                          "type": "null"
-                        }
+                      "type": [
+                        "string",
+                        "number",
+                        "boolean",
+                        "null"
                       ]
                     }
                   }
@@ -2050,19 +1963,11 @@
               "description": "Configuration overrides for this run",
               "type": "object",
               "additionalProperties": {
-                "anyOf": [
-                  {
-                    "type": "string"
-                  },
-                  {
-                    "type": "number"
-                  },
-                  {
-                    "type": "boolean"
-                  },
-                  {
-                    "type": "null"
-                  }
+                "type": [
+                  "string",
+                  "number",
+                  "boolean",
+                  "null"
                 ]
               },
               "propertyNames": {
@@ -3179,19 +3084,11 @@
           "description": "Optional batch-level metadata",
           "type": "object",
           "additionalProperties": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "number"
-              },
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "null"
-              }
+            "type": [
+              "string",
+              "number",
+              "boolean",
+              "null"
             ]
           },
           "propertyNames": {
@@ -3229,13 +3126,9 @@
                   },
                   "matchesExpected": {
                     "description": "Whether output matches expected (null if no oracle)",
-                    "anyOf": [
-                      {
-                        "type": "boolean"
-                      },
-                      {
-                        "type": "null"
-                      }
+                    "type": [
+                      "boolean",
+                      "null"
                     ]
                   },
                   "notes": {
@@ -3331,19 +3224,11 @@
                         "metadata": {
                           "type": "object",
                           "additionalProperties": {
-                            "anyOf": [
-                              {
-                                "type": "string"
-                              },
-                              {
-                                "type": "number"
-                              },
-                              {
-                                "type": "boolean"
-                              },
-                              {
-                                "type": "null"
-                              }
+                            "type": [
+                              "string",
+                              "number",
+                              "boolean",
+                              "null"
                             ]
                           },
                           "propertyNames": {
@@ -3383,19 +3268,11 @@
                     "description": "Classification labels",
                     "type": "object",
                     "additionalProperties": {
-                      "anyOf": [
-                        {
-                          "type": "string"
-                        },
-                        {
-                          "type": "number"
-                        },
-                        {
-                          "type": "boolean"
-                        },
-                        {
-                          "type": "null"
-                        }
+                      "type": [
+                        "string",
+                        "number",
+                        "boolean",
+                        "null"
                       ]
                     },
                     "propertyNames": {
@@ -3418,19 +3295,11 @@
                           "description": "Optional additional metadata",
                           "type": "object",
                           "additionalProperties": {
-                            "anyOf": [
-                              {
-                                "type": "string"
-                              },
-                              {
-                                "type": "number"
-                              },
-                              {
-                                "type": "boolean"
-                              },
-                              {
-                                "type": "null"
-                              }
+                            "type": [
+                              "string",
+                              "number",
+                              "boolean",
+                              "null"
                             ]
                           },
                           "propertyNames": {
@@ -3455,37 +3324,21 @@
                     "additionalProperties": {
                       "anyOf": [
                         {
-                          "anyOf": [
-                            {
-                              "type": "string"
-                            },
-                            {
-                              "type": "number"
-                            },
-                            {
-                              "type": "boolean"
-                            },
-                            {
-                              "type": "null"
-                            }
+                          "type": [
+                            "string",
+                            "number",
+                            "boolean",
+                            "null"
                           ]
                         },
                         {
                           "type": "array",
                           "items": {
-                            "anyOf": [
-                              {
-                                "type": "string"
-                              },
-                              {
-                                "type": "number"
-                              },
-                              {
-                                "type": "boolean"
-                              },
-                              {
-                                "type": "null"
-                              }
+                            "type": [
+                              "string",
+                              "number",
+                              "boolean",
+                              "null"
                             ]
                           }
                         }
@@ -3582,19 +3435,11 @@
                     "description": "Configuration overrides for this run",
                     "type": "object",
                     "additionalProperties": {
-                      "anyOf": [
-                        {
-                          "type": "string"
-                        },
-                        {
-                          "type": "number"
-                        },
-                        {
-                          "type": "boolean"
-                        },
-                        {
-                          "type": "null"
-                        }
+                      "type": [
+                        "string",
+                        "number",
+                        "boolean",
+                        "null"
                       ]
                     },
                     "propertyNames": {
@@ -3927,19 +3772,11 @@
           "description": "Configuration overrides for this run",
           "type": "object",
           "additionalProperties": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "number"
-              },
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "null"
-              }
+            "type": [
+              "string",
+              "number",
+              "boolean",
+              "null"
             ]
           },
           "propertyNames": {
@@ -4003,6 +3840,9 @@
         "confidence95": {
           "description": "95% confidence interval [lower, upper]",
           "type": "array",
+          "items": false,
+          "minItems": 2,
+          "maxItems": 2,
           "prefixItems": [
             {
               "type": "number"

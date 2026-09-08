@@ -447,7 +447,11 @@ export class WorkerExecutor {
 					// Store run method while it's narrowed to Function by typeof check
 					const runMethod = constructed.run;
 					const constructedObj = constructed;
-					const sut: { id: string; config: unknown; run: (inputs: unknown) => Promise<unknown> } = {
+					const sut: {
+						id: string;
+						config: unknown;
+						run: (inputs: unknown) => Promise<unknown>;
+					} = {
 						id:
 							"id" in constructed && typeof constructed.id === "string"
 								? constructed.id
@@ -496,6 +500,7 @@ export class WorkerExecutor {
 			} catch (error) {
 				throw new Error(
 					`Failed to load SUT "${serializedSut.id}": ${error instanceof Error ? error.message : String(error)}`,
+					{ cause: error },
 				);
 			}
 		}
@@ -535,6 +540,7 @@ export class WorkerExecutor {
 			} catch (error) {
 				throw new Error(
 					`Failed to load case "${serializedCase.caseId}" from ${modulePath}: ${error instanceof Error ? error.message : String(error)}`,
+					{ cause: error },
 				);
 			}
 		}
@@ -612,6 +618,7 @@ export class WorkerExecutor {
 			} catch (error) {
 				throw new Error(
 					`Failed to load SUT "${sutMeta.id}" from registry: ${error instanceof Error ? error.message : String(error)}`,
+					{ cause: error },
 				);
 			}
 		}
@@ -653,6 +660,7 @@ export class WorkerExecutor {
 			} catch (error) {
 				throw new Error(
 					`Failed to load case "${serializedCase.caseId}" from ${modulePath}: ${error instanceof Error ? error.message : String(error)}`,
+					{ cause: error },
 				);
 			}
 		}

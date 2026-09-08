@@ -1,9 +1,9 @@
 {
-  "$schema": "../../ppef.schema.json#/$defs/RobustnessEvaluatorConfig",
-  "name": "Robustness Analysis",
-  "description": "Analyze algorithm robustness under perturbations",
-  "metrics": ["executionTime", "accuracy", "f1Score"],
-  "perturbations": ["edge-removal", "noise", "seed-shift"],
-  "intensityLevels": [0.1, 0.2, 0.3, 0.4, 0.5],
-  "runsPerLevel": 10
+	"$schema": "../../ppef.schema.json#/$defs/RobustnessEvaluatorConfig",
+	"name": "Robustness Analysis",
+	"description": "Analyze algorithm robustness under perturbations",
+	"metrics": ["executionTime", "accuracy", "f1Score"],
+	"perturbations": ["edge-removal", "noise", "seed-shift"],
+	"intensityLevels": [0.1, 0.2, 0.3, 0.4, 0.5],
+	"runsPerLevel": 10
 }

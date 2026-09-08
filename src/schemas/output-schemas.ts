@@ -87,7 +87,10 @@ export const RankedItemSchema = z
 			.optional()
 			.describe("Optional additional metadata"),
 	})
-	.meta({ title: "RankedItem", description: "A ranked item for ranking tasks" });
+	.meta({
+		title: "RankedItem",
+		description: "A ranked item for ranking tasks",
+	});
 
 /**
  * Artefact reference.
@@ -99,7 +102,10 @@ const ArtefactReferenceSchema = z
 		hash: z.string().optional(),
 		metadata: z.record(z.string(), PrimitiveSchema).optional(),
 	})
-	.meta({ title: "ArtefactReference", description: "Reference to an external artefact" });
+	.meta({
+		title: "ArtefactReference",
+		description: "Reference to an external artefact",
+	});
 
 /**
  * Output artefacts and summaries.
@@ -118,7 +124,10 @@ export const ResultOutputsSchema = z
 			.describe("References to generated artefacts"),
 		extra: z.record(z.string(), z.unknown()).optional().describe("Additional untyped outputs"),
 	})
-	.meta({ title: "ResultOutputs", description: "Output artefacts and summaries" });
+	.meta({
+		title: "ResultOutputs",
+		description: "Output artefacts and summaries",
+	});
 
 /**
  * Numeric metrics collected during evaluation.
@@ -129,7 +138,10 @@ export const ResultMetricsSchema = z
 		extra: z.record(z.string(), z.number()).optional().describe("Additional metrics (overflow)"),
 	})
 	.catchall(z.union([z.number(), z.record(z.string(), z.number())]))
-	.meta({ title: "ResultMetrics", description: "Numeric metrics collected during evaluation" });
+	.meta({
+		title: "ResultMetrics",
+		description: "Numeric metrics collected during evaluation",
+	});
 
 /**
  * Provenance information for reproducibility.
@@ -157,7 +169,10 @@ export const ProvenanceSchema = z
 		peakMemoryBytes: z.number().optional().describe("Peak memory usage during execution (bytes)"),
 		finalMemoryBytes: z.number().optional().describe("Memory usage at completion (bytes)"),
 	})
-	.meta({ title: "Provenance", description: "Provenance information for reproducibility" });
+	.meta({
+		title: "Provenance",
+		description: "Provenance information for reproducibility",
+	});
 
 /**
  * Complete evaluation result.
@@ -171,7 +186,10 @@ export const EvaluationResultSchema = z
 		provenance: ProvenanceSchema.describe("Provenance for reproducibility"),
 		error: z.string().optional().describe("Error message if the run failed"),
 	})
-	.meta({ title: "EvaluationResult", description: "Complete evaluation result" });
+	.meta({
+		title: "EvaluationResult",
+		description: "Complete evaluation result",
+	});
 
 /**
  * Batch of evaluation results.
@@ -211,7 +229,10 @@ export const SummaryStatsSchema = z
 		p25: z.number().optional().describe("25th percentile"),
 		p75: z.number().optional().describe("75th percentile"),
 	})
-	.meta({ title: "SummaryStats", description: "Summary statistics for a numeric metric" });
+	.meta({
+		title: "SummaryStats",
+		description: "Summary statistics for a numeric metric",
+	});
 
 /**
  * Comparison metrics between primary and baseline SUTs.
@@ -244,7 +265,10 @@ export const CoverageMetricsSchema = z
 			.describe("Metric availability (metric name -> coverage fraction)"),
 		missingCases: z.array(z.string()).optional().describe("Missing case IDs"),
 	})
-	.meta({ title: "CoverageMetrics", description: "Coverage information for the aggregation" });
+	.meta({
+		title: "CoverageMetrics",
+		description: "Coverage information for the aggregation",
+	});
 
 /**
  * Aggregated result for a SUT.
@@ -278,7 +302,10 @@ export const AggregatedResultSchema = z
 		coverage: CoverageMetricsSchema.optional().describe("Coverage information"),
 		metadata: z.record(z.string(), PrimitiveSchema).optional().describe("Additional metadata"),
 	})
-	.meta({ title: "AggregatedResult", description: "Aggregated result for a SUT" });
+	.meta({
+		title: "AggregatedResult",
+		description: "Aggregated result for a SUT",
+	});
 
 /**
  * Complete aggregation output.
@@ -298,7 +325,10 @@ export const AggregationOutputSchema = z
 			.optional()
 			.describe("Global metadata"),
 	})
-	.meta({ title: "AggregationOutput", description: "Complete aggregation output" });
+	.meta({
+		title: "AggregationOutput",
+		description: "Complete aggregation output",
+	});
 
 // ============================================================================
 // Claims Types (src/types/claims.ts)
@@ -321,7 +351,10 @@ export const ClaimEvidenceSchema = z
 			.optional()
 			.describe("95% confidence interval for delta"),
 	})
-	.meta({ title: "ClaimEvidence", description: "Evidence supporting a claim evaluation" });
+	.meta({
+		title: "ClaimEvidence",
+		description: "Evidence supporting a claim evaluation",
+	});
 
 /**
  * Claim status.
@@ -352,7 +385,10 @@ export const EvaluationClaimOutputSchema = z
 		tags: z.array(z.string()).optional().describe("Tags for filtering"),
 		citation: z.string().optional().describe("Citation/reference for the claim"),
 	})
-	.meta({ title: "EvaluationClaimOutput", description: "An evaluation claim (hypothesis)" });
+	.meta({
+		title: "EvaluationClaimOutput",
+		description: "An evaluation claim (hypothesis)",
+	});
 
 /**
  * Result of evaluating a single claim.
@@ -365,7 +401,10 @@ export const ClaimEvaluationSchema = z
 		inconclusiveReason: z.string().optional().describe("Reason for inconclusive status"),
 		notes: z.array(z.string()).optional().describe("Additional notes"),
 	})
-	.meta({ title: "ClaimEvaluation", description: "Result of evaluating a single claim" });
+	.meta({
+		title: "ClaimEvaluation",
+		description: "Result of evaluating a single claim",
+	});
 
 /**
  * Summary of all claim evaluations.
@@ -522,7 +561,10 @@ export const RobustnessMetricsSchema = z
 			.optional(),
 		breakpoint: z.number().optional(),
 	})
-	.meta({ title: "RobustnessMetrics", description: "Robustness analysis metrics" });
+	.meta({
+		title: "RobustnessMetrics",
+		description: "Robustness analysis metrics",
+	});
 
 /**
  * Result of robustness analysis for a single SUT.
@@ -578,7 +620,10 @@ export const SutMetricRankingSchema = z
 		rank: z.number().int(),
 		n: z.number().int(),
 	})
-	.meta({ title: "SutMetricRanking", description: "Ranking of a SUT for a specific metric" });
+	.meta({
+		title: "SutMetricRanking",
+		description: "Ranking of a SUT for a specific metric",
+	});
 
 /**
  * Pairwise comparison between two SUTs.
@@ -627,7 +672,10 @@ export const MetricCorrelationSchema = z
 		spearmanRho: z.number().optional(),
 		interpretation: z.string(),
 	})
-	.meta({ title: "MetricCorrelation", description: "Correlation between two metrics" });
+	.meta({
+		title: "MetricCorrelation",
+		description: "Correlation between two metrics",
+	});
 
 /**
  * Summary of exploratory evaluation results.

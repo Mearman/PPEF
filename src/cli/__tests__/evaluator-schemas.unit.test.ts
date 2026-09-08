@@ -166,7 +166,12 @@ describe("MetricsEvaluatorConfigSchema", () => {
 					type: "target-range",
 					metric: "f1Score",
 					sut: "*",
-					targetRange: { min: 0.8, max: 1.0, minInclusive: true, maxInclusive: true },
+					targetRange: {
+						min: 0.8,
+						max: 1.0,
+						minInclusive: true,
+						maxInclusive: true,
+					},
 				},
 			],
 		};
@@ -245,7 +250,9 @@ describe("MetricsEvaluatorConfigSchema", () => {
 	});
 
 	it("rejects config without criteria", () => {
-		const result = MetricsEvaluatorConfigSchema.safeParse({ name: "no criteria" });
+		const result = MetricsEvaluatorConfigSchema.safeParse({
+			name: "no criteria",
+		});
 		assert.ok(!result.success);
 	});
 

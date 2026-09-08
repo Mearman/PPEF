@@ -134,11 +134,7 @@
     {
       "description": "array value",
       "config": {
-        "items": [
-          1,
-          2,
-          3
-        ]
+        "items": [1, 2, 3]
       },
       "canonicalized": "{\"items\":[1,2,3]}",
       "configHash": "7aff5dcb"

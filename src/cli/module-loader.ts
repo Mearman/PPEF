@@ -91,7 +91,9 @@ async function loadModule(modulePath: string, baseDir: string): Promise<Record<s
 		return module;
 	} catch (error) {
 		if (error instanceof Error) {
-			throw new Error(`Failed to load module from ${modulePath}: ${error.message}`);
+			throw new Error(`Failed to load module from ${modulePath}: ${error.message}`, {
+				cause: error,
+			});
 		}
 		throw error;
 	}

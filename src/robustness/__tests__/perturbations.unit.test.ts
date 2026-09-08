@@ -305,7 +305,10 @@ describe("perturbations", () => {
 
 	describe("createPerturbation", () => {
 		it("should create perturbation with custom intensity", () => {
-			const custom = createPerturbation({ type: "edge-removal", intensity: 0.25 });
+			const custom = createPerturbation({
+				type: "edge-removal",
+				intensity: 0.25,
+			});
 
 			assert.strictEqual(custom.id, "edge-removal");
 			assert.strictEqual(custom.intensity, 0.25);
@@ -313,7 +316,10 @@ describe("perturbations", () => {
 
 		it("should apply custom intensity to perturbed case", () => {
 			const mockCase = createMockCase("case-005");
-			const custom = createPerturbation({ type: "node-removal", intensity: 0.15 });
+			const custom = createPerturbation({
+				type: "node-removal",
+				intensity: 0.15,
+			});
 			const perturbed = custom.apply(mockCase, 42);
 
 			assert.strictEqual(perturbed.inputs.summary?.perturbationIntensity, 0.15);
@@ -332,14 +338,20 @@ describe("perturbations", () => {
 		});
 
 		it("should preserve name and description from base perturbation", () => {
-			const custom = createPerturbation({ type: "edge-removal", intensity: 0.2 });
+			const custom = createPerturbation({
+				type: "edge-removal",
+				intensity: 0.2,
+			});
 
 			assert.strictEqual(custom.name, "Edge Removal");
 			assert.strictEqual(custom.description, "Randomly remove a fraction of edges");
 		});
 
 		it("should preserve type from base perturbation", () => {
-			const custom = createPerturbation({ type: "weight-noise", intensity: 0.05 });
+			const custom = createPerturbation({
+				type: "weight-noise",
+				intensity: 0.05,
+			});
 
 			assert.strictEqual(custom.type, "noise");
 		});
@@ -366,8 +378,14 @@ describe("perturbations", () => {
 
 		it("should produce different caseId for different intensities", () => {
 			const mockCase = createMockCase("case-008");
-			const custom1 = createPerturbation({ type: "edge-removal", intensity: 0.1 });
-			const custom2 = createPerturbation({ type: "edge-removal", intensity: 0.2 });
+			const custom1 = createPerturbation({
+				type: "edge-removal",
+				intensity: 0.1,
+			});
+			const custom2 = createPerturbation({
+				type: "edge-removal",
+				intensity: 0.2,
+			});
 
 			const perturbed1 = custom1.apply(mockCase, 42);
 			const perturbed2 = custom2.apply(mockCase, 42);

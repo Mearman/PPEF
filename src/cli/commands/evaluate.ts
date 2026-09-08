@@ -84,6 +84,7 @@ export async function executeEvaluate(
 			logger.info(`Found ${aggregates.length} aggregated results`);
 		} else if (hasResults) {
 			// Need to aggregate first
+			rawResults = data.results;
 			logger.info(`Found ${data.results?.length ?? 0} raw results - need to aggregate first`);
 			logger.error(
 				"Please run 'ppef aggregate' on the results file first, or use an aggregates file",

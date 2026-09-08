@@ -1,9 +1,9 @@
 {
-  "$schema": "../../ppef.schema.json#/$defs/ExploratoryEvaluatorConfig",
-  "metrics": ["length"],
-  "metricDirections": {
-    "length": "higher-better"
-  },
-  "analyzeCaseClassEffects": true,
-  "computeCorrelations": false
+	"$schema": "../../ppef.schema.json#/$defs/ExploratoryEvaluatorConfig",
+	"metrics": ["length"],
+	"metricDirections": {
+		"length": "higher-better"
+	},
+	"analyzeCaseClassEffects": true,
+	"computeCorrelations": false
 }

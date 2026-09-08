@@ -352,10 +352,34 @@ describe("ParallelExecutor class with DI", () => {
 		it("should distribute runs evenly across workers", () => {
 			const executor = new ParallelExecutor(mockLogger, mockSpawner, mockSystemInfo);
 			const runs: PlannedRun[] = [
-				{ runId: "run1", sutId: "sut1", caseId: "case1", repetition: 0, seed: 1 },
-				{ runId: "run2", sutId: "sut1", caseId: "case2", repetition: 0, seed: 2 },
-				{ runId: "run3", sutId: "sut1", caseId: "case3", repetition: 0, seed: 3 },
-				{ runId: "run4", sutId: "sut1", caseId: "case4", repetition: 0, seed: 4 },
+				{
+					runId: "run1",
+					sutId: "sut1",
+					caseId: "case1",
+					repetition: 0,
+					seed: 1,
+				},
+				{
+					runId: "run2",
+					sutId: "sut1",
+					caseId: "case2",
+					repetition: 0,
+					seed: 2,
+				},
+				{
+					runId: "run3",
+					sutId: "sut1",
+					caseId: "case3",
+					repetition: 0,
+					seed: 3,
+				},
+				{
+					runId: "run4",
+					sutId: "sut1",
+					caseId: "case4",
+					repetition: 0,
+					seed: 4,
+				},
 			];
 
 			// Access private method via testing
@@ -372,9 +396,27 @@ describe("ParallelExecutor class with DI", () => {
 		it("should handle uneven distribution", () => {
 			const executor = new ParallelExecutor(mockLogger, mockSpawner, mockSystemInfo);
 			const runs: PlannedRun[] = [
-				{ runId: "run1", sutId: "sut1", caseId: "case1", repetition: 0, seed: 1 },
-				{ runId: "run2", sutId: "sut1", caseId: "case2", repetition: 0, seed: 2 },
-				{ runId: "run3", sutId: "sut1", caseId: "case3", repetition: 0, seed: 3 },
+				{
+					runId: "run1",
+					sutId: "sut1",
+					caseId: "case1",
+					repetition: 0,
+					seed: 1,
+				},
+				{
+					runId: "run2",
+					sutId: "sut1",
+					caseId: "case2",
+					repetition: 0,
+					seed: 2,
+				},
+				{
+					runId: "run3",
+					sutId: "sut1",
+					caseId: "case3",
+					repetition: 0,
+					seed: 3,
+				},
 			];
 
 			//
@@ -388,7 +430,13 @@ describe("ParallelExecutor class with DI", () => {
 		it("should handle more workers than runs", () => {
 			const executor = new ParallelExecutor(mockLogger, mockSpawner, mockSystemInfo);
 			const runs: PlannedRun[] = [
-				{ runId: "run1", sutId: "sut1", caseId: "case1", repetition: 0, seed: 1 },
+				{
+					runId: "run1",
+					sutId: "sut1",
+					caseId: "case1",
+					repetition: 0,
+					seed: 1,
+				},
 			];
 
 			//
@@ -411,8 +459,20 @@ describe("ParallelExecutor class with DI", () => {
 		it("should create proper batch metadata", () => {
 			const executor = new ParallelExecutor(mockLogger, mockSpawner, mockSystemInfo);
 			const runs: PlannedRun[] = [
-				{ runId: "run1", sutId: "sut1", caseId: "case1", repetition: 0, seed: 1 },
-				{ runId: "run2", sutId: "sut1", caseId: "case2", repetition: 0, seed: 2 },
+				{
+					runId: "run1",
+					sutId: "sut1",
+					caseId: "case1",
+					repetition: 0,
+					seed: 1,
+				},
+				{
+					runId: "run2",
+					sutId: "sut1",
+					caseId: "case2",
+					repetition: 0,
+					seed: 2,
+				},
 			];
 
 			//
@@ -595,7 +655,9 @@ describe("ParallelExecutor class with DI", () => {
 				}
 			}, 10);
 
-			const result = await executor.execute(runs, [], [], createTestConfig(0), { workers: 2 });
+			const result = await executor.execute(runs, [], [], createTestConfig(0), {
+				workers: 2,
+			});
 
 			assert.strictEqual(mockSpawner.spawnedProcesses.length, 2);
 			assert.strictEqual(result.results.length, 0);

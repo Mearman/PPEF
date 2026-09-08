@@ -1,10 +1,6 @@
 {
 	"$schema": "../../ppef.schema.json#/$defs/ExploratoryEvaluatorConfig",
-	"metrics": [
-		"comparisons",
-		"swaps",
-		"executionTimeMs"
-	],
+	"metrics": ["comparisons", "swaps", "executionTimeMs"],
 	"metricDirections": {
 		"comparisons": "lower-better",
 		"swaps": "lower-better",

@@ -39,15 +39,34 @@ interface RunIdVector {
 	runId: string;
 }
 
-function generateRunIdVectors(): { vectors: RunIdVector[]; canonicalizationRules: string[] } {
+function generateRunIdVectors(): {
+	vectors: RunIdVector[];
+	canonicalizationRules: string[];
+} {
 	const testCases: RunIdVector["inputs"][] = [
 		{ sutId: "sut-a", caseId: "case-1" },
 		{ sutId: "sut-a", caseId: "case-1", seed: 42 },
 		{ sutId: "sut-a", caseId: "case-1", seed: 42, repetition: 0 },
 		{ sutId: "sut-a", caseId: "case-1", seed: 42, repetition: 1 },
-		{ sutId: "sut-a", caseId: "case-1", seed: 42, configHash: "abcd1234", repetition: 0 },
-		{ sutId: "degree-prioritised-v1.0.0", caseId: "karate-v1", seed: 42, repetition: 1 },
-		{ sutId: "bfs-baseline", caseId: "erdos-renyi-1000", seed: 0, repetition: 0 },
+		{
+			sutId: "sut-a",
+			caseId: "case-1",
+			seed: 42,
+			configHash: "abcd1234",
+			repetition: 0,
+		},
+		{
+			sutId: "degree-prioritised-v1.0.0",
+			caseId: "karate-v1",
+			seed: 42,
+			repetition: 1,
+		},
+		{
+			sutId: "bfs-baseline",
+			caseId: "erdos-renyi-1000",
+			seed: 0,
+			repetition: 0,
+		},
 		{ sutId: "x", caseId: "y" },
 	];
 
@@ -137,7 +156,11 @@ function generateStatisticalVectors(): {
 
 	// Mann-Whitney U vectors
 	const mwuCases: { desc: string; a: number[]; b: number[] }[] = [
-		{ desc: "clearly different samples", a: [1, 2, 3, 4, 5], b: [6, 7, 8, 9, 10] },
+		{
+			desc: "clearly different samples",
+			a: [1, 2, 3, 4, 5],
+			b: [6, 7, 8, 9, 10],
+		},
 		{ desc: "identical samples", a: [5, 5, 5, 5, 5], b: [5, 5, 5, 5, 5] },
 		{ desc: "overlapping samples", a: [1, 3, 5, 7, 9], b: [2, 4, 6, 8, 10] },
 		{
@@ -155,7 +178,11 @@ function generateStatisticalVectors(): {
 			description: `mannWhitneyU: ${desc}`,
 			function: "mannWhitneyUTest",
 			inputs: { sampleA: a, sampleB: b },
-			expected: { u: result.u, pValue: result.pValue, significant: result.significant },
+			expected: {
+				u: result.u,
+				pValue: result.pValue,
+				significant: result.significant,
+			},
 			tolerance: 1e-6,
 		});
 	}
@@ -165,7 +192,11 @@ function generateStatisticalVectors(): {
 		{ desc: "large effect", a: [10, 11, 12, 13, 14], b: [20, 21, 22, 23, 24] },
 		{ desc: "small effect", a: [10, 11, 12, 13, 14], b: [11, 12, 13, 14, 15] },
 		{ desc: "zero effect", a: [10, 11, 12, 13, 14], b: [10, 11, 12, 13, 14] },
-		{ desc: "different variances", a: [10, 20, 30, 40, 50], b: [25, 26, 27, 28, 29] },
+		{
+			desc: "different variances",
+			a: [10, 20, 30, 40, 50],
+			b: [25, 26, 27, 28, 29],
+		},
 	];
 
 	for (const { desc, a, b } of cohensCases) {

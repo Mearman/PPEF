@@ -511,7 +511,10 @@ const detectPreferredMode = (repoRoot?: string): CheckpointMode => {
 	const cwd = repoRoot ?? process.cwd();
 	try {
 		// Check if we're in a git repo with commits
-		execSync("git rev-parse --git-dir > /dev/null 2>&1", { stdio: "pipe", cwd });
+		execSync("git rev-parse --git-dir > /dev/null 2>&1", {
+			stdio: "pipe",
+			cwd,
+		});
 
 		// Check if there are any commits
 		try {

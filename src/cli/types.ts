@@ -135,7 +135,10 @@ export const MetricsExtractorConfig = z
 		module: z.string().min(1).describe("Path to module file (relative to config file)"),
 		exportName: z.string().min(1).describe("Name of the export to use as metrics extractor"),
 	})
-	.meta({ title: "MetricsExtractorConfig", description: "Metrics extractor configuration" });
+	.meta({
+		title: "MetricsExtractorConfig",
+		description: "Metrics extractor configuration",
+	});
 export type MetricsExtractorConfig = z.infer<typeof MetricsExtractorConfig>;
 
 /**

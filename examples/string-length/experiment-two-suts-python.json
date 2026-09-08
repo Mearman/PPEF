@@ -1,51 +1,51 @@
 {
-  "$schema": "../../ppef.schema.json",
-  "experiment": {
-    "name": "string-length-two-suts",
-    "description": "Compare built-in len() vs list() for string length measurement (Python)"
-  },
-  "executor": {
-    "repetitions": 5
-  },
-  "suts": [
-    {
-      "id": "builtin-length",
-      "module": "./sut.py",
-      "exportName": "create_sut",
-      "registration": {
-        "name": "Built-in len()",
-        "version": "1.0.0",
-        "role": "primary"
-      }
-    },
-    {
-      "id": "spread-length",
-      "module": "./sut_spread.py",
-      "exportName": "create_sut",
-      "registration": {
-        "name": "list() len()",
-        "version": "1.0.0",
-        "role": "baseline"
-      }
-    }
-  ],
-  "cases": [
-    {
-      "id": "hello-world",
-      "module": "./case_hello.py",
-      "exportName": "create_case"
-    },
-    {
-      "id": "unicode-emoji",
-      "module": "./case_unicode.py",
-      "exportName": "create_case"
-    }
-  ],
-  "metricsExtractor": {
-    "module": "./metrics.py",
-    "exportName": "extract"
-  },
-  "output": {
-    "path": "./results"
-  }
+	"$schema": "../../ppef.schema.json",
+	"experiment": {
+		"name": "string-length-two-suts",
+		"description": "Compare built-in len() vs list() for string length measurement (Python)"
+	},
+	"executor": {
+		"repetitions": 5
+	},
+	"suts": [
+		{
+			"id": "builtin-length",
+			"module": "./sut.py",
+			"exportName": "create_sut",
+			"registration": {
+				"name": "Built-in len()",
+				"version": "1.0.0",
+				"role": "primary"
+			}
+		},
+		{
+			"id": "spread-length",
+			"module": "./sut_spread.py",
+			"exportName": "create_sut",
+			"registration": {
+				"name": "list() len()",
+				"version": "1.0.0",
+				"role": "baseline"
+			}
+		}
+	],
+	"cases": [
+		{
+			"id": "hello-world",
+			"module": "./case_hello.py",
+			"exportName": "create_case"
+		},
+		{
+			"id": "unicode-emoji",
+			"module": "./case_unicode.py",
+			"exportName": "create_case"
+		}
+	],
+	"metricsExtractor": {
+		"module": "./metrics.py",
+		"exportName": "extract"
+	},
+	"output": {
+		"path": "./results"
+	}
 }

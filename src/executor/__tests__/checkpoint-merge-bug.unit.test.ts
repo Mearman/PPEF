@@ -26,7 +26,9 @@ describe("Checkpoint Merge Bug Diagnostics", () => {
 	beforeEach(() => {
 		testDir = join(tmpdir(), `checkpoint-merge-test-${randomBytes(8).toString("hex")}`);
 		mainPath = join(testDir, "checkpoint.json");
-		mainCheckpoint = new CheckpointManager({ storage: new FileStorage(mainPath) });
+		mainCheckpoint = new CheckpointManager({
+			storage: new FileStorage(mainPath),
+		});
 	});
 
 	/**

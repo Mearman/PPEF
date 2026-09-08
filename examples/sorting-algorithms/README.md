@@ -6,25 +6,25 @@ Requires **Node >= 23** for native TypeScript module support (`.ts` files loaded
 
 ## SUTs
 
-| SUT | Algorithm | Role |
-|-----|-----------|------|
-| `bubble-sort` | Adjacent swaps with early-exit optimisation | baseline |
-| `insertion-sort` | Shift-insert into sorted prefix | baseline |
-| `merge-sort` | Recursive divide-merge | primary |
-| `quick-sort` | Lomuto partition, recursive | primary |
+| SUT              | Algorithm                                   | Role     |
+| ---------------- | ------------------------------------------- | -------- |
+| `bubble-sort`    | Adjacent swaps with early-exit optimisation | baseline |
+| `insertion-sort` | Shift-insert into sorted prefix             | baseline |
+| `merge-sort`     | Recursive divide-merge                      | primary  |
+| `quick-sort`     | Lomuto partition, recursive                 | primary  |
 
 All SUTs return `{ sorted, comparisons, swaps, executionTimeMs }`.
 
 ## Cases
 
-| Case | Size | Distribution | Class |
-|------|------|-------------|-------|
-| `small-random` | 20 | LCG seed 42 | `small` |
-| `medium-random` | 1000 | LCG seed 123 | `medium` |
-| `large-random` | 10000 | LCG seed 456 | `large` |
-| `already-sorted` | 1000 | `[0..999]` | `sorted` |
-| `reverse-sorted` | 1000 | `[999..0]` | `sorted` |
-| `nearly-sorted` | 1000 | Sorted + 50 LCG swaps | `sorted` |
+| Case             | Size  | Distribution          | Class    |
+| ---------------- | ----- | --------------------- | -------- |
+| `small-random`   | 20    | LCG seed 42           | `small`  |
+| `medium-random`  | 1000  | LCG seed 123          | `medium` |
+| `large-random`   | 10000 | LCG seed 456          | `large`  |
+| `already-sorted` | 1000  | `[0..999]`            | `sorted` |
+| `reverse-sorted` | 1000  | `[999..0]`            | `sorted` |
+| `nearly-sorted`  | 1000  | Sorted + 50 LCG swaps | `sorted` |
 
 ## Run
 

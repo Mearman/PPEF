@@ -50,11 +50,19 @@ describe("config-loader", () => {
 						id: "sut1",
 						module: "./sut.js",
 						exportName: "createSut",
-						registration: { name: "SUT 1", version: "1.0.0", role: "primary", tags: [] },
+						registration: {
+							name: "SUT 1",
+							version: "1.0.0",
+							role: "primary",
+							tags: [],
+						},
 					},
 				],
 				cases: [{ id: "case1", module: "./case.js", exportName: "createCase" }],
-				metricsExtractor: { module: "./metrics.js", exportName: "extractMetrics" },
+				metricsExtractor: {
+					module: "./metrics.js",
+					exportName: "extractMetrics",
+				},
 				output: {},
 			};
 
@@ -75,7 +83,12 @@ describe("config-loader", () => {
 						id: "sut1",
 						module: "./sut.js",
 						exportName: "createSut",
-						registration: { name: "SUT", version: "1.0.0", role: "primary", tags: [] },
+						registration: {
+							name: "SUT",
+							version: "1.0.0",
+							role: "primary",
+							tags: [],
+						},
 					},
 				],
 				cases: [{ id: "case1", module: "./case.js", exportName: "createCase" }],
@@ -111,11 +124,19 @@ describe("config-loader", () => {
 						id: "sut1",
 						module: "./sut.js",
 						exportName: "createSut",
-						registration: { name: "SUT 1", version: "1.0.0", role: "primary", tags: [] },
+						registration: {
+							name: "SUT 1",
+							version: "1.0.0",
+							role: "primary",
+							tags: [],
+						},
 					},
 				],
 				cases: [{ id: "case1", module: "./case.js", exportName: "createCase" }],
-				metricsExtractor: { module: "./metrics.js", exportName: "extractMetrics" },
+				metricsExtractor: {
+					module: "./metrics.js",
+					exportName: "extractMetrics",
+				},
 				output: {},
 			};
 
@@ -165,11 +186,19 @@ describe("config-loader", () => {
 						id: "sut1",
 						module: "./sut.js",
 						exportName: "createSut",
-						registration: { name: "SUT", version: "1.0.0", role: "primary", tags: [] },
+						registration: {
+							name: "SUT",
+							version: "1.0.0",
+							role: "primary",
+							tags: [],
+						},
 					},
 				],
 				cases: [{ id: "case1", module: "./case.js", exportName: "createCase" }],
-				metricsExtractor: { module: "./metrics.js", exportName: "extractMetrics" },
+				metricsExtractor: {
+					module: "./metrics.js",
+					exportName: "extractMetrics",
+				},
 				output: {},
 			};
 
@@ -188,11 +217,19 @@ describe("config-loader", () => {
 						id: "sut1",
 						module: "./sut.js",
 						exportName: "createSut",
-						registration: { name: "SUT", version: "1.0.0", role: "primary", tags: [] },
+						registration: {
+							name: "SUT",
+							version: "1.0.0",
+							role: "primary",
+							tags: [],
+						},
 					},
 				],
 				cases: [{ id: "case1", module: "./case.js", exportName: "createCase" }],
-				metricsExtractor: { module: "./metrics.js", exportName: "extractMetrics" },
+				metricsExtractor: {
+					module: "./metrics.js",
+					exportName: "extractMetrics",
+				},
 				output: {},
 			};
 
@@ -211,11 +248,19 @@ describe("config-loader", () => {
 						id: "sut1",
 						module: "./sut.js",
 						exportName: "createSut",
-						registration: { name: "SUT", version: "1.0.0", role: "primary", tags: [] },
+						registration: {
+							name: "SUT",
+							version: "1.0.0",
+							role: "primary",
+							tags: [],
+						},
 					},
 				],
 				cases: [{ id: "case1", module: "./case.js", exportName: "createCase" }],
-				metricsExtractor: { module: "./metrics.js", exportName: "extractMetrics" },
+				metricsExtractor: {
+					module: "./metrics.js",
+					exportName: "extractMetrics",
+				},
 				output: {},
 			};
 
@@ -234,11 +279,19 @@ describe("config-loader", () => {
 						id: "sut1",
 						module: "./sut.js",
 						exportName: "createSut",
-						registration: { name: "SUT", version: "1.0.0", role: "primary", tags: [] },
+						registration: {
+							name: "SUT",
+							version: "1.0.0",
+							role: "primary",
+							tags: [],
+						},
 					},
 				],
 				cases: [{ id: "case1", module: "./case.js", exportName: "createCase" }],
-				metricsExtractor: { module: "./metrics.js", exportName: "extractMetrics" },
+				metricsExtractor: {
+					module: "./metrics.js",
+					exportName: "extractMetrics",
+				},
 				output: {},
 			};
 
@@ -254,7 +307,10 @@ describe("config-loader", () => {
 				executor: { repetitions: 1 },
 				suts: [],
 				cases: [{ id: "case1", module: "./case.js", exportName: "createCase" }],
-				metricsExtractor: { module: "./metrics.js", exportName: "extractMetrics" },
+				metricsExtractor: {
+					module: "./metrics.js",
+					exportName: "extractMetrics",
+				},
 				output: {},
 			};
 
@@ -276,7 +332,10 @@ describe("config-loader", () => {
 					},
 				],
 				cases: [{ id: "case1", module: "./case.js", exportName: "createCase" }],
-				metricsExtractor: { module: "./metrics.js", exportName: "extractMetrics" },
+				metricsExtractor: {
+					module: "./metrics.js",
+					exportName: "extractMetrics",
+				},
 				output: {},
 			};
 
@@ -296,11 +355,19 @@ describe("config-loader", () => {
 						id: "sut1",
 						module: "./sut.js",
 						exportName: "createSut",
-						registration: { name: "", version: "1.0.0", role: "primary", tags: [] },
+						registration: {
+							name: "",
+							version: "1.0.0",
+							role: "primary",
+							tags: [],
+						},
 					},
 				],
 				cases: [{ id: "case1", module: "./case.js", exportName: "createCase" }],
-				metricsExtractor: { module: "./metrics.js", exportName: "extractMetrics" },
+				metricsExtractor: {
+					module: "./metrics.js",
+					exportName: "extractMetrics",
+				},
 				output: {},
 			};
 
@@ -318,11 +385,19 @@ describe("config-loader", () => {
 						id: "sut1",
 						module: "./sut.js",
 						exportName: "createSut",
-						registration: { name: "SUT 1", version: "", role: "primary", tags: [] },
+						registration: {
+							name: "SUT 1",
+							version: "",
+							role: "primary",
+							tags: [],
+						},
 					},
 				],
 				cases: [{ id: "case1", module: "./case.js", exportName: "createCase" }],
-				metricsExtractor: { module: "./metrics.js", exportName: "extractMetrics" },
+				metricsExtractor: {
+					module: "./metrics.js",
+					exportName: "extractMetrics",
+				},
 				output: {},
 			};
 
@@ -348,7 +423,10 @@ describe("config-loader", () => {
 					},
 				],
 				cases: [{ id: "case1", module: "./case.js", exportName: "createCase" }],
-				metricsExtractor: { module: "./metrics.js", exportName: "extractMetrics" },
+				metricsExtractor: {
+					module: "./metrics.js",
+					exportName: "extractMetrics",
+				},
 				output: {},
 			};
 
@@ -375,7 +453,10 @@ describe("config-loader", () => {
 					},
 				],
 				cases: [{ id: "case1", module: "./case.js", exportName: "createCase" }],
-				metricsExtractor: { module: "./metrics.js", exportName: "extractMetrics" },
+				metricsExtractor: {
+					module: "./metrics.js",
+					exportName: "extractMetrics",
+				},
 				output: {},
 			};
 
@@ -398,7 +479,10 @@ describe("config-loader", () => {
 						},
 					],
 					cases: [{ id: "case1", module: "./case.js", exportName: "createCase" }],
-					metricsExtractor: { module: "./metrics.js", exportName: "extractMetrics" },
+					metricsExtractor: {
+						module: "./metrics.js",
+						exportName: "extractMetrics",
+					},
 					output: {},
 				};
 
@@ -416,7 +500,12 @@ describe("config-loader", () => {
 						id: "duplicate",
 						module: "./sut1.js",
 						exportName: "createSut1",
-						registration: { name: "SUT 1", version: "1.0.0", role: "primary", tags: [] },
+						registration: {
+							name: "SUT 1",
+							version: "1.0.0",
+							role: "primary",
+							tags: [],
+						},
 					},
 					{
 						id: "duplicate",
@@ -431,7 +520,10 @@ describe("config-loader", () => {
 					},
 				],
 				cases: [{ id: "case1", module: "./case.js", exportName: "createCase" }],
-				metricsExtractor: { module: "./metrics.js", exportName: "extractMetrics" },
+				metricsExtractor: {
+					module: "./metrics.js",
+					exportName: "extractMetrics",
+				},
 				output: {},
 			};
 
@@ -449,11 +541,19 @@ describe("config-loader", () => {
 						id: "sut1",
 						module: "./sut.js",
 						exportName: "createSut",
-						registration: { name: "SUT", version: "1.0.0", role: "primary", tags: [] },
+						registration: {
+							name: "SUT",
+							version: "1.0.0",
+							role: "primary",
+							tags: [],
+						},
 					},
 				],
 				cases: [],
-				metricsExtractor: { module: "./metrics.js", exportName: "extractMetrics" },
+				metricsExtractor: {
+					module: "./metrics.js",
+					exportName: "extractMetrics",
+				},
 				output: {},
 			};
 
@@ -471,11 +571,19 @@ describe("config-loader", () => {
 						id: "sut1",
 						module: "./sut.js",
 						exportName: "createSut",
-						registration: { name: "SUT", version: "1.0.0", role: "primary", tags: [] },
+						registration: {
+							name: "SUT",
+							version: "1.0.0",
+							role: "primary",
+							tags: [],
+						},
 					},
 				],
 				cases: [{ id: "case1", module: "", exportName: "" }],
-				metricsExtractor: { module: "./metrics.js", exportName: "extractMetrics" },
+				metricsExtractor: {
+					module: "./metrics.js",
+					exportName: "extractMetrics",
+				},
 				output: {},
 			};
 
@@ -494,14 +602,22 @@ describe("config-loader", () => {
 						id: "sut1",
 						module: "./sut.js",
 						exportName: "createSut",
-						registration: { name: "SUT", version: "1.0.0", role: "primary", tags: [] },
+						registration: {
+							name: "SUT",
+							version: "1.0.0",
+							role: "primary",
+							tags: [],
+						},
 					},
 				],
 				cases: [
 					{ id: "duplicate", module: "./case1.js", exportName: "createCase1" },
 					{ id: "duplicate", module: "./case2.js", exportName: "createCase2" },
 				],
-				metricsExtractor: { module: "./metrics.js", exportName: "extractMetrics" },
+				metricsExtractor: {
+					module: "./metrics.js",
+					exportName: "extractMetrics",
+				},
 				output: {},
 			};
 
@@ -519,7 +635,12 @@ describe("config-loader", () => {
 						id: "sut1",
 						module: "./sut.js",
 						exportName: "createSut",
-						registration: { name: "SUT", version: "1.0.0", role: "primary", tags: [] },
+						registration: {
+							name: "SUT",
+							version: "1.0.0",
+							role: "primary",
+							tags: [],
+						},
 					},
 				],
 				cases: [{ id: "case1", module: "./case.js", exportName: "createCase" }],
@@ -540,7 +661,12 @@ describe("config-loader", () => {
 						id: "sut1",
 						module: "./sut.js",
 						exportName: "createSut",
-						registration: { name: "SUT", version: "1.0.0", role: "primary", tags: [] },
+						registration: {
+							name: "SUT",
+							version: "1.0.0",
+							role: "primary",
+							tags: [],
+						},
 					},
 				],
 				cases: [{ id: "case1", module: "./case.js", exportName: "createCase" }],
@@ -562,7 +688,12 @@ describe("config-loader", () => {
 						id: "sut1",
 						module: "./sut.js",
 						exportName: "createSut",
-						registration: { name: "SUT", version: "1.0.0", role: "primary", tags: [] },
+						registration: {
+							name: "SUT",
+							version: "1.0.0",
+							role: "primary",
+							tags: [],
+						},
 					},
 				],
 				cases: [{ id: "case1", module: "./case.js", exportName: "createCase" }],
@@ -584,11 +715,19 @@ describe("config-loader", () => {
 						id: "sut1",
 						module: "./sut.js",
 						exportName: "createSut",
-						registration: { name: "SUT", version: "1.0.0", role: "primary", tags: [] },
+						registration: {
+							name: "SUT",
+							version: "1.0.0",
+							role: "primary",
+							tags: [],
+						},
 					},
 				],
 				cases: [{ id: "case1", module: "./case.js", exportName: "createCase" }],
-				metricsExtractor: { module: "./metrics.js", exportName: "extractMetrics" },
+				metricsExtractor: {
+					module: "./metrics.js",
+					exportName: "extractMetrics",
+				},
 			};
 
 			const result = validateConfig(config);
@@ -610,11 +749,19 @@ describe("config-loader", () => {
 						id: "sut1",
 						module: "./sut.js",
 						exportName: "createSut",
-						registration: { name: "SUT", version: "1.0.0", role: "primary", tags: [] },
+						registration: {
+							name: "SUT",
+							version: "1.0.0",
+							role: "primary",
+							tags: [],
+						},
 					},
 				],
 				cases: [{ id: "case1", module: "./case.js", exportName: "createCase" }],
-				metricsExtractor: { module: "./metrics.js", exportName: "extractMetrics" },
+				metricsExtractor: {
+					module: "./metrics.js",
+					exportName: "extractMetrics",
+				},
 				output: { format: "invalid" },
 			};
 
@@ -633,11 +780,19 @@ describe("config-loader", () => {
 							id: "sut1",
 							module: "./sut.js",
 							exportName: "createSut",
-							registration: { name: "SUT", version: "1.0.0", role: "primary", tags: [] },
+							registration: {
+								name: "SUT",
+								version: "1.0.0",
+								role: "primary",
+								tags: [],
+							},
 						},
 					],
 					cases: [{ id: "case1", module: "./case.js", exportName: "createCase" }],
-					metricsExtractor: { module: "./metrics.js", exportName: "extractMetrics" },
+					metricsExtractor: {
+						module: "./metrics.js",
+						exportName: "extractMetrics",
+					},
 					output: { format },
 				};
 
@@ -660,11 +815,19 @@ describe("config-loader", () => {
 						id: "sut1",
 						module: "./sut.js",
 						exportName: "createSut",
-						registration: { name: "SUT 1", version: "1.0.0", role: "primary", tags: [] },
+						registration: {
+							name: "SUT 1",
+							version: "1.0.0",
+							role: "primary",
+							tags: [],
+						},
 					},
 				],
 				cases: [{ id: "case1", module: "./case.js", exportName: "createCase" }],
-				metricsExtractor: { module: "./metrics.js", exportName: "extractMetrics" },
+				metricsExtractor: {
+					module: "./metrics.js",
+					exportName: "extractMetrics",
+				},
 				output: {},
 			};
 
