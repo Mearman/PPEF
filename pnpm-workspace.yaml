@@ -25,3 +25,7 @@ overrides:
   koa: ^3.2.1
   undici: ^7.28.0
   "ajv@^8": ^8.18.0
+  # The release-notes generator loads the writer through conventional-changelog's
+  # nested resolution; force writer 9 so the conventionalcommits preset's helpers exist.
+  conventional-changelog-writer: ^9.2.1
+  conventional-changelog: ^8.0.0
