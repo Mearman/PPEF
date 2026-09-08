@@ -1,42 +1,42 @@
 {
-  "$schema": "../../ppef.schema.json#/$defs/MetricsEvaluatorConfig",
-  "name": "Metrics-Only Evaluation",
-  "description": "Evaluate length metric against threshold, baseline, and target-range criteria",
-  "criteria": [
-    {
-      "criterionId": "length-threshold",
-      "description": "Measured length should be greater than zero",
-      "type": "threshold",
-      "metric": "length",
-      "sut": "*",
-      "threshold": {
-        "operator": "gt",
-        "value": 0
-      }
-    },
-    {
-      "criterionId": "length-baseline",
-      "description": "Built-in .length should be at least as large as spread operator",
-      "type": "baseline",
-      "metric": "length",
-      "sut": "builtin-length",
-      "baseline": {
-        "sut": "spread-length",
-        "operator": "gte"
-      }
-    },
-    {
-      "criterionId": "length-target-range",
-      "description": "Length should be in reasonable range [1, 100]",
-      "type": "target-range",
-      "metric": "length",
-      "sut": "*",
-      "targetRange": {
-        "min": 1,
-        "max": 100,
-        "minInclusive": true,
-        "maxInclusive": true
-      }
-    }
-  ]
+	"$schema": "../../ppef.schema.json#/$defs/MetricsEvaluatorConfig",
+	"name": "Metrics-Only Evaluation",
+	"description": "Evaluate length metric against threshold, baseline, and target-range criteria",
+	"criteria": [
+		{
+			"criterionId": "length-threshold",
+			"description": "Measured length should be greater than zero",
+			"type": "threshold",
+			"metric": "length",
+			"sut": "*",
+			"threshold": {
+				"operator": "gt",
+				"value": 0
+			}
+		},
+		{
+			"criterionId": "length-baseline",
+			"description": "Built-in .length should be at least as large as spread operator",
+			"type": "baseline",
+			"metric": "length",
+			"sut": "builtin-length",
+			"baseline": {
+				"sut": "spread-length",
+				"operator": "gte"
+			}
+		},
+		{
+			"criterionId": "length-target-range",
+			"description": "Length should be in reasonable range [1, 100]",
+			"type": "target-range",
+			"metric": "length",
+			"sut": "*",
+			"targetRange": {
+				"min": 1,
+				"max": 100,
+				"minInclusive": true,
+				"maxInclusive": true
+			}
+		}
+	]
 }

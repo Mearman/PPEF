@@ -66,7 +66,9 @@ describe("ResourceCalculator", () => {
 	describe("calculateResources", () => {
 		it("should match synchronous results when disk measurement is disabled", async () => {
 			const syncResult = calculateResourcesSync(0.75);
-			const asyncResult = await calculateResources(0.75, { measureDisk: false });
+			const asyncResult = await calculateResources(0.75, {
+				measureDisk: false,
+			});
 
 			assert.strictEqual(asyncResult.maxWorkers, syncResult.maxWorkers);
 			assert.strictEqual(asyncResult.maxMemoryMb, syncResult.maxMemoryMb);

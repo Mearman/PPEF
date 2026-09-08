@@ -10,11 +10,11 @@ import { runCli } from "../dist/cli/index.js";
 
 // Run the CLI and exit with appropriate code
 runCli().then(
-	(code) => {
-		process.exit(code);
-	},
-	(error) => {
-		console.error("Fatal error:", error);
-		process.exit(1);
-	},
+  (code) => {
+    process.exit(code);
+  },
+  (error) => {
+    console.error("Fatal error:", error);
+    process.exit(1);
+  },
 );

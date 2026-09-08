@@ -211,8 +211,14 @@ const getProvenance = (collectProvenance: boolean): Provenance => {
 	let dirty = false;
 
 	try {
-		gitCommit = execSync("git rev-parse HEAD", { encoding: "utf-8", env: undefined }).trim();
-		const status = execSync("git status --porcelain", { encoding: "utf-8", env: undefined });
+		gitCommit = execSync("git rev-parse HEAD", {
+			encoding: "utf-8",
+			env: undefined,
+		}).trim();
+		const status = execSync("git status --porcelain", {
+			encoding: "utf-8",
+			env: undefined,
+		});
 		dirty = status.length > 0;
 	} catch {
 		// Git not available or not a git repo

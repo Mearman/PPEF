@@ -28,11 +28,12 @@ The `eval-config.json` file defines three evaluation criteria against the `lengt
 
 - **length-threshold**: All SUTs must produce a measured length greater than zero
 - **length-baseline**: `builtin-length` must return a length at least as large as `spread-length`
-- **length-target-range**: All SUTs must produce a length in the range [1, 100]
+- **length-target-range**: All SUTs must produce a length in the range 1 to 100
 
 ## Output
 
 The evaluation produces:
+
 - Pass/fail status for each criterion
 - Observed vs expected values
 - Summary statistics including pass rate by SUT
@@ -41,6 +42,7 @@ The evaluation produces:
 ## When to Use Metrics-Only Evaluation
 
 Use this approach when you want to:
+
 1. Verify basic quality thresholds (performance, memory)
 2. Compare against baseline without formal hypothesis testing
 3. Check if metrics fall within acceptable ranges
@@ -48,9 +50,9 @@ Use this approach when you want to:
 
 ## Compared to Claims
 
-| Metrics-Only | Claims |
-|-------------|--------|
-| Absolute thresholds | Hypothesis-driven |
-| Direct comparisons | Statistical significance testing |
-| Pass/fail outcomes | Satisfied/violated/inconclusive |
-| Quality gates | Scientific evidence |
+| Metrics-Only        | Claims                           |
+| ------------------- | -------------------------------- |
+| Absolute thresholds | Hypothesis-driven                |
+| Direct comparisons  | Statistical significance testing |
+| Pass/fail outcomes  | Satisfied/violated/inconclusive  |
+| Quality gates       | Scientific evidence              |

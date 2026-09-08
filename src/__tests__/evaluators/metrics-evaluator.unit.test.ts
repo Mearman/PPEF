@@ -51,7 +51,9 @@ describe("MetricsEvaluator", () => {
 		});
 
 		it("should invalidate when criteria is not an array", () => {
-			const config = { criteria: "not-an-array" } as unknown as MetricsEvaluatorConfig;
+			const config = {
+				criteria: "not-an-array",
+			} as unknown as MetricsEvaluatorConfig;
 			const result = evaluator.validateConfig(config);
 
 			assert.equal(result.valid, false);

@@ -128,19 +128,39 @@ describe("computeComparison", () => {
 	it("should return default values when no common case IDs", () => {
 		const primaryResults = [
 			createMockResult({
-				run: { runId: "p1", sut: "primary", sutRole: "primary", caseId: "primary-case-1" },
+				run: {
+					runId: "p1",
+					sut: "primary",
+					sutRole: "primary",
+					caseId: "primary-case-1",
+				},
 			}),
 			createMockResult({
-				run: { runId: "p2", sut: "primary", sutRole: "primary", caseId: "primary-case-2" },
+				run: {
+					runId: "p2",
+					sut: "primary",
+					sutRole: "primary",
+					caseId: "primary-case-2",
+				},
 			}),
 		];
 
 		const baselineResults = [
 			createMockResult({
-				run: { runId: "b1", sut: "baseline", sutRole: "baseline", caseId: "baseline-case-1" },
+				run: {
+					runId: "b1",
+					sut: "baseline",
+					sutRole: "baseline",
+					caseId: "baseline-case-1",
+				},
 			}),
 			createMockResult({
-				run: { runId: "b2", sut: "baseline", sutRole: "baseline", caseId: "baseline-case-2" },
+				run: {
+					runId: "b2",
+					sut: "baseline",
+					sutRole: "baseline",
+					caseId: "baseline-case-2",
+				},
 			}),
 		];
 
@@ -153,22 +173,42 @@ describe("computeComparison", () => {
 	it("should compute delta and ratio for matching cases", () => {
 		const primaryResults = [
 			createMockResult({
-				run: { runId: "p1", sut: "primary", sutRole: "primary", caseId: "case-1" },
+				run: {
+					runId: "p1",
+					sut: "primary",
+					sutRole: "primary",
+					caseId: "case-1",
+				},
 				metrics: { numeric: { "execution-time": 80 } },
 			}),
 			createMockResult({
-				run: { runId: "p2", sut: "primary", sutRole: "primary", caseId: "case-2" },
+				run: {
+					runId: "p2",
+					sut: "primary",
+					sutRole: "primary",
+					caseId: "case-2",
+				},
 				metrics: { numeric: { "execution-time": 120 } },
 			}),
 		];
 
 		const baselineResults = [
 			createMockResult({
-				run: { runId: "b1", sut: "baseline", sutRole: "baseline", caseId: "case-1" },
+				run: {
+					runId: "b1",
+					sut: "baseline",
+					sutRole: "baseline",
+					caseId: "case-1",
+				},
 				metrics: { numeric: { "execution-time": 100 } },
 			}),
 			createMockResult({
-				run: { runId: "b2", sut: "baseline", sutRole: "baseline", caseId: "case-2" },
+				run: {
+					runId: "b2",
+					sut: "baseline",
+					sutRole: "baseline",
+					caseId: "case-2",
+				},
 				metrics: { numeric: { "execution-time": 100 } },
 			}),
 		];
@@ -183,30 +223,60 @@ describe("computeComparison", () => {
 	it("should compute better rate (wins)", () => {
 		const primaryResults = [
 			createMockResult({
-				run: { runId: "p1", sut: "primary", sutRole: "primary", caseId: "case-1" },
+				run: {
+					runId: "p1",
+					sut: "primary",
+					sutRole: "primary",
+					caseId: "case-1",
+				},
 				metrics: { numeric: { accuracy: 0.9 } },
 			}),
 			createMockResult({
-				run: { runId: "p2", sut: "primary", sutRole: "primary", caseId: "case-2" },
+				run: {
+					runId: "p2",
+					sut: "primary",
+					sutRole: "primary",
+					caseId: "case-2",
+				},
 				metrics: { numeric: { accuracy: 0.7 } },
 			}),
 			createMockResult({
-				run: { runId: "p3", sut: "primary", sutRole: "primary", caseId: "case-3" },
+				run: {
+					runId: "p3",
+					sut: "primary",
+					sutRole: "primary",
+					caseId: "case-3",
+				},
 				metrics: { numeric: { accuracy: 0.85 } },
 			}),
 		];
 
 		const baselineResults = [
 			createMockResult({
-				run: { runId: "b1", sut: "baseline", sutRole: "baseline", caseId: "case-1" },
+				run: {
+					runId: "b1",
+					sut: "baseline",
+					sutRole: "baseline",
+					caseId: "case-1",
+				},
 				metrics: { numeric: { accuracy: 0.8 } },
 			}),
 			createMockResult({
-				run: { runId: "b2", sut: "baseline", sutRole: "baseline", caseId: "case-2" },
+				run: {
+					runId: "b2",
+					sut: "baseline",
+					sutRole: "baseline",
+					caseId: "case-2",
+				},
 				metrics: { numeric: { accuracy: 0.8 } },
 			}),
 			createMockResult({
-				run: { runId: "b3", sut: "baseline", sutRole: "baseline", caseId: "case-3" },
+				run: {
+					runId: "b3",
+					sut: "baseline",
+					sutRole: "baseline",
+					caseId: "case-3",
+				},
 				metrics: { numeric: { accuracy: 0.8 } },
 			}),
 		];
@@ -222,14 +292,24 @@ describe("computeComparison", () => {
 	it("should return infinite ratio when baseline mean is zero", () => {
 		const primaryResults = [
 			createMockResult({
-				run: { runId: "p1", sut: "primary", sutRole: "primary", caseId: "case-1" },
+				run: {
+					runId: "p1",
+					sut: "primary",
+					sutRole: "primary",
+					caseId: "case-1",
+				},
 				metrics: { numeric: { errors: 0 } },
 			}),
 		];
 
 		const baselineResults = [
 			createMockResult({
-				run: { runId: "b1", sut: "baseline", sutRole: "baseline", caseId: "case-1" },
+				run: {
+					runId: "b1",
+					sut: "baseline",
+					sutRole: "baseline",
+					caseId: "case-1",
+				},
 				metrics: { numeric: { errors: 0 } },
 			}),
 		];
@@ -244,14 +324,24 @@ describe("computeComparison", () => {
 	it("should compute pValue using Mann-Whitney U test", () => {
 		const primaryResults = [
 			createMockResult({
-				run: { runId: "p1", sut: "primary", sutRole: "primary", caseId: "case-1" },
+				run: {
+					runId: "p1",
+					sut: "primary",
+					sutRole: "primary",
+					caseId: "case-1",
+				},
 				metrics: { numeric: { "execution-time": 100 } },
 			}),
 		];
 
 		const baselineResults = [
 			createMockResult({
-				run: { runId: "b1", sut: "baseline", sutRole: "baseline", caseId: "case-1" },
+				run: {
+					runId: "b1",
+					sut: "baseline",
+					sutRole: "baseline",
+					caseId: "case-1",
+				},
 				metrics: { numeric: { "execution-time": 100 } },
 			}),
 		];
@@ -265,22 +355,42 @@ describe("computeComparison", () => {
 	it("should compute effect size when both samples have variance", () => {
 		const primaryResults = [
 			createMockResult({
-				run: { runId: "p1", sut: "primary", sutRole: "primary", caseId: "case-1" },
+				run: {
+					runId: "p1",
+					sut: "primary",
+					sutRole: "primary",
+					caseId: "case-1",
+				},
 				metrics: { numeric: { "execution-time": 80 } },
 			}),
 			createMockResult({
-				run: { runId: "p2", sut: "primary", sutRole: "primary", caseId: "case-2" },
+				run: {
+					runId: "p2",
+					sut: "primary",
+					sutRole: "primary",
+					caseId: "case-2",
+				},
 				metrics: { numeric: { "execution-time": 120 } },
 			}),
 		];
 
 		const baselineResults = [
 			createMockResult({
-				run: { runId: "b1", sut: "baseline", sutRole: "baseline", caseId: "case-1" },
+				run: {
+					runId: "b1",
+					sut: "baseline",
+					sutRole: "baseline",
+					caseId: "case-1",
+				},
 				metrics: { numeric: { "execution-time": 95 } },
 			}),
 			createMockResult({
-				run: { runId: "b2", sut: "baseline", sutRole: "baseline", caseId: "case-2" },
+				run: {
+					runId: "b2",
+					sut: "baseline",
+					sutRole: "baseline",
+					caseId: "case-2",
+				},
 				metrics: { numeric: { "execution-time": 105 } },
 			}),
 		];
@@ -296,15 +406,30 @@ describe("computeRankings", () => {
 	it("should rank results by metric in descending order (default)", () => {
 		const results = [
 			createMockResult({
-				run: { runId: "r1", sut: "sut-1", sutRole: "primary", caseId: "case-1" },
+				run: {
+					runId: "r1",
+					sut: "sut-1",
+					sutRole: "primary",
+					caseId: "case-1",
+				},
 				metrics: { numeric: { score: 0.8 } },
 			}),
 			createMockResult({
-				run: { runId: "r2", sut: "sut-2", sutRole: "primary", caseId: "case-1" },
+				run: {
+					runId: "r2",
+					sut: "sut-2",
+					sutRole: "primary",
+					caseId: "case-1",
+				},
 				metrics: { numeric: { score: 0.95 } },
 			}),
 			createMockResult({
-				run: { runId: "r3", sut: "sut-3", sutRole: "primary", caseId: "case-1" },
+				run: {
+					runId: "r3",
+					sut: "sut-3",
+					sutRole: "primary",
+					caseId: "case-1",
+				},
 				metrics: { numeric: { score: 0.7 } },
 			}),
 		];
@@ -321,15 +446,30 @@ describe("computeRankings", () => {
 	it("should rank results in ascending order when specified", () => {
 		const results = [
 			createMockResult({
-				run: { runId: "r1", sut: "sut-1", sutRole: "primary", caseId: "case-1" },
+				run: {
+					runId: "r1",
+					sut: "sut-1",
+					sutRole: "primary",
+					caseId: "case-1",
+				},
 				metrics: { numeric: { "execution-time": 100 } },
 			}),
 			createMockResult({
-				run: { runId: "r2", sut: "sut-2", sutRole: "primary", caseId: "case-1" },
+				run: {
+					runId: "r2",
+					sut: "sut-2",
+					sutRole: "primary",
+					caseId: "case-1",
+				},
 				metrics: { numeric: { "execution-time": 50 } },
 			}),
 			createMockResult({
-				run: { runId: "r3", sut: "sut-3", sutRole: "primary", caseId: "case-1" },
+				run: {
+					runId: "r3",
+					sut: "sut-3",
+					sutRole: "primary",
+					caseId: "case-1",
+				},
 				metrics: { numeric: { "execution-time": 75 } },
 			}),
 		];
@@ -345,11 +485,21 @@ describe("computeRankings", () => {
 	it("should filter out results with missing or NaN metric values", () => {
 		const results = [
 			createMockResult({
-				run: { runId: "r1", sut: "sut-1", sutRole: "primary", caseId: "case-1" },
+				run: {
+					runId: "r1",
+					sut: "sut-1",
+					sutRole: "primary",
+					caseId: "case-1",
+				},
 				metrics: { numeric: { score: 0.8 } },
 			}),
 			createMockResult({
-				run: { runId: "r2", sut: "sut-2", sutRole: "primary", caseId: "case-1" },
+				run: {
+					runId: "r2",
+					sut: "sut-2",
+					sutRole: "primary",
+					caseId: "case-1",
+				},
 				metrics: { numeric: {} }, // Missing metric
 			}),
 		];
@@ -363,7 +513,12 @@ describe("computeRankings", () => {
 	it("should return empty array when no results have the metric", () => {
 		const results = [
 			createMockResult({
-				run: { runId: "r1", sut: "sut-1", sutRole: "primary", caseId: "case-1" },
+				run: {
+					runId: "r1",
+					sut: "sut-1",
+					sutRole: "primary",
+					caseId: "case-1",
+				},
 				metrics: { numeric: {} },
 			}),
 		];
@@ -376,11 +531,21 @@ describe("computeRankings", () => {
 	it("should handle ties in metric values", () => {
 		const results = [
 			createMockResult({
-				run: { runId: "r1", sut: "sut-1", sutRole: "primary", caseId: "case-1" },
+				run: {
+					runId: "r1",
+					sut: "sut-1",
+					sutRole: "primary",
+					caseId: "case-1",
+				},
 				metrics: { numeric: { score: 0.9 } },
 			}),
 			createMockResult({
-				run: { runId: "r2", sut: "sut-2", sutRole: "primary", caseId: "case-1" },
+				run: {
+					runId: "r2",
+					sut: "sut-2",
+					sutRole: "primary",
+					caseId: "case-1",
+				},
 				metrics: { numeric: { score: 0.9 } },
 			}),
 		];

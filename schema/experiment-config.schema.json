@@ -4,7 +4,14 @@
   "title": "PPEF Experiment Configuration",
   "description": "Configuration schema for PPEF experiment execution via CLI",
   "type": "object",
-  "required": ["experiment", "executor", "suts", "cases", "metricsExtractor", "output"],
+  "required": [
+    "experiment",
+    "executor",
+    "suts",
+    "cases",
+    "metricsExtractor",
+    "output"
+  ],
   "properties": {
     "experiment": {
       "type": "object",

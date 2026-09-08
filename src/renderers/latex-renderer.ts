@@ -318,7 +318,14 @@ ${rows.join("\n")}
 	private renderSutRankings(
 		rankings: Record<
 			string,
-			{ sut: string; mean: number; median: number; std?: number; rank: number; n: number }[]
+			{
+				sut: string;
+				mean: number;
+				median: number;
+				std?: number;
+				rank: number;
+				n: number;
+			}[]
 		>,
 	): string {
 		const tables: string[] = [];
@@ -585,8 +592,16 @@ ${rows.join("\n")}
 		});
 
 		const rules = this.options.booktabs
-			? { top: String.raw`\toprule`, mid: String.raw`\midrule`, bottom: String.raw`\bottomrule` }
-			: { top: String.raw`\hline`, mid: String.raw`\hline`, bottom: String.raw`\hline` };
+			? {
+					top: String.raw`\toprule`,
+					mid: String.raw`\midrule`,
+					bottom: String.raw`\bottomrule`,
+				}
+			: {
+					top: String.raw`\hline`,
+					mid: String.raw`\hline`,
+					bottom: String.raw`\hline`,
+				};
 
 		return String.raw`\begin{table}[htbp]
   \centering

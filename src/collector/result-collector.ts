@@ -112,11 +112,17 @@ export class ResultCollector {
 		}
 
 		if (Object.keys(result.metrics.numeric).length === 0) {
-			errors.push({ field: "metrics.numeric", message: "Missing numeric metrics" });
+			errors.push({
+				field: "metrics.numeric",
+				message: "Missing numeric metrics",
+			});
 		}
 
 		if (result.provenance.runtime.platform === "") {
-			errors.push({ field: "provenance.runtime.platform", message: "Missing platform" });
+			errors.push({
+				field: "provenance.runtime.platform",
+				message: "Missing platform",
+			});
 		}
 
 		return errors;

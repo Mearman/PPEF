@@ -39,11 +39,13 @@ pnpm test                 # Run all tests with coverage (c8 + tsx + Node native 
 ```
 
 Run a single test file:
+
 ```bash
 npx tsx --test src/path/to/file.test.ts
 ```
 
 CLI (after build):
+
 ```bash
 ppef experiment.json   # Run experiment (default command)
 ppef run config.json   # Explicit run command
@@ -58,6 +60,7 @@ ppef evaluate          # Run evaluators on results
 Create a minimal experiment with three files and a config:
 
 **experiment.json**
+
 ```json
 {
   "experiment": {
@@ -97,6 +100,7 @@ Create a minimal experiment with three files and a config:
 ```
 
 **sut.mjs** — System Under Test factory
+
 ```js
 export function createSut() {
   return {
@@ -108,6 +112,7 @@ export function createSut() {
 ```
 
 **case.mjs** — Test case definition
+
 ```js
 export function createCase() {
   return {
@@ -125,6 +130,7 @@ export function createCase() {
 ```
 
 **metrics.mjs** — Metrics extractor
+
 ```js
 export function extract(result) {
   return { length: result.length ?? 0 };
@@ -132,6 +138,7 @@ export function extract(result) {
 ```
 
 Run it:
+
 ```bash
 npx ppef experiment.json
 ```
@@ -197,6 +204,7 @@ ppef evaluate aggregates.json -t claims -c claims.json -v
 ```
 
 **claims.json**:
+
 ```json
 {
   "claims": [
@@ -223,6 +231,7 @@ ppef evaluate aggregates.json -t metrics -c metrics-config.json
 ```
 
 **metrics-config.json**:
+
 ```json
 {
   "criteria": [
@@ -240,7 +249,12 @@ ppef evaluate aggregates.json -t metrics -c metrics-config.json
       "type": "target-range",
       "metric": "f1Score",
       "sut": "*",
-      "targetRange": { "min": 0.8, "max": 1.0, "minInclusive": true, "maxInclusive": true }
+      "targetRange": {
+        "min": 0.8,
+        "max": 1.0,
+        "minInclusive": true,
+        "maxInclusive": true
+      }
     }
   ]
 }
@@ -255,6 +269,7 @@ ppef evaluate results.json -t robustness -c robustness-config.json
 ```
 
 **robustness-config.json**:
+
 ```json
 {
   "metrics": ["executionTime", "accuracy"],
@@ -322,11 +337,11 @@ PPEF is designed for cross-language interoperability. A Python runner can produc
 
 The specification lives in [`spec/`](spec/) and comprises three layers:
 
-| Layer | Location | Purpose |
-|-------|----------|---------|
-| JSON Schema | [`ppef.schema.json`](ppef.schema.json) | Machine-readable type definitions for all input and output types |
+| Layer               | Location                                 | Purpose                                                          |
+| ------------------- | ---------------------------------------- | ---------------------------------------------------------------- |
+| JSON Schema         | [`ppef.schema.json`](ppef.schema.json)   | Machine-readable type definitions for all input and output types |
 | Conformance Vectors | [`spec/conformance/`](spec/conformance/) | Pinned input/output pairs that any implementation must reproduce |
-| Prose Specification | [`spec/README.md`](spec/README.md) | Execution semantics, module contracts, statistical algorithms |
+| Prose Specification | [`spec/README.md`](spec/README.md)       | Execution semantics, module contracts, statistical algorithms    |
 
 All output types are available as `$defs` in the schema, enabling validation from any language:
 
@@ -358,19 +373,19 @@ SUTs + Cases (Registries)
 
 ### Module Map (`src/`)
 
-| Module | Purpose |
-|--------|---------|
-| `types/` | All canonical type definitions (result, sut, case, claims, evaluator, aggregate, perturbation) |
-| `registry/` | `SUTRegistry` and `CaseRegistry` — generic registries with role/tag filtering |
-| `executor/` | Orchestrator with worker threads, checkpointing, memory monitoring, binary SUT support |
-| `collector/` | Result aggregation and JSON schema validation |
-| `statistical/` | Mann-Whitney U test, Cohen's d, confidence intervals |
-| `aggregation/` | `computeSummaryStats()`, `computeComparison()`, `computeRankings()`, pipeline |
-| `evaluators/` | Four built-in evaluators + extensible registry (see below) |
-| `claims/` | Claim type definitions |
-| `robustness/` | Perturbation configs and robustness metric types |
-| `renderers/` | LaTeX table renderer |
-| `cli/` | Five commands with config loading, module loading, output writing |
+| Module         | Purpose                                                                                        |
+| -------------- | ---------------------------------------------------------------------------------------------- |
+| `types/`       | All canonical type definitions (result, sut, case, claims, evaluator, aggregate, perturbation) |
+| `registry/`    | `SUTRegistry` and `CaseRegistry` — generic registries with role/tag filtering                  |
+| `executor/`    | Orchestrator with worker threads, checkpointing, memory monitoring, binary SUT support         |
+| `collector/`   | Result aggregation and JSON schema validation                                                  |
+| `statistical/` | Mann-Whitney U test, Cohen's d, confidence intervals                                           |
+| `aggregation/` | `computeSummaryStats()`, `computeComparison()`, `computeRankings()`, pipeline                  |
+| `evaluators/`  | Four built-in evaluators + extensible registry (see below)                                     |
+| `claims/`      | Claim type definitions                                                                         |
+| `robustness/`  | Perturbation configs and robustness metric types                                               |
+| `renderers/`   | LaTeX table renderer                                                                           |
+| `cli/`         | Five commands with config loading, module loading, output writing                              |
 
 ### Key Abstractions
 
@@ -379,6 +394,7 @@ SUTs + Cases (Registries)
 **CaseDefinition** (`CaseDefinition<TInput, TInputs>`): Two-phase resource factory — `getInput()` loads a resource once, `getInputs()` returns algorithm-specific inputs.
 
 **Evaluator** (`Evaluator<TConfig, TInput, TOutput>`): Extensible evaluation with `validateConfig()`, `evaluate()`, `summarize()`. Four built-in types:
+
 - **ClaimsEvaluator** — tests explicit hypotheses with statistical significance
 - **RobustnessEvaluator** — sensitivity analysis under perturbations
 - **MetricsEvaluator** — multi-criterion threshold/baseline/target-range evaluation
@@ -391,9 +407,9 @@ SUTs + Cases (Registries)
 Each module is independently importable:
 
 ```typescript
-import { SUTRegistry } from 'ppef/registry';
-import { EvaluationResult } from 'ppef/types';
-import { computeSummaryStats } from 'ppef/aggregation';
+import { SUTRegistry } from "ppef/registry";
+import { EvaluationResult } from "ppef/types";
+import { computeSummaryStats } from "ppef/aggregation";
 ```
 
 Available subpaths: `ppef/types`, `ppef/registry`, `ppef/executor`, `ppef/collector`, `ppef/statistical`, `ppef/aggregation`, `ppef/evaluators`, `ppef/claims`, `ppef/robustness`, `ppef/renderers`.

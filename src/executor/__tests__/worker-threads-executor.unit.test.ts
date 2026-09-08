@@ -102,9 +102,9 @@ class MockWorker {
 
 	on(event: "message" | "error", listener: (data: WorkerOutputMessage | Error) => void): void {
 		if (event === "message") {
-			this.messageListener = listener as (data: WorkerOutputMessage) => void;
+			this.messageListener = listener;
 		} else {
-			this.errorListener = listener as (error: Error) => void;
+			this.errorListener = listener;
 		}
 	}
 

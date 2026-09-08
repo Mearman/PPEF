@@ -25,7 +25,9 @@ describe("Checkpoint Integration", () => {
 	beforeEach(() => {
 		testDir = join(tmpdir(), `checkpoint-test-${randomBytes(8).toString("hex")}`);
 		checkpointPath = join(testDir, "checkpoint.json");
-		checkpoint = new CheckpointManager({ storage: new FileStorage(checkpointPath) });
+		checkpoint = new CheckpointManager({
+			storage: new FileStorage(checkpointPath),
+		});
 	});
 
 	afterEach(() => {
@@ -62,7 +64,9 @@ describe("Checkpoint Integration", () => {
 			await checkpoint.saveIncremental(result);
 
 			// Load fresh checkpoint
-			const fresh = new CheckpointManager({ storage: new FileStorage(checkpointPath) });
+			const fresh = new CheckpointManager({
+				storage: new FileStorage(checkpointPath),
+			});
 			await fresh.load();
 			const results = fresh.getResults();
 
@@ -101,7 +105,9 @@ describe("Checkpoint Integration", () => {
 			}
 
 			// Load fresh checkpoint
-			const fresh = new CheckpointManager({ storage: new FileStorage(checkpointPath) });
+			const fresh = new CheckpointManager({
+				storage: new FileStorage(checkpointPath),
+			});
 			await fresh.load();
 			const loaded = fresh.getResults();
 
@@ -139,7 +145,9 @@ describe("Checkpoint Integration", () => {
 			await checkpoint.saveIncremental(result);
 
 			// Verify file exists
-			const fresh = new CheckpointManager({ storage: new FileStorage(checkpointPath) });
+			const fresh = new CheckpointManager({
+				storage: new FileStorage(checkpointPath),
+			});
 			await fresh.load();
 
 			assert.strictEqual(fresh.getResults().length, 1);
@@ -175,7 +183,9 @@ describe("Checkpoint Integration", () => {
 			await checkpoint.saveIncremental(result);
 
 			// Try to load with different config
-			const fresh = new CheckpointManager({ storage: new FileStorage(checkpointPath) });
+			const fresh = new CheckpointManager({
+				storage: new FileStorage(checkpointPath),
+			});
 			await fresh.load();
 
 			// Check if stale with different config
@@ -236,7 +246,9 @@ describe("Checkpoint Integration", () => {
 
 			await checkpoint.saveIncremental(result);
 
-			const fresh = new CheckpointManager({ storage: new FileStorage(checkpointPath) });
+			const fresh = new CheckpointManager({
+				storage: new FileStorage(checkpointPath),
+			});
 			await fresh.load();
 
 			// Same config should not be stale

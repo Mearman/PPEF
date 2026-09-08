@@ -56,7 +56,9 @@ describe("aggregateResults", () => {
 			...createMockResults(3, "baseline", "baseline"),
 		];
 
-		const aggregated = aggregateResults(results, { primarySut: "custom-primary" });
+		const aggregated = aggregateResults(results, {
+			primarySut: "custom-primary",
+		});
 
 		// Should add comparisons using the specified primary
 		const primaryAgg = aggregated.find((a) => a.sut === "custom-primary");
@@ -70,7 +72,9 @@ describe("aggregateResults", () => {
 			...createMockResults(3, "custom-baseline", "baseline"),
 		];
 
-		const aggregated = aggregateResults(results, { baselineSuts: ["custom-baseline"] });
+		const aggregated = aggregateResults(results, {
+			baselineSuts: ["custom-baseline"],
+		});
 
 		// Should add comparisons using the specified baseline
 		const primaryAgg = aggregated.find((a) => a.sut === "primary");

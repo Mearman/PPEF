@@ -6,12 +6,12 @@ Requires **Node >= 23** for native TypeScript module support (`.ts` files loaded
 
 ## SUTs
 
-| SUT | Algorithm | Role |
-|-----|-----------|------|
-| `linear-search` | Sequential scan of unsorted `data` | baseline |
-| `binary-search` | Iterative binary search on `sortedData` | primary |
-| `map-search` | Build `Map(value -> index)` then `.get()` | primary |
-| `set-search` | Build `Set` then `.has()` | primary |
+| SUT             | Algorithm                                 | Role     |
+| --------------- | ----------------------------------------- | -------- |
+| `linear-search` | Sequential scan of unsorted `data`        | baseline |
+| `binary-search` | Iterative binary search on `sortedData`   | primary  |
+| `map-search`    | Build `Map(value -> index)` then `.get()` | primary  |
+| `set-search`    | Build `Set` then `.has()`                 | primary  |
 
 All SUTs return `{ found, index, comparisons, executionTimeMs }`.
 
@@ -19,14 +19,14 @@ Map and Set SUTs include construction time in `executionTimeMs` to reflect the r
 
 ## Cases
 
-| Case | Size | Target | Class |
-|------|------|--------|-------|
-| `small-found` | 100 | `data[50]` | `small` |
-| `small-not-found` | 100 | `-1` | `small` |
-| `large-found-start` | 10000 | `data[5]` | `large` |
+| Case                 | Size  | Target       | Class   |
+| -------------------- | ----- | ------------ | ------- |
+| `small-found`        | 100   | `data[50]`   | `small` |
+| `small-not-found`    | 100   | `-1`         | `small` |
+| `large-found-start`  | 10000 | `data[5]`    | `large` |
 | `large-found-middle` | 10000 | `data[5000]` | `large` |
-| `large-found-end` | 10000 | `data[9990]` | `large` |
-| `large-not-found` | 10000 | `-1` | `large` |
+| `large-found-end`    | 10000 | `data[9990]` | `large` |
+| `large-not-found`    | 10000 | `-1`         | `large` |
 
 Large cases share seed 123 so they use the same shuffled array, differing only in target position.
 

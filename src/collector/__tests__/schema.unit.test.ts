@@ -80,7 +80,12 @@ describe("schema validators", () => {
 
 		it("should require correctness", () => {
 			const result = validateResult({
-				run: { runId: "test-1", sut: "sut-1", sutRole: "primary", caseId: "case-1" },
+				run: {
+					runId: "test-1",
+					sut: "sut-1",
+					sutRole: "primary",
+					caseId: "case-1",
+				},
 			});
 			assert.strictEqual(result.valid, false);
 			assert.ok(result.errors.some((e) => e.includes("correctness")));
@@ -88,7 +93,12 @@ describe("schema validators", () => {
 
 		it("should validate correctness fields", () => {
 			const result = validateResult({
-				run: { runId: "test-1", sut: "sut-1", sutRole: "primary", caseId: "case-1" },
+				run: {
+					runId: "test-1",
+					sut: "sut-1",
+					sutRole: "primary",
+					caseId: "case-1",
+				},
 				correctness: {},
 			});
 			assert.strictEqual(result.valid, false);
@@ -99,8 +109,17 @@ describe("schema validators", () => {
 
 		it("should require metrics", () => {
 			const result = validateResult({
-				run: { runId: "test-1", sut: "sut-1", sutRole: "primary", caseId: "case-1" },
-				correctness: { expectedExists: true, producedOutput: true, valid: true },
+				run: {
+					runId: "test-1",
+					sut: "sut-1",
+					sutRole: "primary",
+					caseId: "case-1",
+				},
+				correctness: {
+					expectedExists: true,
+					producedOutput: true,
+					valid: true,
+				},
 			});
 			assert.strictEqual(result.valid, false);
 			assert.ok(result.errors.some((e) => e.includes("metrics")));
@@ -108,8 +127,17 @@ describe("schema validators", () => {
 
 		it("should require metrics.numeric to be an object", () => {
 			const result = validateResult({
-				run: { runId: "test-1", sut: "sut-1", sutRole: "primary", caseId: "case-1" },
-				correctness: { expectedExists: true, producedOutput: true, valid: true },
+				run: {
+					runId: "test-1",
+					sut: "sut-1",
+					sutRole: "primary",
+					caseId: "case-1",
+				},
+				correctness: {
+					expectedExists: true,
+					producedOutput: true,
+					valid: true,
+				},
 				metrics: {
 					numeric: "not-an-object",
 				},
@@ -120,8 +148,17 @@ describe("schema validators", () => {
 
 		it("should validate numeric metrics are finite numbers", () => {
 			const result = validateResult({
-				run: { runId: "test-1", sut: "sut-1", sutRole: "primary", caseId: "case-1" },
-				correctness: { expectedExists: true, producedOutput: true, valid: true },
+				run: {
+					runId: "test-1",
+					sut: "sut-1",
+					sutRole: "primary",
+					caseId: "case-1",
+				},
+				correctness: {
+					expectedExists: true,
+					producedOutput: true,
+					valid: true,
+				},
 				metrics: {
 					numeric: {
 						accuracy: 0.9,
@@ -137,8 +174,17 @@ describe("schema validators", () => {
 
 		it("should require provenance", () => {
 			const result = validateResult({
-				run: { runId: "test-1", sut: "sut-1", sutRole: "primary", caseId: "case-1" },
-				correctness: { expectedExists: true, producedOutput: true, valid: true },
+				run: {
+					runId: "test-1",
+					sut: "sut-1",
+					sutRole: "primary",
+					caseId: "case-1",
+				},
+				correctness: {
+					expectedExists: true,
+					producedOutput: true,
+					valid: true,
+				},
 				metrics: { numeric: { accuracy: 0.9 } },
 			});
 			assert.strictEqual(result.valid, false);
@@ -147,8 +193,17 @@ describe("schema validators", () => {
 
 		it("should validate provenance.runtime", () => {
 			const result = validateResult({
-				run: { runId: "test-1", sut: "sut-1", sutRole: "primary", caseId: "case-1" },
-				correctness: { expectedExists: true, producedOutput: true, valid: true },
+				run: {
+					runId: "test-1",
+					sut: "sut-1",
+					sutRole: "primary",
+					caseId: "case-1",
+				},
+				correctness: {
+					expectedExists: true,
+					producedOutput: true,
+					valid: true,
+				},
 				metrics: { numeric: { accuracy: 0.9 } },
 				provenance: {},
 			});
@@ -290,7 +345,11 @@ describe("schema validators", () => {
 		});
 
 		it("should require non-empty version", () => {
-			const result = validateSutRegistration({ id: "sut-1", name: "SUT 1", version: "" });
+			const result = validateSutRegistration({
+				id: "sut-1",
+				name: "SUT 1",
+				version: "",
+			});
 			assert.strictEqual(result.valid, false);
 			assert.ok(result.errors.some((e) => e.includes("version")));
 		});

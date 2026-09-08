@@ -157,7 +157,10 @@ describe("CheckpointManager", () => {
 		it("should use injected storage", () => {
 			const mockStorage = new MockCheckpointStorage();
 			const mockLock = new MockLock();
-			const cp = new CheckpointManager({ storage: mockStorage, lock: mockLock });
+			const cp = new CheckpointManager({
+				storage: mockStorage,
+				lock: mockLock,
+			});
 			assert.ok(cp);
 		});
 
@@ -590,7 +593,10 @@ describe("CheckpointManager", () => {
 			const mockFileStorage = new MockCheckpointStorage();
 
 			// Create a temporary checkpoint manager for testing mergeShards
-			const testCheckpoint = new CheckpointManager({ storage: mockFileStorage, lock });
+			const testCheckpoint = new CheckpointManager({
+				storage: mockFileStorage,
+				lock,
+			});
 
 			// Manually test mergeShards by creating mock FileStorage with shards
 			// Since we can't easily mock FileStorage.findShards, we'll test a simpler case:

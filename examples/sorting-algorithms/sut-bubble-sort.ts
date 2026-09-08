@@ -1,3 +1,4 @@
+/// <reference lib="dom" />
 /**
  * Bubble Sort SUT
  *
@@ -51,7 +52,12 @@ export function createSut(): {
 
 			const executionTimeMs = performance.now() - start;
 
-			return Promise.resolve({ sorted: arr, comparisons, swaps, executionTimeMs });
+			return Promise.resolve({
+				sorted: arr,
+				comparisons,
+				swaps,
+				executionTimeMs,
+			});
 		},
 	};
 }

@@ -112,7 +112,10 @@ export const EvaluationClaimSchema = z
 		tags: z.array(z.string()).optional().describe("Tags for filtering"),
 		citation: z.string().optional().describe("Citation/reference for the claim"),
 	})
-	.meta({ title: "EvaluationClaim", description: "An evaluation claim (hypothesis)" });
+	.meta({
+		title: "EvaluationClaim",
+		description: "An evaluation claim (hypothesis)",
+	});
 export type EvaluationClaimSchema = z.infer<typeof EvaluationClaimSchema>;
 
 /**
@@ -207,7 +210,10 @@ export const MetricsCriterionSchema = z
 			});
 		}
 	})
-	.meta({ title: "MetricsCriterion", description: "A metrics evaluation criterion" });
+	.meta({
+		title: "MetricsCriterion",
+		description: "A metrics evaluation criterion",
+	});
 export type MetricsCriterionSchema = z.infer<typeof MetricsCriterionSchema>;
 
 /**

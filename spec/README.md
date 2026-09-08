@@ -117,6 +117,7 @@ It receives the raw SUT result and returns a flat dictionary of named numeric me
 Binary SUTs are the recommended path for cross-language integration. They communicate via stdin/stdout:
 
 **Invocation:**
+
 1. Spawn the configured `binaryCommand` with `binaryArgs`
 2. Write input to stdin in the configured format
 3. Wait for process exit (up to `binaryTimeout` ms, default 30000)
@@ -125,21 +126,22 @@ Binary SUTs are the recommended path for cross-language integration. They commun
 
 **Input formats (`binaryInputFormat`):**
 
-| Format | Encoding |
-|--------|----------|
-| `json` | `JSON.stringify(inputs)` followed by newline |
-| `raw` | `String(inputs)` followed by newline |
-| `lines` | One value per line (for array inputs) |
+| Format  | Encoding                                     |
+| ------- | -------------------------------------------- |
+| `json`  | `JSON.stringify(inputs)` followed by newline |
+| `raw`   | `String(inputs)` followed by newline         |
+| `lines` | One value per line (for array inputs)        |
 
 **Output formats (`binaryOutputFormat`):**
 
-| Format | Decoding |
-|--------|----------|
-| `json` | `JSON.parse(stdout.trim())` |
-| `raw` | `stdout.trim()` as string |
+| Format  | Decoding                    |
+| ------- | --------------------------- |
+| `json`  | `JSON.parse(stdout.trim())` |
+| `raw`   | `stdout.trim()` as string   |
 | `lines` | `stdout.trim().split('\n')` |
 
 **Error handling:**
+
 - Non-zero exit code: capture stderr as error message
 - Timeout: send SIGKILL, report as `timeout` failure type
 - Empty stdout with exit 0: report as `no_output` failure type
@@ -367,15 +369,15 @@ Output: `ExploratoryEvaluationSummary`
 
 All PPEF files are JSON. Implementations SHOULD support both compact and pretty-printed JSON.
 
-| File | Schema Reference | Description |
-|------|-----------------|-------------|
-| `experiment.json` | `ppef.schema.json` (root) | Experiment configuration |
-| `results.json` | `ppef.schema.json#/$defs/ResultBatch` | Raw execution results |
-| `aggregates.json` | `ppef.schema.json#/$defs/AggregationOutput` | Aggregated statistics |
-| `claims.json` | `ppef.schema.json#/$defs/ClaimsEvaluatorConfig` | Claims evaluator config |
-| `eval-claims.json` | `ppef.schema.json#/$defs/ClaimEvaluationSummary` | Claims evaluation output |
-| `eval-metrics.json` | `ppef.schema.json#/$defs/MetricsEvaluationSummary` | Metrics evaluation output |
-| `eval-robustness.json` | `ppef.schema.json#/$defs/RobustnessAnalysisOutput` | Robustness analysis output |
+| File                    | Schema Reference                                       | Description                   |
+| ----------------------- | ------------------------------------------------------ | ----------------------------- |
+| `experiment.json`       | `ppef.schema.json` (root)                              | Experiment configuration      |
+| `results.json`          | `ppef.schema.json#/$defs/ResultBatch`                  | Raw execution results         |
+| `aggregates.json`       | `ppef.schema.json#/$defs/AggregationOutput`            | Aggregated statistics         |
+| `claims.json`           | `ppef.schema.json#/$defs/ClaimsEvaluatorConfig`        | Claims evaluator config       |
+| `eval-claims.json`      | `ppef.schema.json#/$defs/ClaimEvaluationSummary`       | Claims evaluation output      |
+| `eval-metrics.json`     | `ppef.schema.json#/$defs/MetricsEvaluationSummary`     | Metrics evaluation output     |
+| `eval-robustness.json`  | `ppef.schema.json#/$defs/RobustnessAnalysisOutput`     | Robustness analysis output    |
 | `eval-exploratory.json` | `ppef.schema.json#/$defs/ExploratoryEvaluationSummary` | Exploratory evaluation output |
 
 ## 9. Conformance

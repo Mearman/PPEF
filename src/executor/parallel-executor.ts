@@ -447,7 +447,10 @@ export class ParallelExecutor {
 		_cases: unknown[],
 		config: ExecutorConfig & { onResult?: (result: EvaluationResult) => void },
 		options: ParallelExecutorOptions = {},
-	): Promise<{ results: EvaluationResult[]; errors: { runId: string; error: string }[] }> {
+	): Promise<{
+		results: EvaluationResult[];
+		errors: { runId: string; error: string }[];
+	}> {
 		const numberWorkers = options.workers ?? this.systemInfo.cpuCount;
 		const nodePath = options.nodePath ?? this.systemInfo.nodePath;
 		const checkpointDir =
@@ -525,7 +528,10 @@ export const executeParallel = async (
 	cases: unknown[],
 	config: ExecutorConfig & { onResult?: (result: EvaluationResult) => void },
 	options: ParallelExecutorOptions = {},
-): Promise<{ results: EvaluationResult[]; errors: { runId: string; error: string }[] }> => {
+): Promise<{
+	results: EvaluationResult[];
+	errors: { runId: string; error: string }[];
+}> => {
 	const executor = new ParallelExecutor();
 	return executor.execute(runs, suts, cases, config, options);
 };

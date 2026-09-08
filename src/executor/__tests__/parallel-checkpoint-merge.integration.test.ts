@@ -31,7 +31,9 @@ describe("Parallel Checkpoint Merge Integration Tests", () => {
 		testDir = join(tmpdir(), `parallel-merge-test-${randomBytes(8).toString("hex")}`);
 		mkdirSync(testDir, { recursive: true });
 		mainPath = join(testDir, "checkpoint.json");
-		mainCheckpoint = new CheckpointManager({ storage: new FileStorage(mainPath) });
+		mainCheckpoint = new CheckpointManager({
+			storage: new FileStorage(mainPath),
+		});
 	});
 
 	/**
@@ -130,7 +132,9 @@ describe("Parallel Checkpoint Merge Integration Tests", () => {
 			createdAt: new Date().toISOString(),
 			updatedAt: new Date().toISOString(),
 			completedRunIds: ["worker-001"],
-			results: { "worker-001": createMockResult("worker-001", "sut-2", "case-2") },
+			results: {
+				"worker-001": createMockResult("worker-001", "sut-2", "case-2"),
+			},
 			totalPlanned: 132,
 		});
 
@@ -170,7 +174,9 @@ describe("Parallel Checkpoint Merge Integration Tests", () => {
 			createdAt: new Date().toISOString(),
 			updatedAt: new Date().toISOString(),
 			completedRunIds: ["worker-001"],
-			results: { "worker-001": createMockResult("worker-001", "sut-2", "case-2") },
+			results: {
+				"worker-001": createMockResult("worker-001", "sut-2", "case-2"),
+			},
 			totalPlanned: 132,
 		});
 

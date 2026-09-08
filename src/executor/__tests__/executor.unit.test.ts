@@ -40,12 +40,11 @@ const createMockSut = (id: string): SutDefinition<unknown, MockResult> => ({
 		config: Object.freeze({}),
 		tags: [],
 	},
-	factory: () =>
-		({
-			id,
-			config: {},
-			run: async () => ({ value: id }),
-		}) as never,
+	factory: () => ({
+		id,
+		config: {},
+		run: async () => ({ value: id }),
+	}),
 });
 
 /**
@@ -76,7 +75,7 @@ describe("Executor", () => {
 			const suts = [createMockSut("sut1"), createMockSut("sut2")];
 			const cases = [createMockCase("case1"), createMockCase("case2")];
 
-			const planned = executor.plan(suts as never, cases as never);
+			const planned = executor.plan(suts, cases);
 
 			assert.strictEqual(planned.length, 4); // 2 SUTs x 2 cases
 		});
@@ -86,7 +85,7 @@ describe("Executor", () => {
 			const suts = [createMockSut("sut1")];
 			const cases = [createMockCase("case1")];
 
-			const planned = executorWithRep.plan(suts as never, cases as never);
+			const planned = executorWithRep.plan(suts, cases);
 
 			assert.strictEqual(planned.length, 3); // 1 SUT x 1 case x 3 reps
 			assert.strictEqual(planned[0].repetition, 0);
@@ -98,7 +97,7 @@ describe("Executor", () => {
 			const suts = [createMockSut("sut1")];
 			const cases = [createMockCase("case1"), createMockCase("case2")];
 
-			const planned = executor.plan(suts as never, cases as never);
+			const planned = executor.plan(suts, cases);
 			const runIds = new Set(planned.map((r) => r.runId));
 
 			assert.strictEqual(runIds.size, planned.length); // All unique
@@ -117,12 +116,7 @@ describe("Executor", () => {
 			// Filter to only run the first one
 			const filteredRuns = [allPlanned[0]];
 
-			const summary = await inProcessExecutor.execute(
-				suts as never,
-				cases as never,
-				() => ({}),
-				filteredRuns,
-			);
+			const summary = await inProcessExecutor.execute(suts, cases, () => ({}), filteredRuns);
 
 			assert.strictEqual(summary.totalRuns, 1);
 			assert.strictEqual(summary.successfulRuns, 1);
@@ -139,12 +133,7 @@ describe("Executor", () => {
 			// Filter to only run half
 			const filteredRuns = allPlanned.slice(0, 1);
 
-			const summary = await inProcessExecutor.execute(
-				suts as never,
-				cases as never,
-				() => ({}),
-				filteredRuns,
-			);
+			const summary = await inProcessExecutor.execute(suts, cases, () => ({}), filteredRuns);
 
 			assert.strictEqual(summary.totalRuns, 1);
 			assert.strictEqual(summary.successfulRuns, 1);
@@ -155,7 +144,7 @@ describe("Executor", () => {
 			const suts = [createMockSut("sut1")];
 			const cases = [createMockCase("case1")];
 
-			const summary = await inProcessExecutor.execute(suts as never, cases as never, () => ({}));
+			const summary = await inProcessExecutor.execute(suts, cases, () => ({}));
 
 			assert.strictEqual(summary.totalRuns, 1);
 			assert.strictEqual(summary.successfulRuns, 1);
@@ -166,12 +155,7 @@ describe("Executor", () => {
 			const suts = [createMockSut("sut1")];
 			const cases = [createMockCase("case1")];
 
-			const summary = await inProcessExecutor.execute(
-				suts as never,
-				cases as never,
-				() => ({}),
-				[],
-			);
+			const summary = await inProcessExecutor.execute(suts, cases, () => ({}), []);
 
 			assert.strictEqual(summary.totalRuns, 0);
 			assert.strictEqual(summary.successfulRuns, 0);
@@ -188,17 +172,12 @@ describe("Executor", () => {
 			const cases = [createMockCase("case1")];
 
 			// Plan all runs
-			const allPlanned = executorWithConcurrency.plan(suts as never, cases as never);
+			const allPlanned = executorWithConcurrency.plan(suts, cases);
 
 			// Filter to only run one
 			const filteredRuns = [allPlanned[0]];
 
-			const summary = await executorWithConcurrency.execute(
-				suts as never,
-				cases as never,
-				() => ({}),
-				filteredRuns,
-			);
+			const summary = await executorWithConcurrency.execute(suts, cases, () => ({}), filteredRuns);
 
 			assert.strictEqual(summary.totalRuns, 1);
 			assert.strictEqual(summary.successfulRuns, 1);
@@ -244,7 +223,7 @@ describe("Executor", () => {
 			const suts = [createMockSut("sut1")];
 			const cases = [slowCase];
 
-			const summary = await executorWithTimeout.execute(suts as never, cases as never, () => ({}));
+			const summary = await executorWithTimeout.execute(suts, cases, () => ({}));
 
 			// Should fail due to timeout
 			assert.strictEqual(summary.totalRuns, 1);
@@ -263,16 +242,15 @@ describe("Executor", () => {
 					config: Object.freeze({}),
 					tags: [],
 				},
-				factory: () =>
-					({
-						id: "slow-sut",
-						config: {},
-						run: async () => {
-							// Sleep longer than timeout
-							await new Promise((resolve) => setTimeout(resolve, 200));
-							return { value: "slow" };
-						},
-					}) as never,
+				factory: () => ({
+					id: "slow-sut",
+					config: {},
+					run: async () => {
+						// Sleep longer than timeout
+						await new Promise((resolve) => setTimeout(resolve, 200));
+						return { value: "slow" };
+					},
+				}),
 			};
 
 			const executorWithTimeout = new Executor({
@@ -283,7 +261,7 @@ describe("Executor", () => {
 			const suts = [slowSut];
 			const cases = [createMockCase("case1")];
 
-			const summary = await executorWithTimeout.execute(suts as never, cases as never, () => ({}));
+			const summary = await executorWithTimeout.execute(suts, cases, () => ({}));
 
 			// Should fail due to timeout
 			assert.strictEqual(summary.totalRuns, 1);
@@ -305,10 +283,13 @@ describe("Executor", () => {
 			const suts = [createMockSut("sut1")];
 			const cases = [createMockCase("case1")];
 
-			await executorWithProgress.execute(suts as never, cases as never, () => ({}));
+			await executorWithProgress.execute(suts, cases, () => ({}));
 
 			assert.ok(progressUpdates.length > 0);
-			const firstUpdate = progressUpdates[0] as { total: number; completed: number };
+			const firstUpdate = progressUpdates[0] as {
+				total: number;
+				completed: number;
+			};
 			assert.strictEqual(firstUpdate.total, 1);
 			assert.strictEqual(firstUpdate.completed, 1);
 		});
@@ -325,7 +306,7 @@ describe("Executor", () => {
 			const suts = [createMockSut("sut1")];
 			const cases = [createMockCase("case1")];
 
-			await executorWithCallback.execute(suts as never, cases as never, () => ({}));
+			await executorWithCallback.execute(suts, cases, () => ({}));
 
 			assert.strictEqual(results.length, 1);
 			assert.ok(results[0]);

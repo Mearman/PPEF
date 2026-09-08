@@ -1,36 +1,36 @@
 {
-  "$schema": "../../ppef.schema.json",
-  "experiment": {
-    "name": "string-length",
-    "description": "Compare string length implementations (Python)"
-  },
-  "executor": {
-    "repetitions": 3
-  },
-  "suts": [
-    {
-      "id": "builtin-length",
-      "module": "./sut.py",
-      "exportName": "create_sut",
-      "registration": {
-        "name": "Built-in len()",
-        "version": "1.0.0",
-        "role": "primary"
-      }
-    }
-  ],
-  "cases": [
-    {
-      "id": "hello-world",
-      "module": "./case_hello.py",
-      "exportName": "create_case"
-    }
-  ],
-  "metricsExtractor": {
-    "module": "./metrics.py",
-    "exportName": "extract"
-  },
-  "output": {
-    "path": "./results"
-  }
+	"$schema": "../../ppef.schema.json",
+	"experiment": {
+		"name": "string-length",
+		"description": "Compare string length implementations (Python)"
+	},
+	"executor": {
+		"repetitions": 3
+	},
+	"suts": [
+		{
+			"id": "builtin-length",
+			"module": "./sut.py",
+			"exportName": "create_sut",
+			"registration": {
+				"name": "Built-in len()",
+				"version": "1.0.0",
+				"role": "primary"
+			}
+		}
+	],
+	"cases": [
+		{
+			"id": "hello-world",
+			"module": "./case_hello.py",
+			"exportName": "create_case"
+		}
+	],
+	"metricsExtractor": {
+		"module": "./metrics.py",
+		"exportName": "extract"
+	},
+	"output": {
+		"path": "./results"
+	}
 }

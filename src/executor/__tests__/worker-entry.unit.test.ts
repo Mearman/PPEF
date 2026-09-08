@@ -87,31 +87,31 @@ describe("worker-entry", () => {
 		mockModuleLoader = {
 			loadExecutor: async (): Promise<IExecutorModule> => {
 				return {
-					Executor: MockExecutor as unknown as new (...args: unknown[]) => unknown,
-				} as IExecutorModule;
+					Executor: MockExecutor as unknown as IExecutorModule["Executor"],
+				};
 			},
 			loadEvaluate: async (): Promise<IEvaluateModule> => {
 				return {
 					getSutDefinitions: () => ({}),
 					getCaseDefinitions: () => ({}),
-				} as IEvaluateModule;
+				};
 			},
 			loadRegistry: async (): Promise<IRegistryModule> => {
 				return {
 					registerAllBenchmarkCases: async () => ({}),
-				} as IRegistryModule;
+				};
 			},
 			loadSuts: async (): Promise<ISutsModule> => {
 				return {
 					registerAllSuts: () => ({}),
-				} as ISutsModule;
+				};
 			},
 			loadDatasets: async (): Promise<IDatasetsModule> => {
 				return {
 					registerBenchmarkDatasets: async () => {
 						return;
 					},
-				} as IDatasetsModule;
+				};
 			},
 		};
 	});
@@ -155,7 +155,15 @@ describe("worker-entry", () => {
 			};
 
 			const message: WorkerMessage = {
-				runs: [{ runId: "test-1", sutId: "sut-1", caseId: "case-1", repetition: 0, config: {} }],
+				runs: [
+					{
+						runId: "test-1",
+						sutId: "sut-1",
+						caseId: "case-1",
+						repetition: 0,
+						config: {},
+					},
+				],
 				config: {
 					repetitions: 1,
 					seedBase: 42,
@@ -179,7 +187,15 @@ describe("worker-entry", () => {
 
 		it("should post done message on successful execution", async () => {
 			const message: WorkerMessage = {
-				runs: [{ runId: "test-1", sutId: "sut-1", caseId: "case-1", repetition: 0, config: {} }],
+				runs: [
+					{
+						runId: "test-1",
+						sutId: "sut-1",
+						caseId: "case-1",
+						repetition: 0,
+						config: {},
+					},
+				],
 				config: {
 					repetitions: 1,
 					seedBase: 42,
@@ -193,7 +209,10 @@ describe("worker-entry", () => {
 			await executor.handleMessage(message);
 
 			assert.strictEqual(postedMessages.length, 1);
-			const posted = postedMessages[0] as { type: string; results: EvaluationResult[] };
+			const posted = postedMessages[0] as {
+				type: string;
+				results: EvaluationResult[];
+			};
 			assert.strictEqual(posted.type, "done");
 			assert.ok(Array.isArray(posted.results));
 			assert.strictEqual(posted.results.length, 1);
@@ -206,7 +225,15 @@ describe("worker-entry", () => {
 			};
 
 			const message: WorkerMessage = {
-				runs: [{ runId: "test-1", sutId: "sut-1", caseId: "case-1", repetition: 0, config: {} }],
+				runs: [
+					{
+						runId: "test-1",
+						sutId: "sut-1",
+						caseId: "case-1",
+						repetition: 0,
+						config: {},
+					},
+				],
 				config: {
 					repetitions: 1,
 					seedBase: 42,
@@ -231,7 +258,15 @@ describe("worker-entry", () => {
 			};
 
 			const message: WorkerMessage = {
-				runs: [{ runId: "test-1", sutId: "sut-1", caseId: "case-1", repetition: 0, config: {} }],
+				runs: [
+					{
+						runId: "test-1",
+						sutId: "sut-1",
+						caseId: "case-1",
+						repetition: 0,
+						config: {},
+					},
+				],
 				config: {
 					repetitions: 1,
 					seedBase: 42,
@@ -261,12 +296,20 @@ describe("worker-entry", () => {
 
 			mockModuleLoader.loadExecutor = async (): Promise<IExecutorModule> => {
 				return {
-					Executor: MockExecutor as unknown as new (...args: unknown[]) => unknown,
-				} as IExecutorModule;
+					Executor: MockExecutor as unknown as IExecutorModule["Executor"],
+				};
 			};
 
 			const message: WorkerMessage = {
-				runs: [{ runId: "test-1", sutId: "sut-1", caseId: "case-1", repetition: 0, config: {} }],
+				runs: [
+					{
+						runId: "test-1",
+						sutId: "sut-1",
+						caseId: "case-1",
+						repetition: 0,
+						config: {},
+					},
+				],
 				config: {
 					repetitions: 5,
 					seedBase: 999,
@@ -298,9 +341,27 @@ describe("worker-entry", () => {
 		it("should handle multiple runs in a batch", async () => {
 			const message: WorkerMessage = {
 				runs: [
-					{ runId: "test-1", sutId: "sut-1", caseId: "case-1", repetition: 0, config: {} },
-					{ runId: "test-2", sutId: "sut-2", caseId: "case-2", repetition: 1, config: {} },
-					{ runId: "test-3", sutId: "sut-1", caseId: "case-2", repetition: 0, config: {} },
+					{
+						runId: "test-1",
+						sutId: "sut-1",
+						caseId: "case-1",
+						repetition: 0,
+						config: {},
+					},
+					{
+						runId: "test-2",
+						sutId: "sut-2",
+						caseId: "case-2",
+						repetition: 1,
+						config: {},
+					},
+					{
+						runId: "test-3",
+						sutId: "sut-1",
+						caseId: "case-2",
+						repetition: 0,
+						config: {},
+					},
 				],
 				config: {
 					repetitions: 3,
@@ -315,7 +376,10 @@ describe("worker-entry", () => {
 			await executor.handleMessage(message);
 
 			assert.strictEqual(postedMessages.length, 1);
-			const posted = postedMessages[0] as { type: string; results: EvaluationResult[] };
+			const posted = postedMessages[0] as {
+				type: string;
+				results: EvaluationResult[];
+			};
 			assert.strictEqual(posted.type, "done");
 			assert.ok(Array.isArray(posted.results));
 		});
@@ -329,11 +393,19 @@ describe("worker-entry", () => {
 			mockModuleLoader.loadDatasets = async (): Promise<IDatasetsModule> => {
 				return {
 					registerBenchmarkDatasets: registerSpy,
-				} as IDatasetsModule;
+				};
 			};
 
 			const message: WorkerMessage = {
-				runs: [{ runId: "test-1", sutId: "sut-1", caseId: "case-1", repetition: 0, config: {} }],
+				runs: [
+					{
+						runId: "test-1",
+						sutId: "sut-1",
+						caseId: "case-1",
+						repetition: 0,
+						config: {},
+					},
+				],
 				config: {
 					repetitions: 1,
 					seedBase: 42,
@@ -354,11 +426,19 @@ describe("worker-entry", () => {
 			mockModuleLoader.loadSuts = async (): Promise<ISutsModule> => {
 				return {
 					registerAllSuts: registerSpy,
-				} as ISutsModule;
+				};
 			};
 
 			const message: WorkerMessage = {
-				runs: [{ runId: "test-1", sutId: "sut-1", caseId: "case-1", repetition: 0, config: {} }],
+				runs: [
+					{
+						runId: "test-1",
+						sutId: "sut-1",
+						caseId: "case-1",
+						repetition: 0,
+						config: {},
+					},
+				],
 				config: {
 					repetitions: 1,
 					seedBase: 42,
@@ -379,11 +459,19 @@ describe("worker-entry", () => {
 			mockModuleLoader.loadRegistry = async (): Promise<IRegistryModule> => {
 				return {
 					registerAllBenchmarkCases: registerSpy,
-				} as IRegistryModule;
+				};
 			};
 
 			const message: WorkerMessage = {
-				runs: [{ runId: "test-1", sutId: "sut-1", caseId: "case-1", repetition: 0, config: {} }],
+				runs: [
+					{
+						runId: "test-1",
+						sutId: "sut-1",
+						caseId: "case-1",
+						repetition: 0,
+						config: {},
+					},
+				],
 				config: {
 					repetitions: 1,
 					seedBase: 42,
@@ -408,11 +496,19 @@ describe("worker-entry", () => {
 						return {};
 					},
 					getCaseDefinitions: () => ({}),
-				} as IEvaluateModule;
+				};
 			};
 
 			const message: WorkerMessage = {
-				runs: [{ runId: "test-1", sutId: "sut-1", caseId: "case-1", repetition: 0, config: {} }],
+				runs: [
+					{
+						runId: "test-1",
+						sutId: "sut-1",
+						caseId: "case-1",
+						repetition: 0,
+						config: {},
+					},
+				],
 				config: {
 					repetitions: 1,
 					seedBase: 42,

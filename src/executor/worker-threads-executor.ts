@@ -290,7 +290,10 @@ export class WorkerThreadsExecutor {
 		config: ExecutorConfig & { onResult?: (result: EvaluationResult) => void },
 		options: WorkerThreadsExecutorOptions = {},
 		checkpointDir = resolve(process.cwd(), "results/execute"),
-	): Promise<{ results: EvaluationResult[]; errors: { runId: string; error: string }[] }> {
+	): Promise<{
+		results: EvaluationResult[];
+		errors: { runId: string; error: string }[];
+	}> {
 		const workerCount = options.workers ?? 1;
 
 		this.logger.info(
@@ -596,10 +599,17 @@ export const executeWithWorkerThreads = async (
 		registration: { id: string; name: string; version: string; role: string };
 		factory: unknown;
 	}[],
-	cases: { case: { caseId: string }; getInput: () => Promise<unknown>; getInputs: () => unknown }[],
+	cases: {
+		case: { caseId: string };
+		getInput: () => Promise<unknown>;
+		getInputs: () => unknown;
+	}[],
 	config: ExecutorConfig & { onResult?: (result: EvaluationResult) => void },
 	options: WorkerThreadsExecutorOptions & Partial<ResourceLimits> = {},
-): Promise<{ results: EvaluationResult[]; errors: { runId: string; error: string }[] }> => {
+): Promise<{
+	results: EvaluationResult[];
+	errors: { runId: string; error: string }[];
+}> => {
 	const executor = new WorkerThreadsExecutor(options);
 	return executor.execute(runs, suts, cases, config, options);
 };

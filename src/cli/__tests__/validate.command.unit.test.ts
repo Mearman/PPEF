@@ -50,7 +50,7 @@ describe("validate command", () => {
 		mockProcessExit = mock.fn((code: number) => {
 			exitCode = code;
 			throw new Error(`process.exit(${code})`);
-		}) as unknown as (code: number) => never;
+		});
 
 		// Mock config loader
 		mockConfigLoader = {

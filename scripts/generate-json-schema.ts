@@ -581,14 +581,22 @@ const evaluatorDefs: Record<string, unknown> = {
 
 // Generate output type schemas for cross-language interoperability
 const outputDefs: Record<string, unknown> = {
-	EvaluationResult: z.toJSONSchema(EvaluationResultSchema, { target: "draft-2020-12" }),
+	EvaluationResult: z.toJSONSchema(EvaluationResultSchema, {
+		target: "draft-2020-12",
+	}),
 	ResultBatch: z.toJSONSchema(ResultBatchSchema, { target: "draft-2020-12" }),
 	RunContext: z.toJSONSchema(RunContextSchema, { target: "draft-2020-12" }),
-	CorrectnessResult: z.toJSONSchema(CorrectnessResultSchema, { target: "draft-2020-12" }),
+	CorrectnessResult: z.toJSONSchema(CorrectnessResultSchema, {
+		target: "draft-2020-12",
+	}),
 	Provenance: z.toJSONSchema(ProvenanceSchema, { target: "draft-2020-12" }),
-	AggregatedResult: z.toJSONSchema(AggregatedResultSchema, { target: "draft-2020-12" }),
+	AggregatedResult: z.toJSONSchema(AggregatedResultSchema, {
+		target: "draft-2020-12",
+	}),
 	SummaryStats: z.toJSONSchema(SummaryStatsSchema, { target: "draft-2020-12" }),
-	AggregationOutput: z.toJSONSchema(AggregationOutputSchema, { target: "draft-2020-12" }),
+	AggregationOutput: z.toJSONSchema(AggregationOutputSchema, {
+		target: "draft-2020-12",
+	}),
 	ClaimEvaluationSummary: z.toJSONSchema(ClaimEvaluationSummarySchema, {
 		target: "draft-2020-12",
 	}),

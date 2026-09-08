@@ -1,7 +1,6 @@
 import eslint from "@eslint/js";
 import markdown from "@eslint/markdown";
 import eslintComments from "@eslint-community/eslint-plugin-eslint-comments";
-import jsonc from "eslint-plugin-jsonc";
 import tseslint from "typescript-eslint";
 import prettierRecommended from "eslint-config-prettier";
 import prettierPlugin from "eslint-plugin-prettier";
@@ -67,14 +66,10 @@ export default [
 	// Markdown files
 	...markdown.configs.recommended,
 
-	// JSON/JSONC files
-	...jsonc.configs["flat/recommended-with-json"],
-	...jsonc.configs["flat/prettier"],
-
 	// Prettier integration (must be last to override conflicting rules)
 	prettierRecommended,
 	{
-		files: ["**/*.{ts,js,json,md}"],
+		files: ["**/*.{ts,js}"],
 		plugins: {
 			prettier: prettierPlugin,
 		},

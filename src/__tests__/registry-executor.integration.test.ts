@@ -69,12 +69,34 @@ describe("Registry + Executor Integration", () => {
 		it("should filter by role", () => {
 			sutRegistry
 				.register(
-					{ id: "primary-1", name: "P1", version: "1.0.0", role: "primary", config: {}, tags: [] },
-					() => ({ id: "primary-1", config: {}, run: async () => ({ result: "p1" }) }),
+					{
+						id: "primary-1",
+						name: "P1",
+						version: "1.0.0",
+						role: "primary",
+						config: {},
+						tags: [],
+					},
+					() => ({
+						id: "primary-1",
+						config: {},
+						run: async () => ({ result: "p1" }),
+					}),
 				)
 				.register(
-					{ id: "primary-2", name: "P2", version: "1.0.0", role: "primary", config: {}, tags: [] },
-					() => ({ id: "primary-2", config: {}, run: async () => ({ result: "p2" }) }),
+					{
+						id: "primary-2",
+						name: "P2",
+						version: "1.0.0",
+						role: "primary",
+						config: {},
+						tags: [],
+					},
+					() => ({
+						id: "primary-2",
+						config: {},
+						run: async () => ({ result: "p2" }),
+					}),
 				)
 				.register(
 					{
@@ -85,7 +107,11 @@ describe("Registry + Executor Integration", () => {
 						config: {},
 						tags: [],
 					},
-					() => ({ id: "baseline-1", config: {}, run: async () => ({ result: "b1" }) }),
+					() => ({
+						id: "baseline-1",
+						config: {},
+						run: async () => ({ result: "b1" }),
+					}),
 				);
 
 			const primarySuts = sutRegistry.getByRole("primary");
@@ -106,7 +132,11 @@ describe("Registry + Executor Integration", () => {
 						config: {},
 						tags: ["expansion", "bidirectional"],
 					},
-					() => ({ id: "sut-1", config: {}, run: async () => ({ result: "s1" }) }),
+					() => ({
+						id: "sut-1",
+						config: {},
+						run: async () => ({ result: "s1" }),
+					}),
 				)
 				.register(
 					{
@@ -117,7 +147,11 @@ describe("Registry + Executor Integration", () => {
 						config: {},
 						tags: ["expansion"],
 					},
-					() => ({ id: "sut-2", config: {}, run: async () => ({ result: "s2" }) }),
+					() => ({
+						id: "sut-2",
+						config: {},
+						run: async () => ({ result: "s2" }),
+					}),
 				)
 				.register(
 					{
@@ -128,7 +162,11 @@ describe("Registry + Executor Integration", () => {
 						config: {},
 						tags: ["ranking"],
 					},
-					() => ({ id: "sut-3", config: {}, run: async () => ({ result: "s3" }) }),
+					() => ({
+						id: "sut-3",
+						config: {},
+						run: async () => ({ result: "s3" }),
+					}),
 				);
 
 			const expansionSuts = sutRegistry.getByTag("expansion");
@@ -173,12 +211,34 @@ describe("Registry + Executor Integration", () => {
 		it("should list all registrations", () => {
 			sutRegistry
 				.register(
-					{ id: "sut-a", name: "A", version: "1.0.0", role: "primary", config: {}, tags: [] },
-					() => ({ id: "sut-a", config: {}, run: async () => ({ result: "a" }) }),
+					{
+						id: "sut-a",
+						name: "A",
+						version: "1.0.0",
+						role: "primary",
+						config: {},
+						tags: [],
+					},
+					() => ({
+						id: "sut-a",
+						config: {},
+						run: async () => ({ result: "a" }),
+					}),
 				)
 				.register(
-					{ id: "sut-b", name: "B", version: "1.0.0", role: "baseline", config: {}, tags: [] },
-					() => ({ id: "sut-b", config: {}, run: async () => ({ result: "b" }) }),
+					{
+						id: "sut-b",
+						name: "B",
+						version: "1.0.0",
+						role: "baseline",
+						config: {},
+						tags: [],
+					},
+					() => ({
+						id: "sut-b",
+						config: {},
+						run: async () => ({ result: "b" }),
+					}),
 				);
 
 			const ids = sutRegistry.list();
@@ -192,7 +252,14 @@ describe("Registry + Executor Integration", () => {
 
 		it("should clear all registrations", () => {
 			sutRegistry.register(
-				{ id: "sut", name: "S", version: "1.0.0", role: "primary", config: {}, tags: [] },
+				{
+					id: "sut",
+					name: "S",
+					version: "1.0.0",
+					role: "primary",
+					config: {},
+					tags: [],
+				},
 				() => ({ id: "sut", config: {}, run: async () => ({ result: "s" }) }),
 			);
 

@@ -21,10 +21,10 @@ Create `energy-config.json`:
 
 ```json
 {
-  "name": "Energy Efficiency Evaluation",
-  "maxEnergyConsumption": 1000,
-  "maxEnergyPerOperation": 0.001,
-  "minOperationsPerJoule": 1000
+	"name": "Energy Efficiency Evaluation",
+	"maxEnergyConsumption": 1000,
+	"maxEnergyPerOperation": 0.001,
+	"minOperationsPerJoule": 1000
 }
 ```
 
@@ -110,7 +110,7 @@ EvaluatorRegistry.register(new MyCustomEvaluator());
 ```typescript
 // In your custom evaluator file
 if (import.meta.url === `file://${process.argv[1]}`) {
-  registerMyCustomEvaluator();
+	registerMyCustomEvaluator();
 }
 ```
 

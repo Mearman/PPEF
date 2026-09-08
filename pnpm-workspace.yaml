@@ -6,3 +6,22 @@ packages:
 # ERR_PNPM_IGNORED_BUILDS.
 onlyBuiltDependencies:
   - esbuild
+
+# Security floors for transitively-locked advisory-affected versions; open ranges so patches keep flowing.
+overrides:
+  "@humanfs/node": ^0.16.8
+  fast-uri: ^3.1.4
+  flatted: ^3.4.0
+  handlebars: ^4.7.9
+  js-yaml: ^4.3.0
+  lodash: ^4.18.0
+  lodash-es: ^4.18.0
+  "picomatch@^2": ^2.3.2
+  "brace-expansion@^1": ^1.1.18
+  "brace-expansion@^2": ^2.1.4
+  "minimatch@^3": ^3.1.4
+  "minimatch@^5": ^5.1.8
+  postcss: ^8.5.12
+  koa: ^3.2.1
+  undici: ^7.28.0
+  "ajv@^8": ^8.18.0
