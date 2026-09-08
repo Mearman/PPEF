@@ -1,0 +1,8 @@
+packages:
+  - "."
+
+# pnpm 10 blocks dependency postinstall scripts by default; esbuild needs its
+# binary laid down at install time or every CI install exits with
+# ERR_PNPM_IGNORED_BUILDS.
+onlyBuiltDependencies:
+  - esbuild
