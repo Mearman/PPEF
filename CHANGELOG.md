@@ -1,3 +1,22 @@
+## [1.6.2](https://github.com/Mearman/ppef/compare/v1.6.1...v1.6.2) (2026-09-08)
+
+### Bug Fixes
+
+* **deps:** hold c8 at 11.0.0 for the node 18-21 matrix legs ([f5ce0cf](https://github.com/Mearman/ppef/commit/f5ce0cf5ffd0adda3f33134bc03855f547a37158))
+* **release:** force one conventional-changelog-writer version across resolutions ([4ff8988](https://github.com/Mearman/ppef/commit/4ff89880d68283f526d2a915d1e7798dea422066))
+
+### Build System
+
+* **deps:** upgrade pygments to 2.21.0 and pytest to 9.1.1 in the lock ([6303ce7](https://github.com/Mearman/ppef/commit/6303ce75a30c22e886ce562242354ac62d9b9311))
+
+### Continuous Integration
+
+* **ci:** publish to npm through oidc trusted publishing ([40b1c70](https://github.com/Mearman/ppef/commit/40b1c705d1e61c385ff75b04093f50c79ecb6fdb))
+
+### Chores
+
+* **deps:** update every dependency to the newest release at least a week old ([862546f](https://github.com/Mearman/ppef/commit/862546f0d337446de69d68cb30b2d972f8af38f2))
+
 ## <small>1.6.1 (2026-09-08)</small>
 
 - build(deps): allow the esbuild postinstall pnpm 10 blocks by default ([4ee20e3](https://github.com/Mearman/ppef/commit/4ee20e3))

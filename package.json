@@ -1,6 +1,6 @@
 {
   "name": "ppef",
-  "version": "1.6.1",
+  "version": "1.6.2",
   "description": "Portable Programmatic Evaluation Framework - Claim-driven, deterministic evaluation for experiments",
   "type": "module",
   "main": "dist/index.cjs",
