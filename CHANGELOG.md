@@ -1,3 +1,9 @@
+## [1.6.3](https://github.com/Mearman/ppef/compare/v1.6.2...v1.6.3) (2026-09-08)
+
+### Continuous Integration
+
+* **ci:** run the release on node 24 for npm trusted publishing support ([40c9049](https://github.com/Mearman/ppef/commit/40c90492721136a29be32fc0f8a8c0f585627130))
+
 ## [1.6.2](https://github.com/Mearman/ppef/compare/v1.6.1...v1.6.2) (2026-09-08)
 
 ### Bug Fixes
