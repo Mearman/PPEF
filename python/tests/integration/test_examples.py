@@ -93,9 +93,7 @@ class TestStringLengthExample:
         assert "results" in content or "aggregates" in content
 
     def test_two_sut_run_and_evaluate(self, tmp_path: Path) -> None:
-        config_path = _setup_example(
-            "string-length", "experiment-two-suts-python.json", tmp_path
-        )
+        config_path = _setup_example("string-length", "experiment-two-suts-python.json", tmp_path)
 
         # Run the experiment
         _run_experiment(config_path)
