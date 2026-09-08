@@ -1,3 +1,9 @@
+## <small>1.6.1 (2026-09-08)</small>
+
+* build(deps): allow the esbuild postinstall pnpm 10 blocks by default ([4ee20e3](https://github.com/Mearman/ppef/commit/4ee20e3))
+* build(deps): pin pnpm to 10.29.3 instead of floating latest ([eb98d37](https://github.com/Mearman/ppef/commit/eb98d37))
+* style(python): apply ruff format to the evaluate command and example tests ([32b9dc6](https://github.com/Mearman/ppef/commit/32b9dc6))
+
 ## 1.6.0 (2026-02-01)
 
 * chore: update schema version to 1.5.0 ([17820a6](https://github.com/Mearman/ppef/commit/17820a6))
