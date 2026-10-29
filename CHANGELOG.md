@@ -1,3 +1,9 @@
+## [1.6.4](https://github.com/Mearman/ppef/compare/v1.6.3...v1.6.4) (2026-10-29)
+
+### Documentation
+
+* add the standard badge row to the README ([490f4d0](https://github.com/Mearman/ppef/commit/490f4d0957d5a0b25dba60b04d21497b4f924e21))
+
 ## [1.6.3](https://github.com/Mearman/ppef/compare/v1.6.2...v1.6.3) (2026-09-08)
 
 ### Continuous Integration
