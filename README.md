@@ -1,5 +1,7 @@
 # PPEF - Portable Programmatic Evaluation Framework
 
+[![GitHub](https://img.shields.io/badge/GitHub-181717?logo=github&logoColor=white)](https://github.com/Mearman/PPEF) [![npm](https://img.shields.io/badge/npm-CB3837?logo=npm&logoColor=white)](https://www.npmjs.com/package/ppef) [![CI](https://img.shields.io/github/actions/workflow/status/Mearman/PPEF/ci.yml?branch=main)](https://github.com/Mearman/PPEF/actions)
+
 A claim-driven, deterministic evaluation framework for experiments. PPEF provides a structured approach to testing and validating software components through reusable test cases, statistical aggregation, and claim-based evaluation.
 
 Published npm package with dual ESM/CJS output. Single runtime dependency: `commander`.
